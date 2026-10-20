@@ -152,3 +152,37 @@ def test_bee_todo_keeps_bee_alarm_as_deadline(post):
     [c] = general(s)
     assert c["commitment_origin"] == "BEE_TODO" and c["title"] == "Renew passport"
     assert c["due_at"] == e.at("17:00") and c["status"] == "ACTIVE"
+
+
+def test_recurring_promise_rolls_to_next_occurrence_after_deadline_or_proof(post):
+    [c] = nl.parse("I'll take out the bins every Monday.", NOW)
+    assert c["recurrence"] == {"freq": "WEEKLY", "weekday": 0} and c["title"] == "Take out the bins"
+    assert c["due_local"].isoformat() == "2026-10-26T18:00:00+05:30"
+    [walk] = nl.parse("I'll walk the dog every morning.", NOW)
+    assert walk["recurrence"] == {"freq": "DAILY"} and walk["due_local"].isoformat() == "2026-10-20T09:00:00+05:30"
+    s = say(post, "walk", "I'll walk the dog every morning.")
+    [first] = general(s)
+    post(f"/contracts/{first['contract_id']}/confirm", {"action": "confirm-done"})
+    s = say(post, "noop", "Nice day.", hm="08:30")
+    first, second = general(s)
+    assert first["status"] == "VERIFIED" and first["next_occurrence_id"] == second["contract_id"]
+    assert second["due_at"] == "2026-10-21T03:30:00+00:00" and second["status"] == "ACTIVE"
+    s = post("/admin/clock/advance", {"minutes": 1440})["state"]
+    s = post("/admin/clock/advance", {"minutes": 90})["state"]  # past 09:00 on the 21st
+    third = general(s)[-1]
+    assert len(general(s)) == 3 and general(s)[1]["status"] == "MISSED"
+    assert third["due_at"] == "2026-10-22T03:30:00+00:00"
+
+
+def test_morning_briefing_summarizes_open_promises_once():
+    s = e.fresh()
+    s.update(household_id="h", clock_mode="WALL", now="2026-10-20T02:00:00+00:00", timezone="Asia/Kolkata")
+    e.compile_bee(s, e.BeeInput(event_id="a", utterance="I will call Mom at 9 pm.",
+                                occurred_at="2026-10-20T07:31:00+05:30"))
+    e.compile_bee(s, e.BeeInput(event_id="b", utterance="I'll buy milk on my way home.",
+                                occurred_at="2026-10-20T07:32:00+05:30"))
+    e.tick(s, "2026-10-20T02:35:00+00:00")  # 08:05 IST
+    e.tick(s, "2026-10-20T03:00:00+00:00")
+    briefings = [a for a in s["alerts"] if a["kind"] == "DAILY_BRIEFING"]
+    assert len(briefings) == 1
+    assert "1 due today: Call Mom (21:00)" in briefings[0]["message"] and "waiting on a trigger" in briefings[0]["message"]

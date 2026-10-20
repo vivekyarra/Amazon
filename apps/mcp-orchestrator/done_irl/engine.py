@@ -129,6 +129,8 @@ def revise(s, c, status, reason, evidence_id=None):
     c.update(status=status, revision=c["revision"] + 1, updated_at=s["now"])
     if evidence_id:
         c["evidence_ids"].append(evidence_id)
+    if status == "VERIFIED":
+        roll_recurrence(s, c)
     emit(
         s,
         "commitment.verified" if status == "VERIFIED" else "commitment.updated",
@@ -404,6 +406,7 @@ def compile_bee(s, bee: BeeInput):
                 target_reps=cand["reps"],
                 deadline_assumption=cand["assumption"],
                 original_utterance=cand["sentence"],
+                recurrence=cand.get("recurrence"),
             )
             if cand["modality"] == "AUTHORIZED_MANUAL_CONFIRMATION":
                 c["verification_note"] = "No sensor can prove this task; completion is recorded as USER_CONFIRMED."
@@ -495,6 +498,78 @@ def _completion_claim(s, bee, claim):
         emit(s, "commitment.updated", dict(contract_id=best["contract_id"], reason="Late completion claim recorded"))
 
 
+def roll_recurrence(s, c):
+    """Create the next occurrence of a recurring promise exactly once (after proof or deadline)."""
+    series = c.get("recurrence")
+    if not series or not c.get("due_at") or c.get("next_occurrence_id"):
+        return None
+    step = timedelta(days=1 if series["freq"] == "DAILY" else 7)
+    due = datetime.fromisoformat(c["due_at"]) + step
+    base = c.get("series_key") or c["key"]
+    key = f"{base}~{due.astimezone(ZoneInfo(c.get('timezone') or ZONE)).date().isoformat()}"
+    nxt = create_contract(
+        s, key, c["title"], c["original_utterance"], c["counterparty"]["label"], c["verification_modality"],
+        due.isoformat(), c.get("deadline_trigger"), False,
+    )
+    for field in ("type", "item_class", "target_reps", "verification_note", "commitment_origin", "recurrence", "timezone"):
+        if c.get(field) is not None:
+            nxt[field] = c[field]
+    nxt["series_key"] = base
+    nxt["deadline_assumption"] = "Next occurrence of a recurring promise."
+    c["next_occurrence_id"] = nxt["contract_id"]
+    emit(s, "commitment.recurrence_scheduled", dict(contract_id=nxt["contract_id"], previous=c["contract_id"]))
+    return nxt
+
+
+def morning_briefing(s, current):
+    """Wall-clock households get one private summary between 08:00 and 11:00 local time."""
+    zone = ZoneInfo(s.get("timezone") or ZONE)
+    local = current.astimezone(zone)
+    today = local.date().isoformat()
+    if s.get("last_briefing_date") == today:
+        return
+    s["last_briefing_date"] = today
+    if not 8 <= local.hour < 11:
+        return
+    open_ = [c for c in s["contracts"] if c["status"] in {"ACTIVE", "ENGAGED", "EVIDENCE_PENDING", "MISSED",
+                                                           "NEEDS_CONFIRMATION", "DISPUTED"}]
+    if not open_:
+        return
+    due_today = [
+        c for c in open_
+        if c.get("due_at") and datetime.fromisoformat(c["due_at"]).astimezone(zone).date() == local.date()
+        and c["status"] in {"ACTIVE", "ENGAGED"}
+    ]
+    parts = []
+    if due_today:
+        listed = ", ".join(
+            f"{c['title']} ({datetime.fromisoformat(c['due_at']).astimezone(zone):%H:%M})" for c in due_today[:4]
+        )
+        parts.append(f"{len(due_today)} due today: {listed}")
+    for label, status in [("overdue", "MISSED"), ("awaiting your confirmation", "EVIDENCE_PENDING"),
+                          ("to accept or decline", "NEEDS_CONFIRMATION"), ("disputed", "DISPUTED")]:
+        n = sum(1 for c in open_ if c["status"] == status)
+        if n:
+            parts.append(f"{n} {label}")
+    triggered = sum(1 for c in open_ if c.get("deadline_trigger") and not c.get("due_at"))
+    if triggered:
+        parts.append(f"{triggered} waiting on a trigger (arrival home / before TV)")
+    item = dict(
+        alert_id="alert_" + str(len(s["alerts"]) + 1),
+        contract_id=None,
+        kind="DAILY_BRIEFING",
+        message="Good morning. " + "; ".join(parts) + ".",
+        action="/",
+        at=s["now"],
+        source_mode=s.get("source_mode", MODE),
+        provider="AUTHENTICATED_COMPANION",
+        delivery_status="STORED_FOR_COMPANION",
+        device_delivery_verified=False,
+    )
+    s["alerts"].append(item)
+    emit(s, "commitment.daily_briefing", dict(alert_id=item["alert_id"], open_contracts=len(open_)))
+
+
 def alert(s, c, kind, message, action=None):
     item = dict(
         alert_id="alert_" + str(len(s["alerts"]) + 1),
@@ -519,7 +594,9 @@ def tick(s, now):
     s["now"] = now
     if not s["consent"]:
         return
-    for c in s["contracts"]:
+    if s.get("clock_mode") == "WALL":
+        morning_briefing(s, current)
+    for c in list(s["contracts"]):
         for job in c["scheduled_jobs"]:
             if job["status"] != "PENDING" or datetime.fromisoformat(job["at"]) > current:
                 continue
@@ -567,6 +644,10 @@ def tick(s, now):
                         else "Preparation is unconfirmed. Open details to act."
                     ),
                 )
+        if c.get("recurrence") and any(
+            j["kind"] == "DEADLINE" and j["status"] in {"EXECUTED", "SKIPPED"} for j in c["scheduled_jobs"]
+        ) and c["status"] != "CANCELLED":
+            roll_recurrence(s, c)
 
 
 def verify_social(s, db, household, key):

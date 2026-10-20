@@ -23,6 +23,7 @@ COPY = {
     "DELIVERY_MISMATCH": ("Delivery needs review", False),
     "DEPOSIT_OBSERVED": ("Parcel observed on porch", True),
     "PORCH_REMOVAL": ("Porch activity needs your review", False),
+    "DAILY_BRIEFING": ("Your day", True),
 }
 PRIVATE_KINDS = {"DELIVERY_MISMATCH", "PORCH_REMOVAL", "DEPOSIT_OBSERVED"}
 
@@ -71,7 +72,10 @@ class PushNotifier:
     @staticmethod
     def message(alert, title=None):
         heading, silent = COPY.get(alert["kind"], ("DONE/IRL update", False))
-        body = "Open DONE/IRL to review." if alert["kind"] in PRIVATE_KINDS or not title else title
+        if alert["kind"] == "DAILY_BRIEFING":
+            body = alert["message"][:240]
+        else:
+            body = "Open DONE/IRL to review." if alert["kind"] in PRIVATE_KINDS or not title else title
         return {"title": "DONE/IRL · " + heading, "body": body, "silent": silent,
                 "url": alert.get("action") or "/", "tag": alert["alert_id"]}
 
@@ -79,6 +83,7 @@ class PushNotifier:
         """(subscription, alert, payload) triples not yet attempted, oldest first."""
         out = []
         titles = {c["contract_id"]: c["title"] for c in s.get("contracts", [])}
+        titles[None] = None
         alerts = s.get("alerts", [])
         for sub in s.get("push_subscriptions", []):
             for alert in alerts[sub.get("alert_cursor", 0):]:

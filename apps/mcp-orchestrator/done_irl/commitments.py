@@ -44,6 +44,18 @@ NUMBERS = {
 }
 
 
+def recurrence(text):
+    """DAILY / WEEKLY(weekday) series from explicit words only."""
+    for i, name in enumerate(WEEKDAYS):
+        if re.search(rf"\bevery {name}s?\b|\b(?:on )?{name}s\b", text):
+            return {"freq": "WEEKLY", "weekday": i}
+    if re.search(r"\bevery (?:day|morning|evening|night)\b|\bdaily\b|\beach day\b", text):
+        return {"freq": "DAILY"}
+    if re.search(r"\bevery week\b|\bweekly\b", text):
+        return {"freq": "WEEKLY", "weekday": None}
+    return None
+
+
 def _num(token):
     try:
         return float(token)
@@ -112,9 +124,10 @@ def parse_deadline(text, now_local):
         for pattern, h, label in [
             (r"\b(end of (?:the )?day|eod|by close of business|cob)\b", 18, "end of day"),
             (r"\btonight\b", 21, "tonight"),
-            (r"\bthis evening\b|\bin the evening\b", 19, "this evening"),
+            (r"\bevery night\b", 21, "every night"),
+            (r"\bthis evening\b|\bin the evening\b|\bevery evening\b", 19, "this evening"),
             (r"\bthis afternoon\b|\bin the afternoon\b", 15, "this afternoon"),
-            (r"\bthis morning\b|\bin the morning\b|\btomorrow morning\b", 9, "the morning"),
+            (r"\bthis morning\b|\bin the morning\b|\btomorrow morning\b|\bevery morning\b", 9, "the morning"),
         ]:
             if re.search(pattern, text):
                 hour, minute = h, 0
@@ -177,6 +190,8 @@ def _title(sentence):
         r"\b(?:maybe|probably|perhaps|hopefully|try to|definitely|really)\b"
         r"|\b(?:today|tonight|tomorrow(?: morning| evening| night)?|this (?:morning|afternoon|evening|weekend)"
         r"|in the (?:morning|afternoon|evening)|morning|end of (?:the )?(?:day|week)|eod"
+        r"|every (?:day|morning|evening|night|week|monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?"
+        r"|daily|weekly|each day"
         r"|(?:when i (?:get|come) (?:back )?home|on my way home|after work|before i get home)"
         r"|(?:at|by|before|around|until|till) (?:\d{1,2}(?::\d\d)?\s*(?:am|pm|a\.m\.|p\.m\.|o'clock)?|noon|midnight)"
         r"|in (?:a|an|half an|one|two|three|four|five|ten|fifteen|twenty|thirty|\d+) (?:minutes?|mins?|hours?|days?)"
@@ -213,13 +228,19 @@ def parse(utterance, now_local, request=False):
             continue
         ctype, modality, item, reps = classify(text)
         due, trigger, assumption = parse_deadline(text, now_local)
+        series = recurrence(text)
+        if series and due is None and not trigger:
+            due = now_local.replace(hour=21, minute=0, second=0, microsecond=0)
+            if due <= now_local:
+                due += timedelta(days=1)
+            assumption = "Recurring promise without a time; each occurrence is due at 21:00 local time."
         title = _title(original)
         person = _counterparty(original, text)
         key = "gen_" + hashlib.sha256(re.sub(r"\W+", " ", title.lower()).strip().encode()).hexdigest()[:12]
         out.append(dict(
             key=key, sentence=original, title=title, counterparty=person or "Self",
             type=ctype, modality=modality, item_class=item, reps=reps, due_local=due,
-            trigger=trigger, assumption=assumption, hedged=bool(HEDGE.search(text)),
+            trigger=trigger, assumption=assumption, hedged=bool(HEDGE.search(text)), recurrence=series,
         ))
     return out
 
