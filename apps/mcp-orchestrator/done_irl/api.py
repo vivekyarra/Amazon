@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import hmac
 import json
+import logging
 import os
 import secrets
 import time
@@ -24,6 +25,12 @@ from .models import (
     PoseInput,
 )
 from .store import Store
+from .runtime import Runtime
+from .webhooks import verify_ring
+from .adapters import BeeAdapter
+from .camera import CameraBridge
+from .camera_reducers import frame_received, camera_ended
+from .models import CameraInput
 from . import engine as e
 
 
@@ -33,38 +40,89 @@ def create_app(data_dir=None, passwords=None):
     data.mkdir(parents=True, exist_ok=True)
     os.chmod(data, 0o700)
     demo = os.getenv("DEMO_MODE", "true").lower() == "true"
+    key_file = os.getenv("LEDGER_KEY_FILE")
     if not demo:
-        raise RuntimeError(
-            "Live deployment is not certified. Use explicit DEMO_MODE=true for the isolated synthetic workflow."
-        )
+        origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+        if not key_file or not Path(key_file).is_file() or not all(o.startswith("https://") for o in origins):
+            raise RuntimeError(
+                "Live deployment is not certified without a provisioned ledger key and HTTPS origins."
+            )
+        if passwords is None and not os.getenv("OWNER_PASSWORD"):
+            raise RuntimeError("Live deployment requires an explicit owner password.")
     credentials = data / "access.json"
     if passwords is None:
         if credentials.exists():
             passwords = json.loads(credentials.read_text())
         else:
-            passwords = {
-                "demo-admin": os.getenv("DEMO_ADMIN_PASSWORD") or secrets.token_urlsafe(20),
-                "owner": os.getenv("OWNER_PASSWORD") or secrets.token_urlsafe(20),
-            }
+            passwords = {"owner": os.getenv("OWNER_PASSWORD") or secrets.token_urlsafe(20)}
+            if demo:
+                passwords["demo-admin"] = os.getenv("DEMO_ADMIN_PASSWORD") or secrets.token_urlsafe(20)
             fd = os.open(credentials, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             with os.fdopen(fd, "w") as f:
                 json.dump(passwords, f)
+    if not demo and ("demo-admin" in passwords or any(len(p) < 16 for p in passwords.values())):
+        raise RuntimeError(
+            "Live deployment requires owner passwords of at least 16 characters and no demo administrator."
+        )
     # Passwords are salted/hashed in memory; bootstrap file is local, private and ignored.
     salts = {name: secrets.token_bytes(16) for name in passwords}
     hashes = {
         name: hashlib.scrypt(p.encode(), salt=salts[name], n=16384, r=8, p=1) for name, p in passwords.items()
     }
-    store = Store(str(data / "ledger.db"))
+    store = Store(str(data / "ledger.db"), key_file=key_file)
+    runtime = Runtime(store)
+    bee = BeeAdapter()
+    camera = CameraBridge(
+        lambda *args: frame_received(store, *args), lambda *args: camera_ended(store, *args)
+    )
+    if os.getenv("AWS_LEDGER_TABLE"):
+        required = [
+            "AWS_REGION",
+            "S3_EVIDENCE_BUCKET",
+            "AWS_WAKE_QUEUE_URL",
+            "AWS_WAKE_QUEUE_ARN",
+            "AWS_SCHEDULER_ROLE_ARN",
+        ]
+        if any(not os.getenv(name) for name in required):
+            raise RuntimeError("AWS synchronization configuration is incomplete.")
     mcp = FastMCP("DONE/IRL", stateless_http=True, json_response=True, streamable_http_path="/")
     rates = {}
+
+    def fresh(household):
+        s = e.fresh()
+        s["household_id"] = household
+        if not demo:
+            from datetime import datetime, timezone
+
+            s.update(
+                clock_mode="WALL",
+                now=datetime.now(timezone.utc).isoformat(),
+                consent=False,
+                source_mode="NOT_CONNECTED",
+            )
+        return s
 
     def initial(household):
         s = store.read(household)
         if s is None:
+            if not demo and os.getenv("AWS_LEDGER_TABLE"):
+                from .aws_runtime import AWSRuntime
+
+                cloud = AWSRuntime(store)
+                pointer = cloud.table.get_item(
+                    Key={"pk": "HOUSE#" + household, "sk": "SNAPSHOT"}, ConsistentRead=True
+                ).get("Item")
+                if pointer:
+                    raise ApiError(
+                        503,
+                        "RESTORE_REQUIRED",
+                        "A cloud household exists. Restore the original ledger before starting this reducer.",
+                    )
             with store.transaction() as db:
-                s = e.fresh()
-                s["household_id"] = household
-                store.save(db, household, s)
+                s = store.read(household)
+                if s is None:
+                    s = fresh(household)
+                    store.save(db, household, s)
         return s
 
     def mutate(household, key, fingerprint, fn):
@@ -77,15 +135,18 @@ def create_app(data_dir=None, passwords=None):
                     raise ApiError(
                         409, "IDEMPOTENCY_CONFLICT", "This key was already used for another command."
                     )
-                return json.loads(previous["response"])
-            row = db.execute("SELECT state FROM households WHERE id=?", (household,)).fetchone()
-            s = json.loads(row["state"]) if row else e.fresh()
+                return store.decode(previous["response"], f"command:{household}:{key}")
+            s = store.read(household) or fresh(household)
             s["household_id"] = household
+            if s.get("clock_mode") == "WALL":
+                s["_trace_id"] = uuid.uuid4().hex
             result = fn(s, db)
+            s.pop("_trace_id", None)
             response = {"schema_version": "1.0", "trace_id": uuid.uuid4().hex, "result": result, "state": s}
             store.save(db, household, s)
             db.execute(
-                "INSERT INTO commands VALUES (?,?,?,?)", (household, key, fingerprint, json.dumps(response))
+                "INSERT INTO commands VALUES (?,?,?,?)",
+                (household, key, fingerprint, store.encode(response, f"command:{household}:{key}")),
             )
             return response
 
@@ -129,25 +190,86 @@ def create_app(data_dir=None, passwords=None):
     async def lifespan(app):
         async def reconcile():
             while True:
-                # Demo deadlines are evaluated only by the persisted virtual clock.
-                # Cleanup expired sessions and evidence according to wall-clock retention.
-                with store.transaction() as db:
-                    db.execute("DELETE FROM sessions WHERE expires < ?", (time.time(),))
-                await asyncio.sleep(30)
+                try:
+                    await asyncio.to_thread(runtime.step)
+                    for household in list(camera.sessions):
+                        state = store.read(household)
+                        if not state or not state["consent"]:
+                            await camera.stop(household, "CONSENT_REVOKED")
+                    app.state.worker_status = "RUNNING"
+                except Exception as error:
+                    app.state.worker_status = "DEGRADED"
+                    # Do not log provider payloads, URLs, credentials or household data.
+                    logging.getLogger(__name__).error("Ledger worker failed: %s", type(error).__name__)
+                await asyncio.sleep(1)
+
+        async def receive_bee(payload, event_id):
+            household = os.getenv("BEE_HOUSEHOLD", "house_owner")
+            # Only the documented typed utterance envelope is normalized. Unknown shapes
+            # remain visibly rejected rather than guessing that a conversation is an utterance.
+            if not event_id:
+                event_id = payload.get("event_id")
+            if not event_id:
+                raise ApiError(422, "BEE_EVENT_ID_REQUIRED", "Provider event requires a stable event ID.")
+            normalized = BeeInput.model_validate({**payload, "event_id": event_id}).model_dump(mode="json")
+            runtime.enqueue(household, "bee", event_id, normalized, cursor=event_id)
+
+        async def cloud_sync():
+            from .aws_runtime import AWSRuntime
+
+            cloud = AWSRuntime(store)
+            delay = 1
+            while True:
+                try:
+                    await asyncio.to_thread(cloud.flush)
+                    await asyncio.to_thread(cloud.wake, runtime)
+                    app.state.cloud_status = "RUNNING"
+                    delay = 1
+                except Exception as error:
+                    app.state.cloud_status = "DEGRADED"
+                    logging.getLogger(__name__).error("AWS synchronization failed: %s", type(error).__name__)
+                    delay = min(delay * 2, 60)
+                await asyncio.sleep(delay)
 
         async with mcp.session_manager.run():
-            worker = asyncio.create_task(reconcile())
+            app.state.worker_status = "STARTING"
+            with store.transaction() as db:
+                for row in db.execute("SELECT id FROM households").fetchall():
+                    s = store.read(row["id"])
+                    if s.get("camera_request", {}).get("status") in {"OPEN", "PENDING", "CONNECTING"}:
+                        s["camera_request"]["status"] = "CLOSED"
+                        if s["studio"] and s["studio"]["status"] not in {"COMPLETED", "OVERRIDDEN"}:
+                            s["studio"].update(
+                                status="PAUSED", phase="STANDING", stable=0, quality="PROCESS_RESTART_GAP"
+                            )
+                        e.emit(s, "watchdog.monitoring_gap", {"reason": "PROCESS_RESTART_GAP"})
+                        store.save(db, row["id"], s)
+            tasks = [asyncio.create_task(reconcile())]
+            if os.getenv("AWS_LEDGER_TABLE"):
+                app.state.cloud_status = "STARTING"
+                tasks.append(asyncio.create_task(cloud_sync()))
+            if not demo and bee.token:
+                with store.lock:
+                    row = store.db.execute(
+                        "SELECT cursor FROM provider_cursors WHERE household=? AND provider='bee'",
+                        (os.getenv("BEE_HOUSEHOLD", "house_owner"),),
+                    ).fetchone()
+                bee.cursor = row["cursor"] if row else None
+                tasks.append(asyncio.create_task(bee.run(receive_bee)))
             try:
                 yield
             finally:
-                worker.cancel()
-                try:
-                    await worker
-                except asyncio.CancelledError:
-                    pass
+                bee.stopped = True
+                for task in tasks:
+                    task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                await camera.shutdown()
+                await bee.client.aclose()
 
     app = FastAPI(title="DONE/IRL", version="0.1.0", lifespan=lifespan)
     app.state.store = store
+    app.state.runtime = runtime
+    app.state.camera = camera
     app.state.mutate = mutate
 
     @app.middleware("http")
@@ -160,8 +282,14 @@ def create_app(data_dir=None, passwords=None):
                     "http://127.0.0.1:8080,http://localhost:8080,http://localhost:5173,http://127.0.0.1:5173",
                 ).split(",")
             )
-            if origin and origin not in allowed and origin != str(request.base_url).rstrip("/"):
+            if (
+                origin
+                and origin not in allowed
+                and not (demo and origin == str(request.base_url).rstrip("/"))
+            ):
                 raise ApiError(403, "ORIGIN_DENIED", "This origin is not authorized.")
+            if not demo and request.url.scheme != "https" and request.url.path.startswith(("/api", "/mcp")):
+                raise ApiError(426, "HTTPS_REQUIRED", "Live household access requires HTTPS.")
             if int(request.headers.get("content-length", "0")) > 1_000_000:
                 raise ApiError(413, "BODY_TOO_LARGE", "Request exceeds 1 MB.")
             if request.method in {"POST", "PUT", "DELETE", "PATCH"}:
@@ -225,10 +353,15 @@ def create_app(data_dir=None, passwords=None):
     def ready():
         with store.lock:
             store.db.execute("SELECT 1").fetchone()
+        if getattr(app.state, "worker_status", "STARTING") == "DEGRADED" or (
+            os.getenv("AWS_LEDGER_TABLE") and getattr(app.state, "cloud_status", "STARTING") != "RUNNING"
+        ):
+            raise ApiError(503, "WORKER_NOT_READY", "Durable worker or AWS synchronization is not ready.")
         return {
             "status": "ready",
-            "storage": "sqlite-wal",
-            "mode": "SYNTHETIC_DEMO",
+            "storage": "encrypted-sqlite-wal",
+            "mode": "SYNTHETIC_DEMO" if demo else "LIVE_CONFIGURED_UNVERIFIED",
+            "worker": getattr(app.state, "worker_status", "STARTING"),
             "schema_version": "1.0",
             "trace_id": uuid.uuid4().hex,
         }
@@ -263,7 +396,7 @@ def create_app(data_dir=None, passwords=None):
             token,
             httponly=True,
             samesite="strict",
-            secure=request.url.scheme == "https",
+            secure=not demo or request.url.scheme == "https",
             max_age=8 * 3600,
         )
         return response
@@ -278,12 +411,12 @@ def create_app(data_dir=None, passwords=None):
 
     @app.get("/api/state")
     def state(p=Depends(principal)):
-        return {
-            "schema_version": "1.0",
-            "trace_id": uuid.uuid4().hex,
-            "state": initial(p["household"]),
-            "role": p["role"],
-        }
+        s = initial(p["household"])
+        if s.get("clock_mode") == "WALL":
+            from datetime import datetime, timezone
+
+            s["now"] = datetime.now(timezone.utc).isoformat()
+        return {"schema_version": "1.0", "trace_id": uuid.uuid4().hex, "state": s, "role": p["role"]}
 
     @app.get("/api/contracts")
     def contracts(status: str | None = None, offset: int = 0, limit: int = 100, p=Depends(principal)):
@@ -415,6 +548,12 @@ def create_app(data_dir=None, passwords=None):
     def consent(body: ConsentInput, request: Request, p=Depends(owner)):
         def op(s, db):
             s["consent"] = body.enabled
+            if not body.enabled:
+                db.execute(
+                    "UPDATE inbox SET status='CANCELLED',payload=NULL,lease_until=NULL WHERE household=? "
+                    "AND status IN ('PENDING','PROCESSING')",
+                    (p["household"],),
+                )
             for a in s["subagents"]:
                 if a["status"] != "CLOSED":
                     a["status"] = "WATCHING" if body.enabled else "PAUSED_CONSENT"
@@ -452,9 +591,7 @@ def create_app(data_dir=None, passwords=None):
         if datetime.fromisoformat(metadata["retention_expires_at"]) <= datetime.now(timezone.utc):
             raise ApiError(410, "EVIDENCE_EXPIRED", "Evidence retention period has ended.")
         with store.lock:
-            row = store.db.execute(
-                "SELECT * FROM artifacts WHERE id=? AND household=?", (eid, p["household"])
-            ).fetchone()
+            row = store.uow.get_artifact(eid, p["household"])
         if (
             not row
             or hashlib.sha256(row["data"]).hexdigest() != row["sha256"]
@@ -467,19 +604,112 @@ def create_app(data_dir=None, passwords=None):
     def export(p=Depends(principal)):
         s = initial(p["household"])
         with store.lock:
-            e.verify_artifacts(s, store.db, p["household"])
+            e.verify_artifacts(s, store.uow, p["household"])
         return JSONResponse(
             {
                 "schema_version": "1.0",
                 "trace_id": uuid.uuid4().hex,
-                "label": "SYNTHETIC DEMO — NOT AN OFFICIAL REPORT",
+                "label": "SYNTHETIC DEMO — NOT AN OFFICIAL REPORT"
+                if demo
+                else "PRIVATE EVIDENCE EXPORT — NOT AN OFFICIAL REPORT",
                 "state": s,
             },
             headers={"Content-Disposition": 'attachment; filename="done-irl-evidence.json"'},
         )
 
+    @app.post("/api/camera/start")
+    async def camera_start(body: CameraInput, request: Request, p=Depends(owner)):
+        if demo:
+            raise ApiError(409, "ISOLATED_DEMO", "Choose a live deployment to connect a Ring camera.")
+
+        # Commit the command before the external effect; retries cannot reopen a completed session.
+        def intent(s, db):
+            if not s["consent"]:
+                raise ApiError(409, "CONSENT_REQUIRED", "Enable camera consent first.")
+            previous = s.get("camera_request", {})
+            if previous.get("status") in {"PENDING", "OPEN", "CONNECTING"}:
+                raise ApiError(
+                    409, "CAMERA_ALREADY_OPEN", "Close or recover the current camera session first."
+                )
+            e.contract(s, "squats")
+            operation = {"id": uuid.uuid4().hex, "device_id": body.device_id, "status": "PENDING"}
+            s["camera_request"] = operation
+            e.emit(s, "studio.camera_requested", operation.copy())
+            return operation.copy()
+
+        operation = command(request, p, intent)["result"]
+        with store.transaction() as db:
+            s = store.read(p["household"])
+            current = s.get("camera_request", {})
+            if current.get("id") != operation["id"] or current.get("status") != "PENDING":
+                return camera.status(p["household"])
+            s["camera_request"]["status"] = "CONNECTING"
+            store.save(db, p["household"], s)
+        try:
+            result = await camera.start(p["household"], body.device_id)
+            with store.transaction() as db:
+                s = store.read(p["household"])
+                if not s["consent"]:
+                    raise ApiError(409, "CONSENT_REVOKED", "Consent was revoked while connecting.")
+                e.studio_start(s, source="LIVE_RING_WHEP", source_mode="NOT_CONNECTED")
+                session = s["studio"]
+                session.update(
+                    camera_id=result["id"],
+                    timestamp_base=max(0, session["last_timestamp_ms"]) + 1,
+                    status="RUNNING",
+                    phase="STANDING",
+                    stable=0,
+                    quality="AWAITING_FRAMES",
+                )
+                s["camera_request"]["status"] = "OPEN"
+                store.save(db, p["household"], s)
+            return result
+        except BaseException:
+            await camera.stop(p["household"], "CONNECTION_FAILED")
+            with store.transaction() as db:
+                s = store.read(p["household"])
+                s["camera_request"]["status"] = "FAILED"
+                e.emit(s, "watchdog.monitoring_gap", {"reason": "CAMERA_CONNECTION_FAILED"})
+                store.save(db, p["household"], s)
+            raise
+
+    @app.get("/api/camera/status")
+    def camera_status(p=Depends(principal)):
+        return camera.status(p["household"])
+
+    @app.post("/api/camera/stop")
+    async def camera_stop(request: Request, p=Depends(owner)):
+        operation = command(
+            request,
+            p,
+            lambda s, db: e.emit(
+                s, "studio.camera_close_requested", {"camera_id": camera.status(p["household"]).get("id")}
+            ),
+        )["result"]
+        if camera.status(p["household"]).get("id") == operation["payload"]["camera_id"]:
+            await camera.stop(p["household"])
+        return camera.status(p["household"])
+
+    @app.get("/api/camera/frame")
+    def camera_frame(p=Depends(principal)):
+        s = initial(p["household"])
+        session = camera.sessions.get(p["household"])
+        if not s["consent"] or not session or not session["jpeg"]:
+            raise ApiError(
+                503, "CAMERA_FRAME_UNAVAILABLE", "No current authorized decoded frame is available."
+            )
+        return Response(
+            session["jpeg"], media_type="image/jpeg", headers={"Cache-Control": "private, no-store"}
+        )
+
     @app.post("/api/studio/sessions")
     def start_studio(request: Request, p=Depends(owner)):
+        if not demo:
+            raise ApiError(
+                503,
+                "CAMERA_NOT_CONNECTED",
+                "A verified live camera session is required to start live pose verification.",
+            )
         return command(request, p, lambda s, db: e.studio_start(s))
 
     @app.post("/api/admin/studio/rep")
@@ -588,59 +818,118 @@ def create_app(data_dir=None, passwords=None):
 
     @app.post("/api/webhooks/ring")
     async def ring_webhook(request: Request):
-        # Public webhook stays fail-closed until a documented account/device mapping is configured.
         key = os.getenv("RING_HMAC_KEY")
         if not key:
             raise ApiError(503, "RING_NOT_CONNECTED", "Ring webhook verification is not configured.")
         body = await request.body()
-        timestamp = request.headers.get("x-ring-timestamp", "")
-        try:
-            if abs(time.time() - int(timestamp)) > 300:
-                raise ValueError
-        except ValueError:
-            raise ApiError(401, "STALE_WEBHOOK", "Webhook timestamp is missing or stale.")
-        expected = hmac.new(key.encode(), timestamp.encode() + b"." + body, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(expected, request.headers.get("x-ring-signature", "")):
-            raise ApiError(401, "BAD_SIGNATURE", "Webhook signature is invalid.")
-        raise ApiError(
-            503, "RING_ACCOUNT_NOT_LINKED", "Live account mapping is not configured. No state was changed."
+        household, event_id, payload = verify_ring(
+            body, request.headers.get("x-signature", ""), key, os.getenv("RING_BINDINGS_FILE")
         )
+        if demo:
+            raise ApiError(409, "ISOLATED_DEMO", "Live webhooks require a separate live deployment.")
+        receipt, created = runtime.enqueue(household, "ring", event_id, payload)
+        return JSONResponse({"receipt_id": receipt, "duplicate": not created}, status_code=202)
+
+    @app.post("/api/tv/sessions")
+    def register_tv(request: Request, p=Depends(owner)):
+        def op(s, db):
+            sessions = [session for session in s.get("tv_sessions", []) if session["expires"] > time.time()][
+                -7:
+            ]
+            session = {
+                "session_id": "tv_" + uuid.uuid4().hex,
+                "expires": time.time() + 8 * 3600,
+                "device_runtime_verified": False,
+            }
+            s["tv_sessions"] = [*sessions, session]
+            e.emit(s, "tv.session_registered", session.copy())
+            return session
+
+        return command(request, p, op)
+
+    @app.get("/api/camera/devices")
+    def camera_devices(p=Depends(owner)):
+        path = os.getenv("RING_BINDINGS_FILE")
+        if not path or demo:
+            return {"devices": []}
+        try:
+            bindings = json.loads(Path(path).read_text())
+            devices = sorted(
+                {
+                    device
+                    for binding in bindings.values()
+                    if binding["household"] == p["household"]
+                    for device in binding["devices"]
+                }
+            )
+        except (OSError, ValueError, TypeError, KeyError):
+            raise ApiError(503, "RING_BINDINGS_INVALID", "Camera bindings could not be loaded.")
+        return {"devices": devices}
 
     @app.get("/api/integrations/status")
     def integrations(p=Depends(principal)):
+        s = initial(p["household"])
+        with store.lock:
+            receipts = store.db.execute(
+                "SELECT provider,MAX(completed) AS last_success FROM inbox "
+                "WHERE household=? AND status='DONE' GROUP BY provider",
+                (p["household"],),
+            ).fetchall()
+        last = {row["provider"]: row["last_success"] for row in receipts}
+        stream = camera.status(p["household"])
+
+        def provider(name, receipt):
+            return {
+                "name": name,
+                "status": "LIVE_VERIFIED" if last.get(receipt) else "BLOCKED",
+                "last_verified_at": last.get(receipt),
+                "reason": (
+                    "Authenticated provider event processed; physical/device runtime proof is separate."
+                    if last.get(receipt)
+                    else "No authenticated live event processed for this household."
+                ),
+            }
+
         return {
             "schema_version": "1.0",
             "trace_id": uuid.uuid4().hex,
             "integrations": [
+                provider("Bee", "bee"),
+                provider("Ring", "ring"),
                 {
-                    "name": "Bee",
-                    "status": "BLOCKED",
-                    "reason": "No authorized device/token; synthetic utterances available.",
-                },
-                {
-                    "name": "Ring",
-                    "status": "BLOCKED",
-                    "reason": "No linked camera/token; calibrated synthetic pixels only.",
+                    "name": "Ring video",
+                    "status": stream["source_mode"],
+                    "reason": "Decoded frames: "
+                    + str(stream.get("frames_decoded", 0))
+                    + "; no silent fallback to demo.",
                 },
                 {
                     "name": "Alexa+",
                     "status": "NOT_CONNECTED",
-                    "reason": "MCP server implemented; no Alexa account connection.",
+                    "reason": "MCP server available; no verified Alexa account connection.",
                 },
                 {
                     "name": "Fire TV",
                     "status": "BLOCKED",
-                    "reason": "Native Fire OS client supplied; device/runtime proof pending.",
+                    "reason": "Native client builds; actual device runtime proof pending.",
                 },
                 {
                     "name": "MCP",
-                    "status": "SIMULATED_VERIFIED",
-                    "reason": "Official Python SDK; isolated synthetic household.",
+                    "status": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+                    "reason": "Official SDK tested; source provenance is recorded per household event.",
                 },
                 {
                     "name": "Companion",
-                    "status": "SIMULATED_VERIFIED",
+                    "status": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
                     "reason": "Authenticated notification inbox; no native push/haptic claim.",
+                },
+                {
+                    "name": "Worker",
+                    "status": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+                    "reason": getattr(app.state, "worker_status", "STARTING")
+                    + "; "
+                    + s.get("clock_mode", "VIRTUAL")
+                    + " clock.",
                 },
             ],
         }
@@ -701,18 +990,33 @@ def create_app(data_dir=None, passwords=None):
     def list_active_contracts() -> dict:
         """Read owner-scoped contracts and truthful source labels."""
         p = mcp_principal()
-        return {"contracts": initial(p["household"])["contracts"], "source_mode": e.MODE}
+        s = initial(p["household"])
+        return {
+            "contracts": s["contracts"],
+            "source_mode": s["source_mode"],
+            "tv_sessions": [
+                session for session in s.get("tv_sessions", []) if session["expires"] > time.time()
+            ],
+        }
 
     @mcp.tool()
     def compile_ambient_commitment(utterance_json: dict, speaker_context: dict) -> dict:
-        """Compile consented synthetic utterances; cannot mark a promise verified."""
+        """Compile owner-provided speech/text with explicit provenance; never claim Bee capture or physical completion."""
         bee = BeeInput.model_validate(
             {**utterance_json, "speaker": speaker_context.get("speaker", "UNKNOWN")}
         )
-        ids = tool_command(
-            "compile", [utterance_json, speaker_context], lambda s, db, p: e.compile_bee(s, bee), True
-        )
-        return {"contract_ids": ids, "source_mode": e.MODE}
+
+        def op(s, db, p):
+            s["_event_source"] = {
+                "source": "MCP_OWNER_INPUT",
+                "source_mode": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+                "consent_scope": "demo" if demo else "household",
+            }
+            ids = e.compile_bee(s, bee)
+            s.pop("_event_source", None)
+            return {"contract_ids": ids, "source_mode": s["source_mode"]}
+
+        return tool_command("compile", [utterance_json, speaker_context], op)
 
     @mcp.tool()
     def spawn_watchdog_subagent(
@@ -754,15 +1058,42 @@ def create_app(data_dir=None, passwords=None):
         }
 
     @mcp.tool()
-    def bridge_ring_camera_to_firetv(
+    async def bridge_ring_camera_to_firetv(
         camera_device_id: str, firetv_session_id: str, verification_mode: str
     ) -> dict:
-        """Report camera bridge availability without pretending synthetic frames are live Ring."""
-        mcp_principal()
+        """Open an authorized backend WHEP/pose relay for a registered owner TV session."""
+        from types import SimpleNamespace
+
+        p = mcp_principal()
+        s = initial(p["household"])
+        if demo:
+            return {
+                "status": "BLOCKED",
+                "source_mode": "BLOCKED",
+                "reason": "Live Ring requires the separate live deployment.",
+            }
+        if verification_mode != "POSE_SQUATS":
+            raise ApiError(
+                422, "VERIFICATION_MODE_UNSUPPORTED", "Only POSE_SQUATS is supported by this bridge."
+            )
+        if not any(
+            session["session_id"] == firetv_session_id and session["expires"] > time.time()
+            for session in s.get("tv_sessions", [])
+        ):
+            raise ApiError(
+                403, "TV_SESSION_NOT_AUTHORIZED", "Register this TV session in the same household first."
+            )
+        args = [camera_device_id, firetv_session_id, verification_mode]
+        request = SimpleNamespace(
+            headers={"idempotency-key": "mcp:bridge:" + e.digest(args)},
+            state=SimpleNamespace(fingerprint=e.digest(args)),
+        )
+        result = await camera_start(CameraInput(device_id=camera_device_id), request, p)
         return {
-            "status": "BLOCKED",
-            "source_mode": "BLOCKED",
-            "reason": "Live Ring/Fire TV session has not been authorized or runtime-verified. Synthetic studio uses separate labeled API.",
+            **result,
+            "frame_url": "/api/camera/frame",
+            "household_authenticated": True,
+            "tv_device_runtime_verified": False,
         }
 
     app.mount("/mcp", mcp.streamable_http_app())

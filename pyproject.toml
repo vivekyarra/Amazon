@@ -10,15 +10,28 @@ dependencies = [
     "mcp>=1.20,<2",
     "numpy>=2,<3",
     "opencv-contrib-python>=4.11,<5",
+    "cryptography>=44,<47",
 ]
 
 [project.optional-dependencies]
 human-pose = [
     "mediapipe>=0.10.32,<0.11",
 ]
+ring-video = [
+    "aiortc>=1.14,<2",
+    "mediapipe>=0.10.32,<0.11",
+]
+aws = [
+    "boto3>=1.40,<2",
+]
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.14,<1"]
+dev = [
+    "moto[dynamodb,s3,scheduler,sqs]>=5,<6",
+    "pytest>=8,<10",
+    "pytest-asyncio>=1,<2",
+    "ruff>=0.14,<1",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["apps/mcp-orchestrator"]

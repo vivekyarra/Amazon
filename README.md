@@ -63,10 +63,17 @@ Fire OS build/install and runtime validation are described in [TV instructions](
 
 ## Safety and privacy
 
-No browser receives a Bee/Ring/AWS credential. All state and evidence routes require household-scoped authentication. API writes require an idempotency key. Cookies are HttpOnly/SameSite; HTTPS enables Secure cookies. The server validates origins and rate-limits commands. Live deployment fails closed until the integration work is certified. Simulated incident approval is bound to the exact manifest and destination; a tool’s `human_confirmed_boolean` cannot authorize dispatch. There is no official police adapter or cross-app TV lock.
+No browser receives a Bee/Ring/AWS credential. All state and evidence routes require household-scoped authentication. API writes require an idempotency key. Cookies are HttpOnly/SameSite; HTTPS enables Secure cookies. The server validates origins and rate-limits commands. Live pilot startup requires an explicitly provisioned encryption key, HTTPS origins and strong owner-only credentials; actual integration/runtime certification remains pending. Simulated incident approval is bound to the exact manifest and destination; a tool’s `human_confirmed_boolean` cannot authorize dispatch. There is no official police adapter or cross-app TV lock.
 
 See [architecture](docs/architecture.md), [privacy](docs/privacy-security.md), [deployment](docs/deployment.md), [judge runbook](docs/judge-runbook.md), and the [original product specification](docs/product-spec.md).
 
 ## Repository workflow
 
-Work is developed on `feat/done-irl`. CI must pass on the exact release commit before promotion to `main`. Credentials, local outputs, vendor directories, APKs and generated build bundles are ignored. Publication, third-party device registration, and submission video uploads need owner-controlled accounts and are not inferred from a passing local test.
+Work is developed on feature branches (`feat/done-irl`, then `feat/live-runtime`). CI must pass on the exact release commit before promotion to `main`. Credentials, local outputs, vendor directories, APKs and generated build bundles are ignored. Publication, third-party device registration, and submission video uploads need owner-controlled accounts and are not inferred from a passing local test.
+
+
+## Live runtime and AWS pilot
+
+The optional runtime includes an encrypted durable provider inbox, wall-clock deadline worker, documented Ring webhook signatures, a backend WHEP decoder/MediaPipe/JPEG relay, and optional AWS outbox replication, DynamoDB projections, private S3 evidence, EventBridge Scheduler/SQS and hash-checked snapshot recovery. New live households require explicit consent; no demo administrator exists in this mode. Actual Bee/Ring/Alexa/Fire TV account and device acceptance is still outstanding.
+
+See [AWS provisioning and operations](infra/aws/README.md), [current architecture](docs/architecture.md), [integration proof](docs/integration-status.md) and [public reference attribution](docs/public-references.md). Install optional runtime dependencies with `uv sync --frozen --extra ring-video --extra aws`; run backend checks with the same extras to exercise real WebRTC codec loopback. Build the live container with `--build-arg ENABLE_LIVE_RUNTIME=true`. Local AWS emulation and template lint are not evidence of an actual deployment.

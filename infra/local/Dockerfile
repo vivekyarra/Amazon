@@ -17,10 +17,11 @@ RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy-ca.pem,mode=0444,r
     apt-get update -o APT::Update::Error-Mode=any && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgles2 ffmpeg && \
     rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/90-build-ca
 ENV UV_COMPILE_BYTECODE=1 PYTHONPATH=/app/apps/mcp-orchestrator DATA_DIR=/data DEMO_MODE=true
+ARG ENABLE_LIVE_RUNTIME=false
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy-ca.pem,mode=0444,required=false \
     if [ -f /run/secrets/proxy-ca.pem ]; then export SSL_CERT_FILE=/run/secrets/proxy-ca.pem; fi; \
-    uv sync --frozen --no-dev && useradd --create-home --uid 10001 app && mkdir /data && chown app:app /data
+    if [ "$ENABLE_LIVE_RUNTIME" = "true" ]; then uv sync --frozen --no-dev --extra aws --extra ring-video; else uv sync --frozen --no-dev; fi && useradd --create-home --uid 10001 app && mkdir /data && chown app:app /data
 COPY --chown=app:app apps/mcp-orchestrator apps/mcp-orchestrator
 COPY --from=web --chown=app:app /app/dist dist
 USER app

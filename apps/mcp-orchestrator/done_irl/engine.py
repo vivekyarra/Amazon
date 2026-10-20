@@ -34,6 +34,7 @@ def fresh():
     return dict(
         schema_version="1.0",
         now=at("08:00"),
+        clock_mode="VIRTUAL",
         timezone=ZONE,
         consent=True,
         contracts=[],
@@ -52,19 +53,26 @@ def fresh():
 
 
 def emit(s, event_type, payload, trace=None):
+    linked = next((c for c in s["contracts"] if c["contract_id"] == payload.get("contract_id")), None)
+    trace = trace or (linked or {}).get("trace_id") or s.get("_trace_id")
     event = dict(
         event_id=f"evt_{len(s['events']) + 1:06d}",
         schema_version="1.0",
         event_type=event_type,
         household_id=s.get("household_id", "demo"),
         actor_id="owner",
-        source="SYNTHETIC_REPLAY",
-        source_mode=MODE,
+        source=s.get("_event_source", {}).get(
+            "source", "SYNTHETIC_REPLAY" if s.get("clock_mode") != "WALL" else "HOUSEHOLD_SERVICE"
+        ),
+        source_mode=s.get("_event_source", {}).get("source_mode", s.get("source_mode", MODE)),
         occurred_at=s["now"],
         received_at=datetime.now(timezone.utc).isoformat(),
-        trace_id=trace or f"trace_{s.get('scenario', 0)}",
+        trace_id=trace
+        or (uuid.uuid4().hex if s.get("clock_mode") == "WALL" else f"trace_{s.get('scenario', 0)}"),
         idempotency_key=f"event:{len(s['events']) + 1}",
-        consent_scope="demo",
+        consent_scope=s.get("_event_source", {}).get(
+            "consent_scope", "demo" if s.get("clock_mode") != "WALL" else "household"
+        ),
         payload=payload,
     )
     s["events"].append(event)
@@ -126,6 +134,7 @@ def add_evidence(
     provenance="SYNTHETIC_SENSOR",
     duration_ms=0,
     parent_evidence_id=None,
+    sensor=None,
 ):
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Evidence collection is paused.")
@@ -133,12 +142,16 @@ def add_evidence(
     data = body if isinstance(body, bytes) else json.dumps(body, sort_keys=True).encode()
     sha = hashlib.sha256(data).hexdigest()
     previous = s["evidence"][-1]["chain_hash"] if s["evidence"] else "0" * 64
+    sensor = sensor or {}
     item = dict(
         evidence_id=evidence_id,
         contract_id=c["contract_id"],
+        trace_id=c.get("trace_id", s.get("_trace_id", f"trace_{s.get('scenario', 0)}")),
         kind=kind,
-        source_platform="SYNTHETIC_FIXTURE",
-        source_mode=MODE,
+        source_platform=sensor.get(
+            "platform", "OWNER_CONFIRMATION" if provenance == "USER_CONFIRMED" else "SYNTHETIC_FIXTURE"
+        ),
+        source_mode=sensor.get("source_mode", s.get("source_mode", MODE)),
         provenance=provenance,
         captured_at=s["now"],
         received_at=s["now"],
@@ -147,17 +160,26 @@ def add_evidence(
         mime=mime,
         media_duration_ms=duration_ms,
         parent_evidence_id=parent_evidence_id,
-        consent_grant_id="demo-explicit-consent",
+        consent_grant_id="household-explicit-consent"
+        if s.get("clock_mode") == "WALL"
+        else "demo-explicit-consent",
         retention_expires_at=(datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
         decision="VALIDATED",
         capture_gaps=[],
         confidence=1.0,
-        model_name_version="synthetic-calibrated-markers-v1",
+        model_name_version=sensor.get(
+            "model",
+            "owner-statement-v1" if provenance == "USER_CONFIRMED" else "synthetic-calibrated-markers-v1",
+        ),
     )
     item["chain_hash"] = digest(item)
-    db.execute("INSERT INTO artifacts VALUES (?,?,?,?,?)", (evidence_id, household, mime, data, sha))
+    db.put_artifact(evidence_id, household, mime, data, sha)
     s["evidence"].append(item)
-    emit(s, "commitment.evidence_collected", dict(evidence_id=evidence_id, kind=kind, sha256=sha))
+    emit(
+        s,
+        "commitment.evidence_collected",
+        dict(contract_id=c["contract_id"], evidence_id=evidence_id, kind=kind, sha256=sha),
+    )
     return evidence_id
 
 
@@ -167,13 +189,17 @@ def create_contract(s, key, title, quote, counterparty, modality, due=None, trig
         return next(c for c in s["contracts"] if c["contract_id"] == cid)
     c = dict(
         contract_id=cid,
+        trace_id=s.get("_trace_id")
+        or (uuid.uuid4().hex if s.get("clock_mode") == "WALL" else f"trace_{s.get('scenario', 0)}"),
         key=key,
         schema_version="1.0",
         household_id=s["household_id"],
         actor={"id": "owner", "role": "SELF"},
         counterparty={"label": counterparty},
         original_utterance=quote,
-        speaker_context="Consented synthetic household conversation",
+        speaker_context="Consented household conversation"
+        if s.get("clock_mode") == "WALL"
+        else "Consented synthetic household conversation",
         title=title,
         type={"drinks": "INBOUND_ITEM", "squats": "PHYSICAL_ACTION", "parcel": "PARCEL_CUSTODY"}.get(
             key, "SCHEDULED_SOCIAL_COMMITMENT"
@@ -188,7 +214,7 @@ def create_contract(s, key, title, quote, counterparty, modality, due=None, trig
         privacy_scope="HOUSEHOLD",
         evidence_ids=[],
         revision=1,
-        source_mode=MODE,
+        source_mode=s.get("_event_source", {}).get("source_mode", s.get("source_mode", MODE)),
         created_at=s["now"],
         updated_at=s["now"],
         scheduled_jobs=[],
@@ -418,7 +444,7 @@ def verify_social(s, db, household, key):
     revise(s, c, "VERIFIED", "Matching authorized participation evidence; simulated source.", ev)
 
 
-def studio_start(s):
+def studio_start(s, source="SYNTHETIC_MARKER_FRAMES", source_mode=MODE):
     c = contract(s, "squats")
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Camera processing is paused.")
@@ -427,8 +453,8 @@ def studio_start(s):
     s["studio"] = dict(
         session_id="studio_" + uuid.uuid4().hex,
         contract_id=c["contract_id"],
-        source_mode=MODE,
-        source="SYNTHETIC_MARKER_FRAMES",
+        source_mode=source_mode,
+        source=source,
         status="RUNNING",
         count=0,
         phase="STANDING",
@@ -438,7 +464,9 @@ def studio_start(s):
         angle=178,
         last_timestamp_ms=-1,
     )
-    emit(s, "studio.camera_session_opened", dict(session_id=s["studio"]["session_id"], source_mode=MODE))
+    emit(
+        s, "studio.camera_session_opened", dict(session_id=s["studio"]["session_id"], source_mode=source_mode)
+    )
 
 
 def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
@@ -454,9 +482,10 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
             "studio.rep_verified",
             dict(
                 session_id=session["session_id"],
+                contract_id=session["contract_id"],
                 count=session["count"],
                 angle=session["angle"],
-                source_mode=MODE,
+                source_mode=session["source_mode"],
             ),
         )
         if session["count"] == 15 and session["gate"] != "UNLOCKED":
@@ -467,13 +496,29 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 household,
                 c,
                 "POSE_15_CYCLES",
-                dict(count=15, source="SYNTHETIC_PIXELS", session_id=session["session_id"]),
+                dict(
+                    count=15,
+                    source=session["source"],
+                    session_id=session["session_id"],
+                    verified_reps=session.get("verified_reps", []),
+                    model_sha256=session.get("model_sha256"),
+                ),
+                provenance="LIVE_SENSOR" if session["source"] == "LIVE_RING_WHEP" else "SYNTHETIC_SENSOR",
+                sensor={
+                    "platform": "RING_WHEP",
+                    "source_mode": "LIVE_VERIFIED",
+                    "model": "MediaPipe-PoseLandmarker:" + session.get("model_sha256", ""),
+                }
+                if session["source"] == "LIVE_RING_WHEP"
+                else None,
             )
             revise(
                 s,
                 c,
                 "VERIFIED",
-                "15 complete cycles from synthetic marker pixel extraction, not live human verification.",
+                "15 complete MediaPipe cycles from decoded Ring WHEP frames."
+                if session["source"] == "LIVE_RING_WHEP"
+                else "15 complete cycles from synthetic marker pixel extraction, not live human verification.",
                 ev,
             )
             session.update(gate="UNLOCKED", status="COMPLETED")
@@ -778,9 +823,17 @@ def incident_action(s, db, household, incident_id, action, data):
 def verify_artifacts(s, db, household):
     previous = "0" * 64
     for item in s["evidence"]:
-        row = db.execute(
-            "SELECT data,sha256 FROM artifacts WHERE id=? AND household=?", (item["evidence_id"], household)
-        ).fetchone()
+        row = db.get_artifact(item["evidence_id"], household)
+        if (
+            not row
+            and db.execute(
+                "SELECT id FROM retention_tombstones WHERE id=? AND household=?",
+                (item["evidence_id"], household),
+            ).fetchone()
+        ):
+            raise ApiError(
+                410, "EVIDENCE_EXPIRED", "Retained manifest references an expired, deleted artifact."
+            )
         if not row or hashlib.sha256(row["data"]).hexdigest() != item["sha256_original"]:
             raise ApiError(409, "EVIDENCE_TAMPERED", "Evidence integrity check failed.")
         expected = {k: v for k, v in item.items() if k != "chain_hash"}

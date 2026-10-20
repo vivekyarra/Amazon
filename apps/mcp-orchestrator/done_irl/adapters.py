@@ -63,6 +63,8 @@ class RingAdapter:
             or parsed.hostname != "api.amazonvision.com"
             or parsed.username
             or parsed.password
+            or parsed.port not in (None, 443)
+            or parsed.fragment
         ):
             raise ApiError(502, "UNTRUSTED_SESSION_URL", "Ring returned an untrusted session URL.")
         self.sessions[location] = time.monotonic() + (30 if battery else 60)
@@ -121,6 +123,7 @@ class BeeAdapter:
                     await handle(json.loads("\n".join(data)), event_id)
                     self.cursor = event_id or self.cursor
                     data = []
+                    event_id = None
 
     async def run(self, handle):
         delay = 1
@@ -128,6 +131,7 @@ class BeeAdapter:
             try:
                 await self.stream_once(handle)
                 delay = 1
+                await asyncio.sleep(delay)  # Bound normal EOF reconnects as well as failure retries.
             except (httpx.HTTPError, ApiError, ValueError):
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, 60)

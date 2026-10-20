@@ -67,6 +67,9 @@ export interface Incident {
   receipt: { label: string; receipt_id: string } | null;
 }
 export interface Studio {
+  source?: string;
+  source_mode?: SourceMode;
+  last_timestamp_ms?: number;
   session_id: string;
   count: number;
   gate: string;
@@ -77,6 +80,8 @@ export interface Studio {
   fixture_frame_index?: number;
 }
 export interface State {
+  clock_mode?: "WALL" | "VIRTUAL";
+  source_mode?: SourceMode;
   now: string;
   timezone: string;
   household_id: string;

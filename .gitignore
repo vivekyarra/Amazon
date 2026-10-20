@@ -17,3 +17,8 @@ artifacts/
 local.properties
 build/
 .DS_Store
+
+*.key
+*.pem
+*.tfstate*
+.aws/

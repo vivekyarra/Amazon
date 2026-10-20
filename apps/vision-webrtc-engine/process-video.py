@@ -44,6 +44,8 @@ def process(model_path, input_path, output_path, provenance):
             success, frame = capture.read()
             if not success:
                 break
+            if frame.shape[1] > 1280:
+                frame = cv2.resize(frame, (1280, round(frame.shape[0] * 1280 / frame.shape[1])))
             timestamp = int(count * 1000 / fps)
             result = detector.detect_for_video(
                 mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)),
@@ -92,6 +94,8 @@ if __name__ == "__main__":
     parser.add_argument("--model", required=True)
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--provenance", choices=["CONSENTED_RECORDED", "SYNTHETIC"], required=True)
+    parser.add_argument(
+        "--provenance", choices=["CONSENTED_RECORDED", "PUBLIC_LICENSED_RECORDED", "SYNTHETIC"], required=True
+    )
     args = parser.parse_args()
     process(args.model, args.input, args.output, args.provenance)

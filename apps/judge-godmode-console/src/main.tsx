@@ -48,13 +48,20 @@ import type {
 import "./style.css";
 
 type Page =
-  "overview" | "replay" | "contracts" | "studio" | "incidents" | "settings";
+  | "overview"
+  | "replay"
+  | "contracts"
+  | "studio"
+  | "incidents"
+  | "evidence"
+  | "settings";
 const labels: Record<Page, string> = {
   overview: "Mission control",
   replay: "Judge replay",
   contracts: "Commitment ledger",
   studio: "Reality-Lock studio",
   incidents: "Evidence & incidents",
+  evidence: "Evidence packet",
   settings: "Connections & privacy",
 };
 const stages = [
@@ -142,6 +149,7 @@ function App() {
         "contracts",
         "studio",
         "incidents",
+        "evidence",
         "settings",
       ].includes(new URLSearchParams(location.search).get("page") ?? "")
         ? new URLSearchParams(location.search).get("page")
@@ -175,6 +183,33 @@ function App() {
   const stop = useRef(false),
     lastEvent = useRef(0);
   const tv = new URLSearchParams(location.search).has("tv");
+  const live = state?.clock_mode === "WALL";
+  const [cameraDevices, setCameraDevices] = useState<string[]>([]);
+  const [cameraDevice, setCameraDevice] = useState("");
+  const [frameTick, setFrameTick] = useState(0);
+  const [tvSession, setTvSession] = useState("");
+  useEffect(() => {
+    if (authenticated && tv)
+      void api("/tv/sessions", {})
+        .then((d) => setTvSession(d.result.session_id))
+        .catch((err) => setError(err.message));
+  }, [authenticated, tv]);
+  useEffect(() => {
+    if (!authenticated || !live) return;
+    void api("/camera/devices")
+      .then((d) => {
+        setCameraDevices(d.devices);
+        setCameraDevice((current) => current || d.devices[0] || "");
+      })
+      .catch((err) => setError(err.message));
+    const timer = setInterval(() => {
+      if (page === "studio") setFrameTick((t) => t + 1);
+      void api("/integrations/status")
+        .then((d) => setIntegrations(d.integrations))
+        .catch(() => {});
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [authenticated, live, page]);
   const refresh = useCallback(async () => {
     const data = await api("/state");
     setState(data.state);
@@ -364,7 +399,7 @@ function App() {
           </div>
           <span className="eyebrow">YOUR REALITY, CONNECTED</span>
           <h2>Welcome to mission control.</h2>
-          <p>Sign in to the private, synthetic judge workspace.</p>
+          <p>Sign in to your private DONE/IRL workspace.</p>
           <form onSubmit={login}>
             <label>
               Workspace account
@@ -437,8 +472,13 @@ function App() {
     });
   const openStudio = () =>
     guarded(async () => {
-      if (!state.contracts.length) await runStage(1);
-      await act("/studio/sessions");
+      if (live) {
+        await api("/camera/start", { device_id: cameraDevice });
+        await refresh();
+      } else {
+        if (!state.contracts.length) await runStage(1);
+        await act("/studio/sessions");
+      }
       navigate("studio");
     });
   const incidentAction = (
@@ -466,7 +506,7 @@ function App() {
         <div className="workspace">
           <span className="workspace-avatar">D</span>
           <div>
-            <strong>Demo household</strong>
+            <strong>{live ? "Your household" : "Demo household"}</strong>
             <small>Private workspace</small>
           </div>
           <span className="workspace-dot" />
@@ -544,7 +584,7 @@ function App() {
           <div className="topbar-right">
             <span className="source-tag">
               <span />
-              SYNTHETIC DEMO
+              {live ? "PRIVATE HOUSEHOLD" : "SYNTHETIC DEMO"}
             </span>
             <span className="clock">
               <Clock3 size={15} />
@@ -558,7 +598,15 @@ function App() {
               <Bell size={19} />
               {state.alerts.length > 0 && <i />}
             </button>
-            <span className="avatar small">JD</span>
+            {tvSession && (
+              <span
+                className="studio-source"
+                title="Authenticated session; device runtime proof is separate"
+              >
+                TV session {tvSession.slice(-8)}
+              </span>
+            )}
+            <span className="avatar small">{live ? "OW" : "JD"}</span>
           </div>
         </header>
         <main className="content">
@@ -1262,7 +1310,7 @@ function App() {
                           <dt>Evidence</dt>
                           <dd>{c.evidence_ids.length} linked record(s)</dd>
                           <dt>Source</dt>
-                          <dd>Synthetic replay</dd>
+                          <dd>{human(c.source_mode)}</dd>
                           <dt>Revision</dt>
                           <dd>{c.revision}</dd>
                         </dl>
@@ -1381,16 +1429,33 @@ function App() {
                     <span>
                       <span className="pulse-dot" />
                       {studio?.status === "RUNNING"
-                        ? "PROCESSING SYNTHETIC FRAMES"
+                        ? live
+                          ? "PROCESSING RING FRAMES"
+                          : "PROCESSING SYNTHETIC FRAMES"
                         : "CAMERA STUDIO"}
                     </span>
-                    <span className="studio-source">DEMO / SYNTHETIC</span>
+                    <span className="studio-source">
+                      {live
+                        ? studio?.source_mode === "LIVE_VERIFIED" &&
+                          studio?.status === "RUNNING"
+                          ? "LIVE RING"
+                          : "AWAITING LIVE CAMERA"
+                        : "DEMO / SYNTHETIC"}
+                    </span>
                   </div>
                   {studio ? (
                     <img
                       className="pose-feed"
-                      src={`/api/studio/frame?v=${studio.fixture_frame_index ?? 0}-${studio.angle}`}
-                      alt="Synthetic marker pose extraction with skeleton overlay"
+                      src={
+                        live
+                          ? `/api/camera/frame?v=${frameTick}`
+                          : `/api/studio/frame?v=${studio.fixture_frame_index ?? 0}-${studio.angle}`
+                      }
+                      alt={
+                        live
+                          ? "Authorized Ring frames with MediaPipe skeleton"
+                          : "Synthetic marker pose extraction with skeleton overlay"
+                      }
                     />
                   ) : (
                     <div className="studio-intro">
@@ -1405,13 +1470,37 @@ function App() {
                       <p>
                         Connect the promise to a complete movement.
                         <br />
-                        This replay processes generated marker frames.
-                        <br />
-                        Live Ring and human pose are not connected.
+                        {live
+                          ? "Choose a linked Ring camera. MediaPipe evaluates complete movements."
+                          : "This replay processes generated marker frames. Live Ring and human pose are not connected."}
                       </p>
-                      <button className="button mint" onClick={openStudio}>
+                      {live && (
+                        <label>
+                          Linked camera
+                          <select
+                            value={cameraDevice}
+                            onChange={(event) =>
+                              setCameraDevice(event.target.value)
+                            }
+                          >
+                            <option value="">
+                              Choose an authorized camera
+                            </option>
+                            {cameraDevices.map((device) => (
+                              <option key={device} value={device}>
+                                {device}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                      <button
+                        className="button mint"
+                        onClick={openStudio}
+                        disabled={live && !cameraDevice}
+                      >
                         <Video size={16} />
-                        Open synthetic camera
+                        {live ? "Connect Ring camera" : "Open synthetic camera"}
                       </button>
                     </div>
                   )}
@@ -1476,9 +1565,38 @@ function App() {
                       <div>
                         <strong>Promise kept. Evidence saved.</strong>
                         <p>
-                          15 synthetic cycles verified. In-app gate unlocked.
+                          {live
+                            ? "15 camera-backed cycles verified."
+                            : "15 synthetic cycles verified."}{" "}
+                          In-app gate unlocked.
                         </p>
                       </div>
+                    </div>
+                  ) : live ? (
+                    <div className="info-box">
+                      <p>
+                        Live camera verification runs on the server. Reconnect
+                        after the permitted Ring session ends; your verified
+                        count is preserved.
+                      </p>
+                      <button
+                        className="button primary wide"
+                        onClick={openStudio}
+                        disabled={busy || !cameraDevice}
+                      >
+                        Connect camera
+                      </button>
+                      <button
+                        className="button wide"
+                        onClick={() =>
+                          void guarded(async () => {
+                            await api("/camera/stop", {});
+                            await refresh();
+                          })
+                        }
+                      >
+                        Close camera
+                      </button>
                     </div>
                   ) : (
                     <button
@@ -1760,6 +1878,57 @@ function App() {
               )}
             </>
           )}
+          {page === "evidence" && (
+            <section className="panel">
+              <div className="panel-heading">
+                <div>
+                  <h2>Private evidence packet</h2>
+                  <p>
+                    Original and derived artifacts retain their source,
+                    provenance and SHA-256 hashes.
+                  </p>
+                </div>
+                <a className="button" href="/api/export" download>
+                  <Download size={16} />
+                  Export verified manifest
+                </a>
+              </div>
+              {state.evidence.length === 0 ? (
+                <div className="empty-state">
+                  <FileCheck2 size={36} />
+                  <h3>No evidence collected yet.</h3>
+                  <p>
+                    Promises close only after their evidence policy is
+                    satisfied.
+                  </p>
+                </div>
+              ) : (
+                state.evidence.map((item) => (
+                  <article className="integration-row" key={item.evidence_id}>
+                    <FileCheck2 size={24} />
+                    <div>
+                      <strong>{human(item.kind)}</strong>
+                      <p>
+                        {human(item.source_mode)} · {human(item.provenance)} ·{" "}
+                        {fmt(item.captured_at)} IST
+                      </p>
+                      <code style={{ overflowWrap: "anywhere" }}>
+                        {item.sha256_original}
+                      </code>
+                    </div>
+                    <a
+                      className="button"
+                      href={`/api/evidence/${item.evidence_id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open artifact
+                    </a>
+                  </article>
+                ))
+              )}
+            </section>
+          )}
           {page === "settings" && (
             <div className="settings-layout">
               <section className="panel">
@@ -1802,8 +1971,11 @@ function App() {
                   Never zero consent.
                 </h2>
                 <p>
-                  All replay data is synthetic. Pause collection to stop
-                  compilation, camera processing, and new watchdog work.
+                  {live
+                    ? "Your live household begins with collection disabled."
+                    : "All replay data is synthetic."}{" "}
+                  Pause collection to stop compilation, camera processing, and
+                  new watchdog work.
                 </p>
                 <button
                   className={`button ${state.consent ? "" : "primary"}`}
@@ -1816,7 +1988,9 @@ function App() {
                   {state.consent ? <Pause size={16} /> : <Play size={16} />}{" "}
                   {state.consent
                     ? "Pause all collection"
-                    : "Restore demo consent"}
+                    : live
+                      ? "Enable household collection"
+                      : "Restore demo consent"}
                 </button>
                 <div className="privacy-facts">
                   <div>

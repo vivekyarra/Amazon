@@ -71,7 +71,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Local API checks pass; live production routes are intentionally blocked."
+        "Authenticated live pilot writes now have guarded configuration and provenance; live provider/account runtime and independent review remain unverified."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -107,7 +107,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Truthful status matrix exists; actual last-successful live probes are unavailable."
+        "Status endpoints expose processed provider receipts and current decoded-frame status; actual authorized device probes remain unavailable."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -317,13 +317,15 @@
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/camera.py",
+        "apps/mcp-orchestrator/done_irl/webhooks.py"
       ],
       "automated_tests": [],
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Ring token/account unavailable; provisional webhook contract, no working decoder/relay."
+        "Documented raw-body webhook HMAC, account/device binding, capabilities and bounded aiortc WHEP decoder implemented; real Ring account/runtime proof missing."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -395,7 +397,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Logical job persists; no real Ring event consumer/history recovery yet."
+        "Leased durable provider worker and Ring notification handling/recovery implemented; actual Ring observation/history-based watchdog reconciliation still missing."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -431,7 +433,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Local blob hashes/chain tested; no original/derived encrypted cloud media pipeline."
+        "Private AES-GCM local artifacts and optional SSE-KMS S3 replica/restore implemented and tested locally; actual cloud/live media proof pending."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -677,13 +679,15 @@
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/camera.py",
+        "apps/mcp-orchestrator/done_irl/webhooks.py"
       ],
       "automated_tests": [],
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Changing synthetic pose images; no live Ring video decoder/relay."
+        "Backend WHEP decoder, MediaPipe/JPEG relay and real-codec synthetic loopback implemented; actual Ring-to-Fire-TV runtime proof pending."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -701,7 +705,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Synthetic pixel-based cycles verified; MediaPipe real human 15-rep fixture unavailable."
+        "Actual MediaPipe processed a licensed public video and counted one rep; canonical fifteen distinct human-rep acceptance remains unmet."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -811,7 +815,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Many negative unit/API tests pass; no real worker/queue/camera/storage recovery system."
+        "Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -829,7 +833,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Local synthetic privacy/auth controls tested; backup retention/encryption/live revocation incomplete."
+        "Encrypted storage, retention byte deletion and live consent propagation implemented; per-camera exclusions, retention settings and disconnect/delete workflows still missing."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -877,13 +881,15 @@
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/aws_runtime.py",
+        "infra/aws/template.yaml"
       ],
       "automated_tests": [],
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Local README/env/license/ops and container replay/restart validated; AWS production deployment remains unverified."
+        "AWS runtime/projection/schedules/restore and validated CloudFormation supplied alongside local deployment; actual AWS provisioning/runtime remains unverified."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null

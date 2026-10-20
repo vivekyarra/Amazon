@@ -31,3 +31,8 @@ For rollback, stop the server, take a consistent SQLite backup (SQLite backup AP
 ## Before real AWS/live deployment
 
 Provisioning DynamoDB/SQS/EventBridge/S3/IAM, encrypted media retention, signed user-scoped media URLs, backup deletion, real-time scheduler workers, token rotation/account linking, webhook signature contracts, Ring WHEP decoding/relay, camera calibration, consent revocation propagation, retry/DLQ and resource limits remain open. No cloud deployment or official report receiver has been created. Do not add AWS mini-challenge claims until actual AWS usage is demonstrated.
+
+
+## Updated live/AWS pilot
+
+The original synthetic deployment remains the default. A guarded live pilot, WHEP/MediaPipe relay and optional AWS runtime are now implemented; use [infra/aws/README.md](../infra/aws/README.md) for the current template, security configuration, backup/restore, retention, teardown and limitations. No actual AWS deployment is claimed. New encrypted storage is not compatible with rolling back to the old plaintext implementation without an explicit migration plan. Keep the original key and consistent backups; never replace a missing encryption key with a new random key.

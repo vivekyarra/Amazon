@@ -18,6 +18,10 @@ class BeeInput(StrictModel):
     timezone: str = "Asia/Kolkata"
 
 
+class CameraInput(StrictModel):
+    device_id: str = Field(min_length=1, max_length=200)
+
+
 class ScenarioInput(StrictModel):
     branch: Literal[
         "deposit",

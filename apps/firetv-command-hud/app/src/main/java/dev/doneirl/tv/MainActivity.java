@@ -35,7 +35,7 @@ public final class MainActivity extends Activity {
         layout.setBackgroundColor(Color.rgb(17,31,35));
         LinearLayout bar = new LinearLayout(this);
         bar.setPadding(20, 8, 20, 8);
-        String[][] views = {{"Ledger", "overview"}, {"Incident review", "incidents"}, {"Evidence packet", "incidents"}, {"Reality-Lock", "studio"}};
+        String[][] views = {{"Ledger", "overview"}, {"Incident review", "incidents"}, {"Evidence packet", "evidence"}, {"Reality-Lock", "studio"}};
         for (String[] view : views) {
             Button button = new Button(this);
             button.setText(view[0]);
@@ -49,7 +49,7 @@ public final class MainActivity extends Activity {
         layout.addView(bar);
         status = new TextView(this);
         status.setTextColor(Color.rgb(188,246,223));
-        status.setText("SYNTHETIC DEMO · in-app gate only · Fire OS runtime proof pending");
+        status.setText("Private household · check in-app source labels · in-app gate only");
         status.setPadding(25, 8, 25, 8);
         layout.addView(status);
         web = new WebView(this);

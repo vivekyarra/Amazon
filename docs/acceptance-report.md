@@ -35,3 +35,8 @@ The [traceability map](requirements-traceability.md) and [machine manifest](acce
 6. Genuine Alexa+ account integration or independently eligible simulated-route proof, primary-track rules review, public under-three-minute video, owner submission, real tool feedback and independent release review. No official police receiver or cross-app TV locking API is available or claimed.
 
 The original release target remains unchanged. The owner deferred device credentials/testing until later; independent implementation and engineering validation proceed without inventing live results.
+
+
+## Live-runtime checkpoint, 20 October 2026
+
+The backend suite now reaches **91 passing tests**, including encrypted retention, durable inbox/lease recovery, official Ring signatures/bindings, actual WebRTC codec loopback and eight Moto AWS-runtime tests. Updated APK and web builds pass. Actual public-reference MediaPipe inference counted one accepted rep in 363 frames; no fifteen-rep or genuine device acceptance is claimed. The WHEP relay and AWS implementation listed as absent above have now been implemented and locally tested, but actual provider/cloud/TV runtime proof remains unavailable. Current remaining work and exact handoff context supersede the earlier implementation list: see [continuation.md](continuation.md), [architecture.md](architecture.md), and [AWS guide](../infra/aws/README.md). Per-camera exclusions, adjustable retention and disconnect/delete workflows remain unimplemented. The full release gate still intentionally fails.

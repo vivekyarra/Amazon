@@ -1,0 +1,324 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: DONE/IRL single-active-reducer deployment with encrypted AWS coordination and private evidence.
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: At least two public subnets in different availability zones for the HTTPS load balancer.
+  ServiceSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: A subnet with outbound internet access for Ring WHEP, Bee, ECR and AWS APIs.
+  CertificateArn:
+    Type: String
+    AllowedPattern: 'arn:aws[a-z-]*:acm:[a-z0-9-]+:[0-9]{12}:certificate/.+'
+  PublicHostname:
+    Type: String
+    AllowedPattern: '[a-z0-9][a-z0-9.-]+[a-z0-9]'
+    Description: DNS name covered by CertificateArn; point it to the load balancer output.
+  RuntimeSecretArn:
+    Type: String
+    AllowedPattern: 'arn:aws[a-z-]*:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+'
+    Description: Existing secret JSON; see infra/aws/README.md. Secret values never enter stack parameters.
+  ImageUri:
+    Type: String
+    AllowedPattern: '[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/[a-z0-9/_-]+@sha256:[a-f0-9]{64}'
+    Description: Image built with ENABLE_LIVE_RUNTIME=true and pushed to private ECR, pinned by digest.
+  AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  InstanceType:
+    Type: String
+    Default: t3.large
+    AllowedValues: [t3.large, t3.xlarge, m7i.large, m7i.xlarge]
+Resources:
+  DataKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      EnableKeyRotation: true
+      PendingWindowInDays: 30
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
+            Action: 'kms:*'
+            Resource: '*'
+  Ledger:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: pk, AttributeType: S}
+        - {AttributeName: sk, AttributeType: S}
+      KeySchema:
+        - {AttributeName: pk, KeyType: HASH}
+        - {AttributeName: sk, KeyType: RANGE}
+      SSESpecification: {SSEEnabled: true, SSEType: KMS, KMSMasterKeyId: !GetAtt DataKey.Arn}
+      PointInTimeRecoverySpecification: {PointInTimeRecoveryEnabled: true}
+      DeletionProtectionEnabled: true
+  Evidence:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls: {Rules: [{ObjectOwnership: BucketOwnerEnforced}]}
+      VersioningConfiguration: {Status: Enabled}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: 'aws:kms', KMSMasterKeyID: !GetAtt DataKey.Arn}
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: RetainSevenDays
+            Status: Enabled
+            ExpirationInDays: 7
+            NoncurrentVersionExpiration: {NoncurrentDays: 7}
+            AbortIncompleteMultipartUpload: {DaysAfterInitiation: 1}
+  EvidencePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Evidence
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource: [!GetAtt Evidence.Arn, !Sub '${Evidence.Arn}/*']
+            Condition: {Bool: {'aws:SecureTransport': false}}
+  DeadLetters:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !Ref DataKey
+  WakeQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 345600
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref DataKey
+      RedrivePolicy: {deadLetterTargetArn: !GetAtt DeadLetters.Arn, maxReceiveCount: 6}
+  SchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: scheduler.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+              ArnLike: {'aws:SourceArn': !Sub 'arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule-group/default'}
+      Policies:
+        - PolicyName: WakeOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - {Effect: Allow, Action: 'sqs:SendMessage', Resource: !GetAtt WakeQueue.Arn}
+              - Effect: Allow
+                Action: ['kms:Decrypt', 'kms:GenerateDataKey']
+                Resource: !GetAtt DataKey.Arn
+  ServiceLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {RetentionInDays: 7}
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns: [!Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore']
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: ec2.amazonaws.com}, Action: 'sts:AssumeRole'}
+      Policies:
+        - PolicyName: LedgerRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:Query']
+                Resource: !GetAtt Ledger.Arn
+              - Effect: Allow
+                Action: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:DeleteObjectVersion']
+                Resource: !Sub '${Evidence.Arn}/*'
+              - Effect: Allow
+                Action: ['s3:ListBucket', 's3:ListBucketVersions']
+                Resource: !GetAtt Evidence.Arn
+              - Effect: Allow
+                Action: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:GetQueueAttributes']
+                Resource: !GetAtt WakeQueue.Arn
+              - Effect: Allow
+                Action: ['scheduler:CreateSchedule', 'scheduler:UpdateSchedule', 'scheduler:DeleteSchedule']
+                Resource: !Sub 'arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/default/dirl-*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt SchedulerRole.Arn
+                Condition: {StringEquals: {'iam:PassedToService': scheduler.amazonaws.com}}
+              - {Effect: Allow, Action: 'secretsmanager:GetSecretValue', Resource: !Ref RuntimeSecretArn}
+              - Effect: Allow
+                Action: ['kms:Decrypt', 'kms:GenerateDataKey']
+                Resource: !GetAtt DataKey.Arn
+              - {Effect: Allow, Action: 'ecr:GetAuthorizationToken', Resource: '*'}
+              - Effect: Allow
+                Action: ['ecr:BatchGetImage', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchCheckLayerAvailability']
+                Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/*'
+              - Effect: Allow
+                Action: ['logs:CreateLogStream', 'logs:PutLogEvents']
+                Resource: !GetAtt ServiceLogs.Arn
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: {Roles: [!Ref InstanceRole]}
+  LoadBalancerGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public HTTPS only
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: [{IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}]
+  ServiceGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Backend from HTTPS load balancer only; no SSH
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourceSecurityGroupId: !Ref LoadBalancerGroup}
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets: !Ref PublicSubnets
+      SecurityGroups: [!Ref LoadBalancerGroup]
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      HealthCheckPath: /health/ready
+      HealthCheckIntervalSeconds: 30
+      TargetGroupAttributes: [{Key: deregistration_delay.timeout_seconds, Value: '30'}]
+      Targets: [{Id: !Ref ServiceInstance}]
+  HTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates: [{CertificateArn: !Ref CertificateArn}]
+      DefaultActions: [{Type: forward, TargetGroupArn: !Ref TargetGroup}]
+  ServiceInstance:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      NetworkInterfaces:
+        - {DeviceIndex: '0', AssociatePublicIpAddress: true, SubnetId: !Ref ServiceSubnet, GroupSet: [!Ref ServiceGroup]}
+      MetadataOptions: {HttpTokens: required, HttpPutResponseHopLimit: 2}
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: {VolumeType: gp3, VolumeSize: 40, Encrypted: true, KmsKeyId: !GetAtt DataKey.Arn, DeleteOnTermination: false}
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-single-reducer'}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          umask 077
+          dnf install -y docker python3-pip
+          systemctl enable --now docker
+          install -d -m 0700 /srv/done-irl /srv/done-irl/data /srv/done-irl/config
+          chown -R 10001:10001 /srv/done-irl/data /srv/done-irl/config
+          python3 -m venv /opt/done-irl-aws
+          /opt/done-irl-aws/bin/pip install 'boto3>=1.40,<2'
+          export DONE_REGION='${AWS::Region}' DONE_SECRET='${RuntimeSecretArn}'
+          /opt/done-irl-aws/bin/python - <<'PY'
+          import base64, json, os
+          from pathlib import Path
+          import boto3
+          raw = boto3.client('secretsmanager', region_name=os.environ['DONE_REGION']).get_secret_value(SecretId=os.environ['DONE_SECRET'])['SecretString']
+          secret = json.loads(raw)
+          key = base64.b64decode(secret.pop('LEDGER_KEY_BASE64'), validate=True)
+          if len(key) != 32 or len(secret['OWNER_PASSWORD']) < 16:
+              raise SystemExit('Invalid provisioned owner/key configuration')
+          config = Path('/srv/done-irl/config')
+          (config / 'ledger.key').write_bytes(key)
+          bindings = secret.pop('RING_BINDINGS', {})
+          (config / 'ring-bindings.json').write_text(json.dumps(bindings))
+          allowed = {'OWNER_PASSWORD', 'BEE_TOKEN', 'RING_ACCESS_TOKEN', 'RING_HMAC_KEY', 'BEE_HOUSEHOLD'}
+          rows = []
+          for name, value in secret.items():
+              if name in allowed:
+                  if not isinstance(value, str) or any(c in value for c in '\r\n\x00'):
+                      raise SystemExit('Invalid secret encoding')
+                  rows.append(name + '=' + value)
+          Path('/srv/done-irl/runtime.env').write_text('\n'.join(rows) + '\n')
+          for p in config.iterdir():
+              p.chmod(0o600)
+              os.chown(p, 10001, 10001)
+          PY
+          curl --fail --silent --show-error --proto '=https' --tlsv1.2 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task' -o /srv/done-irl/config/pose.task
+          echo '59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a  /srv/done-irl/config/pose.task' | sha256sum -c -
+          chown 10001:10001 /srv/done-irl/config/pose.task
+          aws ecr get-login-password --region '${AWS::Region}' | docker login --username AWS --password-stdin '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com'
+          docker pull '${ImageUri}'
+          cat > /etc/systemd/system/done-irl.service <<'UNIT'
+          [Unit]
+          Description=DONE/IRL single active durable reducer
+          Requires=docker.service
+          After=docker.service network-online.target
+          [Service]
+          Restart=always
+          RestartSec=10
+          ExecStartPre=-/usr/bin/docker rm -f done-irl
+          ExecStart=/usr/bin/docker run --name done-irl --init --read-only --tmpfs /tmp:rw,noexec,nosuid,size=256m --cap-drop=ALL --security-opt no-new-privileges --memory=6g --cpus=2 -p 8080:8080 --env-file /srv/done-irl/runtime.env -e DEMO_MODE=false -e DATA_DIR=/data -e LEDGER_KEY_FILE=/config/ledger.key -e RING_BINDINGS_FILE=/config/ring-bindings.json -e ALLOWED_ORIGINS=https://${PublicHostname} -e AWS_REGION=${AWS::Region} -e AWS_LEDGER_TABLE=${Ledger} -e S3_EVIDENCE_BUCKET=${Evidence} -e AWS_WAKE_QUEUE_URL=${WakeQueue} -e AWS_WAKE_QUEUE_ARN=${WakeQueue.Arn} -e AWS_SCHEDULER_ROLE_ARN=${SchedulerRole.Arn} -e POSE_MODEL_FILE=/config/pose.task -e POSE_MODEL_SHA256=59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a -e MPLCONFIGDIR=/tmp/matplotlib -e XDG_CACHE_HOME=/tmp/cache -v /srv/done-irl/data:/data -v /srv/done-irl/config:/config:ro --log-driver awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=${ServiceLogs} --log-opt awslogs-stream=runtime '${ImageUri}' /app/.venv/bin/uvicorn done_irl.api:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips=*
+          ExecStop=/usr/bin/docker stop -t 30 done-irl
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+          systemctl daemon-reload
+          systemctl enable --now done-irl
+  QueueAgeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Wakeup queue delayed; inspect worker and DLQ before redrive.
+      Namespace: AWS/SQS
+      MetricName: ApproximateAgeOfOldestMessage
+      Dimensions: [{Name: QueueName, Value: !GetAtt WakeQueue.QueueName}]
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 180
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+  DeadLetterAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions: [{Name: QueueName, Value: !GetAtt DeadLetters.QueueName}]
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+Outputs:
+  HTTPSOrigin: {Value: !Sub 'https://${PublicHostname}'}
+  LoadBalancerDNS: {Value: !GetAtt LoadBalancer.DNSName}
+  InstanceId: {Value: !Ref ServiceInstance}
+  LedgerTable: {Value: !Ref Ledger}
+  EvidenceBucket: {Value: !Ref Evidence}
+  DeadLetterQueue: {Value: !Ref DeadLetters}

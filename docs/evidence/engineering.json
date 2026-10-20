@@ -3,7 +3,7 @@
   "source_scope": "SYNTHETIC_DEVELOPMENT_DEMO",
   "tests": {
     "backend": {
-      "tests": 65,
+      "tests": 91,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -16,7 +16,7 @@
     }
   },
   "native_apk_build": "PASS",
-  "native_apk_sha256": "da46ed683209b8ecbf04620be2718736eb87e2230e3e163935343057eb10ad16",
+  "native_apk_sha256": "6e9c2847f79f13ab24c7558688b136f9d42e38176d94a6aa6ba017b4b8dba214",
   "fire_tv_runtime": "BLOCKED_NOT_TESTED",
   "browser_demo": {
     "path": "docs/demo/browser-demo.mp4",
@@ -24,5 +24,7 @@
     "sha256": "bef9d9662e9c1fc44d3e4b43d4e21e4521c1766a9f8868115088b1db4cc400eb",
     "native_runtime_proof": false
   },
-  "release": "NOT_COMPLETE"
+  "release": "NOT_COMPLETE",
+  "browser_checkpoint": "Latest browser rerun pending at owner-requested immediate checkpoint; previous main had four passing journeys.",
+  "hosted_ci_checkpoint": "Requested immediate main push without waiting; inspect latest hosted run on resume."
 }
