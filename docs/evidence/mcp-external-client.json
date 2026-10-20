@@ -1,0 +1,1270 @@
+{
+  "title": "DONE/IRL MCP external-client transcript (simulated Alexa+ flow)",
+  "honesty": "Official MCP Python SDK client over real localhost HTTP against the real server. This is NOT an Alexa device or Alexa+ account connection. Utterances are typed owner text labeled MCP_OWNER_INPUT, not Bee captures. Camera stages are synthetic judge-replay fixtures triggered through authenticated REST, labeled per step.",
+  "generated_at": "2026-10-20T11:29:17.100437+00:00",
+  "client": {
+    "sdk": "mcp (python)",
+    "version": "1.30.0",
+    "python": "3.12.13",
+    "transport": "streamable-http"
+  },
+  "server": {
+    "url": "http://127.0.0.1:51114/mcp/",
+    "mode": "DEMO_MODE=true, isolated temporary ledger"
+  },
+  "redaction": "Authorization headers, cookies, tokens and passwords are replaced with [REDACTED].",
+  "summary": [
+    {
+      "step": "initialize",
+      "protocolVersion": "2025-11-25",
+      "server": "DONE/IRL"
+    },
+    {
+      "step": "tools/list",
+      "tools": [
+        "bridge_ring_camera_to_firetv",
+        "compile_ambient_commitment",
+        "dispatch_police_evidence_dossier",
+        "evaluate_deadline_escalation",
+        "get_contract_state",
+        "get_incident_packet",
+        "get_integration_health",
+        "get_watchdog_status",
+        "list_active_contracts",
+        "request_user_verification",
+        "spawn_watchdog_subagent"
+      ]
+    },
+    {
+      "step": "\"Alexa, remember: I'll bring cold drinks home tonight.\" (owner text via MCP, not Bee capture)",
+      "tool": "compile_ambient_commitment",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, remember: I'll call my sister before 6 PM.\" (owner text via MCP, not Bee capture)",
+      "tool": "compile_ambient_commitment",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, remember: I'll cover the teacher meeting at 4 PM.\" (owner text via MCP, not Bee capture)",
+      "tool": "compile_ambient_commitment",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, remember: I'll do 15 squats before watching TV.\" (owner text via MCP, not Bee capture)",
+      "tool": "compile_ambient_commitment",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, what did I promise today?\"",
+      "tool": "list_active_contracts",
+      "isError": false
+    },
+    {
+      "step": "judge replay (REST): 2:10 PM verified deposit",
+      "rest": "/admin/scenarios/2/run",
+      "status": 200
+    },
+    {
+      "step": "refresh contracts after deposit",
+      "tool": "list_active_contracts",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, keep an eye on the parcel\"",
+      "tool": "spawn_watchdog_subagent",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, is my parcel safe?\"",
+      "tool": "get_watchdog_status",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, is my parcel safe?\" (custody detail)",
+      "tool": "get_contract_state",
+      "isError": false
+    },
+    {
+      "step": "judge replay (REST): 3:00/3:35 PM escalation, user not engaged",
+      "rest": "/admin/scenarios/3/run",
+      "status": 200
+    },
+    {
+      "step": "evaluate teacher-meeting escalation at the server clock",
+      "tool": "evaluate_deadline_escalation",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, did I call my sister?\"",
+      "tool": "get_contract_state",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, did I call my sister?\" (how to verify)",
+      "tool": "request_user_verification",
+      "isError": false
+    },
+    {
+      "step": "judge replay (REST): 4:30 PM package removal",
+      "rest": "/admin/scenarios/4/run",
+      "status": 200
+    },
+    {
+      "step": "\"Alexa, what happened to my package?\"",
+      "tool": "get_incident_packet",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, report it to the police\" (model boolean only -> must be denied)",
+      "tool": "dispatch_police_evidence_dossier",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, start Reality-Lock\"",
+      "tool": "bridge_ring_camera_to_firetv",
+      "isError": false
+    },
+    {
+      "step": "\"Alexa, are my devices connected?\"",
+      "tool": "get_integration_health",
+      "isError": false
+    }
+  ],
+  "final_ledger": {
+    "contracts": {
+      "drinks": "ACTIVE",
+      "sister": "ACTIVE",
+      "teacher": "VERIFIED",
+      "squats": "ACTIVE",
+      "parcel": "DISPUTED"
+    },
+    "incident_status": "AWAITING_HUMAN_DECISION",
+    "incident_receipt": null,
+    "mcp_dispatch_denied_events": 1,
+    "alerts": [
+      {
+        "kind": "DEPOSIT_OBSERVED",
+        "message": "Parcel was observed on your porch. PorchWatchdog is active; custody is not yet complete."
+      },
+      {
+        "kind": "SILENT_PREP",
+        "message": "Attend nephew’s teacher meeting is due in 60 minutes. Prepare quietly."
+      },
+      {
+        "kind": "ACTIVE_ESCALATION",
+        "message": "Attend nephew’s teacher meeting is due in 25 minutes. Preparation is unconfirmed. Open details to act."
+      },
+      {
+        "kind": "PORCH_REMOVAL",
+        "message": "A person moved the package from the porch. Was this authorized?"
+      }
+    ]
+  },
+  "jsonrpc_transcript": [
+    {
+      "step": "negative: unauthenticated tools/list is rejected (401)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json"
+        },
+        "authorization": null,
+        "status": 401,
+        "response_headers": {
+          "content-type": "application/json",
+          "www-authenticate": "Bearer realm=\"done-irl-mcp\""
+        },
+        "elapsed_ms": 13.7
+      },
+      "jsonrpc_request": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "method": "tools/list"
+      },
+      "jsonrpc_response": {
+        "schema_version": "1.0",
+        "trace_id": "eb1c3cc8ee5e419c9ab9e03831d75bf0",
+        "error": {
+          "code": "AUTH_REQUIRED",
+          "message": "Sign in to view this household.",
+          "retryable": false
+        }
+      }
+    },
+    {
+      "step": "negative: GET has no standalone SSE stream (405)",
+      "http": {
+        "method": "GET",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "text/event-stream"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 405,
+        "response_headers": {
+          "allow": "POST"
+        },
+        "elapsed_ms": 9.0
+      },
+      "jsonrpc_request": null,
+      "jsonrpc_response": "Method Not Allowed: stateless server; no standalone SSE stream is offered."
+    },
+    {
+      "step": "initialize",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 11.8
+      },
+      "jsonrpc_request": {
+        "method": "initialize",
+        "params": {
+          "protocolVersion": "2025-11-25",
+          "capabilities": {},
+          "clientInfo": {
+            "name": "mcp",
+            "version": "0.1.0"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 0
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "result": {
+          "protocolVersion": "2025-11-25",
+          "capabilities": {
+            "experimental": {},
+            "prompts": {
+              "listChanged": false
+            },
+            "resources": {
+              "subscribe": false,
+              "listChanged": false
+            },
+            "tools": {
+              "listChanged": false
+            }
+          },
+          "serverInfo": {
+            "name": "DONE/IRL",
+            "version": "1.30.0"
+          }
+        }
+      }
+    },
+    {
+      "step": "initialize (notification)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 202,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 11.8
+      },
+      "jsonrpc_request": {
+        "method": "notifications/initialized",
+        "jsonrpc": "2.0"
+      },
+      "jsonrpc_response": null
+    },
+    {
+      "step": "tools/list",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 11.3
+      },
+      "jsonrpc_request": {
+        "method": "tools/list",
+        "jsonrpc": "2.0",
+        "id": 1
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "tools": [
+            {
+              "name": "list_active_contracts",
+              "description": "Read owner-scoped contracts and truthful source labels.",
+              "inputSchema": {
+                "properties": {},
+                "title": "list_active_contractsArguments",
+                "type": "object"
+              }
+            },
+            {
+              "name": "compile_ambient_commitment",
+              "description": "Compile owner-provided speech/text with explicit provenance; never claim Bee capture or physical completion.",
+              "inputSchema": {
+                "properties": {
+                  "utterance_json": {
+                    "additionalProperties": true,
+                    "title": "Utterance Json",
+                    "type": "object"
+                  },
+                  "speaker_context": {
+                    "additionalProperties": true,
+                    "title": "Speaker Context",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "utterance_json",
+                  "speaker_context"
+                ],
+                "title": "compile_ambient_commitmentArguments",
+                "type": "object"
+              }
+            },
+            {
+              "name": "spawn_watchdog_subagent",
+              "description": "Return an existing evidence-backed logical watchdog; never invent camera authorization.",
+              "inputSchema": {
+                "properties": {
+                  "contract_id": {
+                    "title": "Contract Id",
+                    "type": "string"
+                  },
+                  "camera_device_id": {
+                    "title": "Camera Device Id",
+                    "type": "string"
+                  },
+                  "target_roi": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "title": "Target Roi",
+                    "type": "array"
+                  },
+                  "invariant_type": {
+                    "title": "Invariant Type",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contract_id",
+                  "camera_device_id",
+                  "target_roi",
+                  "invariant_type"
+                ],
+                "title": "spawn_watchdog_subagentArguments",
+                "type": "object"
+              }
+            },
+            {
+              "name": "evaluate_deadline_escalation",
+              "description": "Evaluate at the server's stored clock; client time/activity cannot fabricate telemetry.",
+              "inputSchema": {
+                "properties": {
+                  "contract_id": {
+                    "title": "Contract Id",
+                    "type": "string"
+                  },
+                  "current_time": {
+                    "title": "Current Time",
+                    "type": "string"
+                  },
+                  "user_activity_state": {
+                    "title": "User Activity State",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contract_id",
+                  "current_time",
+                  "user_activity_state"
+                ],
+                "title": "evaluate_deadline_escalationArguments",
+                "type": "object"
+              }
+            },
+            {
+              "name": "dispatch_police_evidence_dossier",
+              "description": "Never dispatch from a model's boolean. Owner must approve exact packet in the UI.",
+              "inputSchema": {
+                "properties": {
+                  "incident_id": {
+                    "title": "Incident Id",
+                    "type": "string"
+                  },
+                  "human_confirmed_boolean": {
+                    "title": "Human Confirmed Boolean",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "incident_id",
+                  "human_confirmed_boolean"
+                ],
+                "title": "dispatch_police_evidence_dossierArguments",
+                "type": "object"
+              }
+            },
+            {
+              "name": "bridge_ring_camera_to_firetv",
+              "description": "Open an authorized backend WHEP/pose relay for a registered owner TV session.",
+              "inputSchema": {
+                "properties": {
+                  "camera_device_id": {
+                    "title": "Camera Device Id",
+                    "type": "string"
+                  },
+                  "firetv_session_id": {
+                    "title": "Firetv Session Id",
+                    "type": "string"
+                  },
+                  "verification_mode": {
+                    "title": "Verification Mode",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "camera_device_id",
+                  "firetv_session_id",
+                  "verification_mode"
+                ],
+                "title": "bridge_ring_camera_to_firetvArguments",
+                "type": "object"
+              }
+            },
+            {
+              "name": "get_contract_state",
+              "description": "Read one Physical State Contract, its evidence metadata and audit timeline (owner-scoped).",
+              "inputSchema": {
+                "properties": {
+                  "contract_id": {
+                    "title": "Contract Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contract_id"
+                ],
+                "title": "get_contract_stateArguments",
+                "type": "object"
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "idempotentHint": true
+              }
+            },
+            {
+              "name": "get_watchdog_status",
+              "description": "Read persistent sub-agent (PorchWatchdog etc.) status; optionally filtered by contract.",
+              "inputSchema": {
+                "properties": {
+                  "contract_id": {
+                    "default": "",
+                    "title": "Contract Id",
+                    "type": "string"
+                  }
+                },
+                "title": "get_watchdog_statusArguments",
+                "type": "object"
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "idempotentHint": true
+              }
+            },
+            {
+              "name": "get_incident_packet",
+              "description": "Read an incident packet's metadata and hashes. Raw media stays behind authenticated REST.",
+              "inputSchema": {
+                "properties": {
+                  "incident_id": {
+                    "title": "Incident Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "incident_id"
+                ],
+                "title": "get_incident_packetArguments",
+                "type": "object"
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "idempotentHint": true
+              }
+            },
+            {
+              "name": "get_integration_health",
+              "description": "Read truthful per-provider status (LIVE_VERIFIED / SIMULATED_VERIFIED / NOT_CONNECTED / BLOCKED).",
+              "inputSchema": {
+                "properties": {},
+                "title": "get_integration_healthArguments",
+                "type": "object"
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "idempotentHint": true
+              }
+            },
+            {
+              "name": "request_user_verification",
+              "description": "Describe how the owner can verify a contract. Changes nothing; never marks anything verified.",
+              "inputSchema": {
+                "properties": {
+                  "contract_id": {
+                    "title": "Contract Id",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contract_id"
+                ],
+                "title": "request_user_verificationArguments",
+                "type": "object"
+              },
+              "annotations": {
+                "readOnlyHint": true,
+                "idempotentHint": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, remember: I'll bring cold drinks home tonight.\" (owner text via MCP, not Bee capture)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 17.4
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "compile_ambient_commitment",
+          "arguments": {
+            "utterance_json": {
+              "event_id": "alexa-sim-morning-0",
+              "utterance": "I'll bring cold drinks home tonight.",
+              "occurred_at": "2026-10-20T08:15:00+05:30"
+            },
+            "speaker_context": {
+              "speaker": "SELF"
+            }
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 2
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract_ids\": [\n    \"psc_drinks\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, remember: I'll call my sister before 6 PM.\" (owner text via MCP, not Bee capture)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 15.0
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "compile_ambient_commitment",
+          "arguments": {
+            "utterance_json": {
+              "event_id": "alexa-sim-morning-1",
+              "utterance": "I'll call my sister before 6 PM.",
+              "occurred_at": "2026-10-20T08:15:00+05:30"
+            },
+            "speaker_context": {
+              "speaker": "SELF"
+            }
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 3
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract_ids\": [\n    \"psc_sister\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, remember: I'll cover the teacher meeting at 4 PM.\" (owner text via MCP, not Bee capture)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 15.6
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "compile_ambient_commitment",
+          "arguments": {
+            "utterance_json": {
+              "event_id": "alexa-sim-morning-2",
+              "utterance": "I'll cover the teacher meeting at 4 PM.",
+              "occurred_at": "2026-10-20T08:15:00+05:30"
+            },
+            "speaker_context": {
+              "speaker": "SELF"
+            }
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 4
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract_ids\": [\n    \"psc_teacher\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, remember: I'll do 15 squats before watching TV.\" (owner text via MCP, not Bee capture)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 20.1
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "compile_ambient_commitment",
+          "arguments": {
+            "utterance_json": {
+              "event_id": "alexa-sim-morning-3",
+              "utterance": "I'll do 15 squats before watching TV.",
+              "occurred_at": "2026-10-20T08:15:00+05:30"
+            },
+            "speaker_context": {
+              "speaker": "SELF"
+            }
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 5
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract_ids\": [\n    \"psc_squats\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, what did I promise today?\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 10.4
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "list_active_contracts",
+          "arguments": {}
+        },
+        "jsonrpc": "2.0",
+        "id": 6
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contracts\": [\n    {\n      \"contract_id\": \"psc_drinks\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"drinks\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Wife\"\n      },\n      \"original_utterance\": \"I'll bring cold drinks home tonight.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Bring cold drinks home\",\n      \"type\": \"INBOUND_ITEM\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"ARRIVAL_HOME\",\n      \"verification_modality\": \"RING_THRESHOLD_OBJECT_SCAN\",\n      \"required_evidence\": [\n        \"RING_THRESHOLD_OBJECT_SCAN\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_sister\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"sister\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Sister\"\n      },\n      \"original_utterance\": \"I'll call my sister before 6 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Call your sister\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T12:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T11:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T12:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T12:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_teacher\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"teacher\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Nephew’s teacher\"\n      },\n      \"original_utterance\": \"I'll cover the teacher meeting at 4 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Attend nephew’s teacher meeting\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T10:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T09:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T10:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T10:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_squats\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"squats\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Self\"\n      },\n      \"original_utterance\": \"I'll do 15 squats before watching TV.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"15 squats before TV\",\n      \"type\": \"PHYSICAL_ACTION\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"BEFORE_ENTERTAINMENT\",\n      \"verification_modality\": \"FIRE_TV_LIVE_POSE_CAMERA\",\n      \"required_evidence\": [\n        \"FIRE_TV_LIVE_POSE_CAMERA\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    }\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\",\n  \"tv_sessions\": []\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "refresh contracts after deposit",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 22.1
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "list_active_contracts",
+          "arguments": {}
+        },
+        "jsonrpc": "2.0",
+        "id": 7
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contracts\": [\n    {\n      \"contract_id\": \"psc_drinks\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"drinks\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Wife\"\n      },\n      \"original_utterance\": \"I'll bring cold drinks home tonight.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Bring cold drinks home\",\n      \"type\": \"INBOUND_ITEM\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"ARRIVAL_HOME\",\n      \"verification_modality\": \"RING_THRESHOLD_OBJECT_SCAN\",\n      \"required_evidence\": [\n        \"RING_THRESHOLD_OBJECT_SCAN\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_sister\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"sister\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Sister\"\n      },\n      \"original_utterance\": \"I'll call my sister before 6 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Call your sister\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T12:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T11:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T12:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T12:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_teacher\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"teacher\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Nephew’s teacher\"\n      },\n      \"original_utterance\": \"I'll cover the teacher meeting at 4 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Attend nephew’s teacher meeting\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T10:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T09:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T10:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T10:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_squats\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"squats\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Self\"\n      },\n      \"original_utterance\": \"I'll do 15 squats before watching TV.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"15 squats before TV\",\n      \"type\": \"PHYSICAL_ACTION\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"BEFORE_ENTERTAINMENT\",\n      \"verification_modality\": \"FIRE_TV_LIVE_POSE_CAMERA\",\n      \"required_evidence\": [\n        \"FIRE_TV_LIVE_POSE_CAMERA\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_parcel\",\n      \"trace_id\": \"trace_2\",\n      \"key\": \"parcel\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Courier\"\n      },\n      \"original_utterance\": \"I'm leaving the parcel at your doorstep.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Keep parcel in safe custody\",\n      \"type\": \"PARCEL_CUSTODY\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"AUTHORIZED_INWARD_TRANSFER\",\n      \"verification_modality\": \"RING_SPATIAL_CUSTODY\",\n      \"required_evidence\": [\n        \"RING_SPATIAL_CUSTODY\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [\n        \"ev_9552c94271d24ff3a67119a3ffd8cf73\"\n      ],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T08:40:00+00:00\",\n      \"updated_at\": \"2026-10-20T08:40:00+00:00\",\n      \"scheduled_jobs\": [],\n      \"deposit_status\": \"DEPOSIT_VERIFIED\",\n      \"custody_status\": \"DEPOSIT_VERIFIED_CUSTODY_ACTIVE\"\n    }\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\",\n  \"tv_sessions\": []\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, keep an eye on the parcel\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 13.9
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "spawn_watchdog_subagent",
+          "arguments": {
+            "contract_id": "psc_parcel",
+            "camera_device_id": "synthetic-porch",
+            "target_roi": [
+              0.2,
+              0.55,
+              0.45,
+              0.95
+            ],
+            "invariant_type": "PARCEL_PRESENT"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 8
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status\": \"WATCHING\",\n  \"subagent_id\": \"porch_parcel\",\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, is my parcel safe?\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 13.6
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "get_watchdog_status",
+          "arguments": {
+            "contract_id": "psc_parcel"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 9
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 9,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"subagents\": [\n    {\n      \"subagent_id\": \"porch_parcel\",\n      \"kind\": \"PorchWatchdog\",\n      \"contract_id\": \"psc_parcel\",\n      \"status\": \"WATCHING\",\n      \"last_observation_at\": \"2026-10-20T08:40:00+00:00\",\n      \"restart_cursor\": \"deposit-v1\",\n      \"target_roi\": [\n        0.3125,\n        0.4166666666666667,\n        0.46875,\n        0.5138888888888888\n      ],\n      \"observation_gaps\": [\n        \"Event-driven monitoring; no continuous camera coverage.\"\n      ]\n    }\n  ],\n  \"consent\": true,\n  \"failures\": [],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, is my parcel safe?\" (custody detail)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 11.5
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "get_contract_state",
+          "arguments": {
+            "contract_id": "psc_parcel"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 10
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 10,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract\": {\n    \"contract_id\": \"psc_parcel\",\n    \"trace_id\": \"trace_2\",\n    \"key\": \"parcel\",\n    \"schema_version\": \"1.0\",\n    \"household_id\": \"demo\",\n    \"actor\": {\n      \"id\": \"owner\",\n      \"role\": \"SELF\"\n    },\n    \"counterparty\": {\n      \"label\": \"Courier\"\n    },\n    \"original_utterance\": \"I'm leaving the parcel at your doorstep.\",\n    \"speaker_context\": \"Consented synthetic household conversation\",\n    \"title\": \"Keep parcel in safe custody\",\n    \"type\": \"PARCEL_CUSTODY\",\n    \"status\": \"ACTIVE\",\n    \"confidence\": 0.95,\n    \"due_at\": null,\n    \"timezone\": \"Asia/Kolkata\",\n    \"deadline_trigger\": \"AUTHORIZED_INWARD_TRANSFER\",\n    \"verification_modality\": \"RING_SPATIAL_CUSTODY\",\n    \"required_evidence\": [\n      \"RING_SPATIAL_CUSTODY\"\n    ],\n    \"privacy_scope\": \"HOUSEHOLD\",\n    \"evidence_ids\": [\n      \"ev_9552c94271d24ff3a67119a3ffd8cf73\"\n    ],\n    \"revision\": 1,\n    \"source_mode\": \"SIMULATED_VERIFIED\",\n    \"created_at\": \"2026-10-20T08:40:00+00:00\",\n    \"updated_at\": \"2026-10-20T08:40:00+00:00\",\n    \"scheduled_jobs\": [],\n    \"deposit_status\": \"DEPOSIT_VERIFIED\",\n    \"custody_status\": \"DEPOSIT_VERIFIED_CUSTODY_ACTIVE\"\n  },\n  \"evidence\": [\n    {\n      \"evidence_id\": \"ev_9552c94271d24ff3a67119a3ffd8cf73\",\n      \"kind\": \"DEPOSIT_OBSERVATION\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"provenance\": \"SYNTHETIC_SENSOR\",\n      \"captured_at\": \"2026-10-20T08:40:00+00:00\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"event_id\": \"evt_000009\",\n      \"event_type\": \"commitment.created\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000010\",\n      \"event_type\": \"commitment.evidence_collected\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000011\",\n      \"event_type\": \"parcel.deposit_verified\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000012\",\n      \"event_type\": \"commitment.escalation_dispatched\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    }\n  ],\n  \"incident_ids\": [],\n  \"server_clock\": \"2026-10-20T08:40:00+00:00\",\n  \"verified\": false\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "evaluate teacher-meeting escalation at the server clock",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 15.3
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "evaluate_deadline_escalation",
+          "arguments": {
+            "contract_id": "psc_teacher",
+            "current_time": "2026-10-20T15:35:00+05:30",
+            "user_activity_state": "CODING"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 11
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 11,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status\": \"VERIFIED\",\n  \"clock\": \"2026-10-20T10:35:00+00:00\",\n  \"client_telemetry_ignored\": true\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, did I call my sister?\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 11.8
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "get_contract_state",
+          "arguments": {
+            "contract_id": "psc_sister"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 12
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 12,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract\": {\n    \"contract_id\": \"psc_sister\",\n    \"trace_id\": \"trace_0\",\n    \"key\": \"sister\",\n    \"schema_version\": \"1.0\",\n    \"household_id\": \"demo\",\n    \"actor\": {\n      \"id\": \"owner\",\n      \"role\": \"SELF\"\n    },\n    \"counterparty\": {\n      \"label\": \"Sister\"\n    },\n    \"original_utterance\": \"I'll call my sister before 6 PM.\",\n    \"speaker_context\": \"Consented synthetic household conversation\",\n    \"title\": \"Call your sister\",\n    \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n    \"status\": \"ACTIVE\",\n    \"confidence\": 0.95,\n    \"due_at\": \"2026-10-20T12:30:00+00:00\",\n    \"timezone\": \"Asia/Kolkata\",\n    \"deadline_trigger\": null,\n    \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n    \"required_evidence\": [\n      \"BEE_CONVERSATION_AUDIT\"\n    ],\n    \"privacy_scope\": \"HOUSEHOLD\",\n    \"evidence_ids\": [],\n    \"revision\": 1,\n    \"source_mode\": \"SIMULATED_VERIFIED\",\n    \"created_at\": \"2026-10-20T02:30:00+00:00\",\n    \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n    \"scheduled_jobs\": [\n      {\n        \"kind\": \"T60\",\n        \"at\": \"2026-10-20T11:30:00+00:00\",\n        \"status\": \"PENDING\"\n      },\n      {\n        \"kind\": \"T25\",\n        \"at\": \"2026-10-20T12:05:00+00:00\",\n        \"status\": \"PENDING\"\n      },\n      {\n        \"kind\": \"DEADLINE\",\n        \"at\": \"2026-10-20T12:30:00+00:00\",\n        \"status\": \"PENDING\"\n      }\n    ]\n  },\n  \"evidence\": [],\n  \"timeline\": [\n    {\n      \"event_id\": \"evt_000004\",\n      \"event_type\": \"commitment.created\",\n      \"occurred_at\": \"2026-10-20T02:30:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    }\n  ],\n  \"incident_ids\": [],\n  \"server_clock\": \"2026-10-20T10:35:00+00:00\",\n  \"verified\": false\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, did I call my sister?\" (how to verify)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 10.8
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "request_user_verification",
+          "arguments": {
+            "contract_id": "psc_sister"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 13
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 13,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"contract_id\": \"psc_sister\",\n  \"status\": \"ACTIVE\",\n  \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n  \"prompt\": \"'Call your sister' is not yet verified. Open the authenticated companion to provide accepted evidence; a spoken 'yes' is not proof.\",\n  \"action_url\": \"/?contract=psc_sister\",\n  \"state_changed\": false\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, what happened to my package?\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 16.8
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "get_incident_packet",
+          "arguments": {
+            "incident_id": "inc_parcel"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 14
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 14,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"incident\": {\n    \"incident_id\": \"inc_parcel\",\n    \"contract_id\": \"psc_parcel\",\n    \"status\": \"AWAITING_HUMAN_DECISION\",\n    \"detected_at\": \"2026-10-20T11:00:00+00:00\",\n    \"source_mode\": \"SIMULATED_VERIFIED\",\n    \"packet\": {\n      \"deposit_evidence_ids\": [\n        \"ev_9552c94271d24ff3a67119a3ffd8cf73\"\n      ],\n      \"removal_evidence_id\": \"ev_c8657d637f5d4813ad31bf0a8ed32d1f\",\n      \"source_clip_evidence_id\": \"ev_fa62249c423a48649e02938321cd527a\",\n      \"annotated_clip_evidence_id\": \"ev_5812768e63104ad0812f7181592566bd\",\n      \"person_crop_evidence_id\": \"ev_b1d21c2a711a41b1880df18383cb5cbc\",\n      \"trajectory\": [\n        [\n          280,\n          265\n        ],\n        [\n          160,\n          265\n        ],\n        [\n          70,\n          265\n        ]\n      ],\n      \"coordinate_system\": \"SYNTHETIC_PIXELS\",\n      \"capture_gaps\": [\n        \"No live Ring footage. Generated 15-second synthetic clip.\"\n      ]\n    },\n    \"manifest_hash\": \"31f43d51da4039c235d4e16d6a232addeef6f844c7a9341c50aa62de6b2d0490\",\n    \"revision\": 1,\n    \"receipt\": null,\n    \"approval\": null,\n    \"clip_actual_duration_seconds\": 15,\n    \"quality\": \"SYNTHETIC_CLIP_AVAILABLE\",\n    \"destination\": \"DEMO_RECEIVER_ONLY\"\n  },\n  \"evidence\": [\n    {\n      \"evidence_id\": \"ev_c8657d637f5d4813ad31bf0a8ed32d1f\",\n      \"kind\": \"REMOVAL_FRAME\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"3fdeeca09bac80632ed92400b2ea8c591099b720d1217ebd484128d7677df24d\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_b1d21c2a711a41b1880df18383cb5cbc\",\n      \"kind\": \"PERSON_CROP\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"d09a2a8f1022355068e5ee6ff2c18a2b74243d9589d1ffa9d11939e70d16d4ea\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_fa62249c423a48649e02938321cd527a\",\n      \"kind\": \"REMOVAL_CLIP_ORIGINAL\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"dd4377e0195a68a60ea674757ca470c495a4032beb6b084a7a25ee6022afd08b\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_5812768e63104ad0812f7181592566bd\",\n      \"kind\": \"REMOVAL_CLIP_DERIVED\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"b5e801ac518914f2df4f6c97760c82abb0a9a13dafebe5045630c71171b74943\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    }\n  ],\n  \"report_states_distinct\": [\n    \"DRAFT\",\n    \"OWNER_APPROVED\",\n    \"SIMULATED_DISPATCH\",\n    \"RECEIPT\"\n  ],\n  \"official_case_id\": null,\n  \"note\": \"Only an externally validated receipt is an official case ID.\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, report it to the police\" (model boolean only -> must be denied)",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 27.6
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "dispatch_police_evidence_dossier",
+          "arguments": {
+            "incident_id": "inc_parcel",
+            "human_confirmed_boolean": true
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 15
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 15,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status\": \"DENIED\",\n  \"code\": \"OWNER_APPROVAL_REQUIRED\",\n  \"external_sends\": 0,\n  \"reason\": \"Use authenticated owner review. MCP cannot grant report approval.\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, start Reality-Lock\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 15.8
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "bridge_ring_camera_to_firetv",
+          "arguments": {
+            "camera_device_id": "synthetic-porch",
+            "firetv_session_id": "none",
+            "verification_mode": "POSE_SQUATS"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 16
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 16,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status\": \"BLOCKED\",\n  \"source_mode\": \"BLOCKED\",\n  \"reason\": \"Live Ring requires the separate live deployment.\"\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    },
+    {
+      "step": "\"Alexa, are my devices connected?\"",
+      "http": {
+        "method": "POST",
+        "path": "/mcp/",
+        "request_headers": {
+          "accept": "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-protocol-version": "2025-11-25"
+        },
+        "authorization": "Bearer [REDACTED]",
+        "status": 200,
+        "response_headers": {
+          "content-type": "application/json"
+        },
+        "elapsed_ms": 16.0
+      },
+      "jsonrpc_request": {
+        "method": "tools/call",
+        "params": {
+          "name": "get_integration_health",
+          "arguments": {}
+        },
+        "jsonrpc": "2.0",
+        "id": 17
+      },
+      "jsonrpc_response": {
+        "jsonrpc": "2.0",
+        "id": 17,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"integrations\": [\n    {\n      \"name\": \"Bee\",\n      \"status\": \"BLOCKED\",\n      \"last_verified_at\": null,\n      \"reason\": \"No authenticated live event processed for this household.\"\n    },\n    {\n      \"name\": \"Ring\",\n      \"status\": \"BLOCKED\",\n      \"last_verified_at\": null,\n      \"reason\": \"No authenticated live event processed for this household.\"\n    },\n    {\n      \"name\": \"Ring video\",\n      \"status\": \"NOT_CONNECTED\",\n      \"reason\": \"Decoded frames: 0; no silent fallback to demo.\"\n    },\n    {\n      \"name\": \"Alexa+\",\n      \"status\": \"NOT_CONNECTED\",\n      \"reason\": \"No verified Alexa account/device connection. Judge console offers a labeled SIMULATED Alexa+ experience over the real MCP server.\"\n    },\n    {\n      \"name\": \"Fire TV\",\n      \"status\": \"BLOCKED\",\n      \"reason\": \"Native client builds; actual device runtime proof pending.\"\n    },\n    {\n      \"name\": \"MCP\",\n      \"status\": \"SIMULATED_VERIFIED\",\n      \"reason\": \"Official SDK tested; source provenance is recorded per household event.\"\n    },\n    {\n      \"name\": \"Companion\",\n      \"status\": \"SIMULATED_VERIFIED\",\n      \"reason\": \"Authenticated notification inbox; no native push/haptic claim.\"\n    },\n    {\n      \"name\": \"Worker\",\n      \"status\": \"SIMULATED_VERIFIED\",\n      \"reason\": \"RUNNING; VIRTUAL clock.\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        }
+      }
+    }
+  ]
+}
