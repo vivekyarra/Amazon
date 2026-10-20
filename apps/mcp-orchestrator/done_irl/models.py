@@ -41,6 +41,14 @@ class ScenarioInput(StrictModel):
         "ambiguous",
         "engaged",
         "disengaged",
+        "real_deposit",
+        "real_no_deposit",
+        "real_removal",
+        "real_pickup",
+        "real_passerby",
+        "real_visible",
+        "real_empty",
+        "real_bags",
     ] = "deposit"
 
 

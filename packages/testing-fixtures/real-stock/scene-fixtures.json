@@ -1,0 +1,292 @@
+{
+  "schema_version": "1.0",
+  "provenance": "REAL_RECORDED_STOCK",
+  "description": "Freely licensed real-world recordings used to exercise the real-scene porch/threshold pipeline. These are NOT Ring recordings, NOT the user's home and NOT one continuous household; each clip is an independent scene with its own hand-calibrated zones.",
+  "contains_personal_data": "Public stock models (Pexels) and publicly released CC BY security-camera footage (Wikimedia Commons). No identification of any person is attempted.",
+  "coordinate_system": "Zones are normalized [x, y] polygons over the committed fixture frame (0..1 in both axes).",
+  "detector": {
+    "name": "MediaPipe Object Detector EfficientDet-Lite0 (float32, COCO)",
+    "url": "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite",
+    "sha256": "40338edf5ec70d43e318b0a716a84d4564cd1802759a7a07170c7e43796dbf58",
+    "license": "Apache-2.0 (MediaPipe model card)",
+    "note": "COCO has no parcel/box class. Parcels are inferred from persistent background change inside PORCH_DEPOSIT_ROI, optionally supported by COCO luggage classes (suitcase/handbag/backpack)."
+  },
+  "clips": [
+    {
+      "id": "RS01_DEPOSIT_DOORSTEP_STACK",
+      "file": "RS01_DEPOSIT_DOORSTEP_STACK.mp4",
+      "mode": "porch_deposit",
+      "expected": "DEPOSIT_CONFIRMED",
+      "scenario": "A person stacks two cardboard boxes on a doorstep and walks away without them.",
+      "source": {
+        "platform": "Pexels",
+        "title": "Putting the Boxes On a Doorstep",
+        "page_url": "https://www.pexels.com/video/putting-the-boxes-on-a-doorstep-8926524/",
+        "download_url": "https://videos.pexels.com/video-files/8926524/8926524-sd_640_360_25fps.mp4",
+        "author": "Kampus Production",
+        "author_url": "https://www.pexels.com/@kampus/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "9d1b2760b739b4d969aa785b9c7be173010889c6843a930ff3908e63e1d1bf87"
+      },
+      "trim": {"start": 0.0, "end": 13.05},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.86, 0.0], [1.0, 0.0], [1.0, 1.0], [0.86, 1.0]],
+        "PORCH_DEPOSIT_ROI": [[0.05, 0.38], [0.78, 0.38], [0.78, 0.99], [0.05, 0.99]],
+        "DOOR_THRESHOLD_PLANE": [[0.2, 0.0], [0.55, 0.0], [0.55, 0.36], [0.2, 0.36]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS02_DEPOSIT_MAILER_DOORMAT",
+      "file": "RS02_DEPOSIT_MAILER_DOORMAT.mp4",
+      "mode": "porch_deposit",
+      "expected": "DEPOSIT_CONFIRMED",
+      "scenario": "A courier (legs visible) sets a dark plastic mailer on a doormat and walks out of frame.",
+      "source": {
+        "platform": "Pexels",
+        "title": "A Person Leaving a Parcel at the Door",
+        "page_url": "https://www.pexels.com/video/a-person-leaving-a-parcel-at-the-door-6667230/",
+        "download_url": "https://videos.pexels.com/video-files/6667230/6667230-sd_640_360_25fps.mp4",
+        "author": "Kampus Production",
+        "author_url": "https://www.pexels.com/@kampus/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "64453a78a3be90c606cfbf3cb63bb14aae1d04de00cad8cd7dba9cf40ee3f6e5"
+      },
+      "trim": {"start": 0.0, "end": 11.7},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.82, 0.0], [1.0, 0.0], [1.0, 1.0], [0.82, 1.0]],
+        "PORCH_DEPOSIT_ROI": [[0.05, 0.45], [0.72, 0.45], [0.72, 0.99], [0.05, 0.99]],
+        "DOOR_THRESHOLD_PLANE": [[0.1, 0.0], [0.62, 0.0], [0.62, 0.42], [0.1, 0.42]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS03_COURIER_NO_DEPOSIT",
+      "file": "RS03_COURIER_NO_DEPOSIT.mp4",
+      "mode": "porch_deposit",
+      "expected": "MISMATCH",
+      "scenario": "Door camera: a uniformed courier walks to the door, stands there, and leaves; no parcel is left on the step (uploader: delivery attempt without a parcel drop).",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:FedEx fails delivery without knocking.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:FedEx_fails_delivery_without_knocking.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/40/FedEx_fails_delivery_without_knocking.ogv",
+        "author": "Mac Manson (YouTube: stabaho1)",
+        "author_url": "https://www.youtube.com/user/stabaho1",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "0d80bb4f8bb1d6585f7b143bab21901694ad9bf347f96a7b276223ff28916427"
+      },
+      "trim": {"start": 10.0, "end": 82.0},
+      "encode": {"fps": 5, "height": 360},
+      "analysis_fps": 2.5,
+      "zones": {
+        "STREET_PERIMETER": [[0.6, 0.0], [0.88, 0.0], [0.88, 0.28], [0.6, 0.28]],
+        "PORCH_DEPOSIT_ROI": [[0.42, 0.5], [0.8, 0.5], [0.86, 0.8], [0.4, 0.8]],
+        "DOOR_THRESHOLD_PLANE": [[0.4, 0.05], [0.58, 0.05], [0.58, 0.55], [0.4, 0.55]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS04_PORCH_REMOVAL_CCTV",
+      "file": "RS04_PORCH_REMOVAL_CCTV.mp4",
+      "mode": "porch_watchdog",
+      "expected": "REMOVAL_UNDER_REVIEW",
+      "scenario": "Fixed porch CCTV: a person walks onto the porch, picks up a box and a bag resting near the door, and leaves toward the street side.",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:Front Porch Theft 2012 11 17 101117.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:Front_Porch_Theft_2012_11_17_101117.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/41/Front_Porch_Theft_2012_11_17_101117.ogv",
+        "author": "Trevor Fiatal (YouTube: tafiatal)",
+        "author_url": "https://www.youtube.com/user/tafiatal",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "2c095254dbe094013d7b93a54e46968d46d51803381d831e666f3a6ba057ffec"
+      },
+      "trim": {"start": 0.0, "end": 14.1},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.0, 0.05], [0.22, 0.05], [0.22, 0.5], [0.0, 0.5]],
+        "PORCH_DEPOSIT_ROI": [[0.26, 0.26], [0.53, 0.26], [0.53, 0.43], [0.26, 0.43]],
+        "DOOR_THRESHOLD_PLANE": [[0.5, 0.02], [0.57, 0.02], [0.57, 0.45], [0.5, 0.45]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS05_PORCH_REMOVAL_DOORBELL",
+      "file": "RS05_PORCH_REMOVAL_DOORBELL.mp4",
+      "mode": "porch_watchdog",
+      "expected": "REMOVAL_UNDER_REVIEW",
+      "scenario": "Police public-awareness doorbell clip (faces pixelated at source): a person knocks, picks up the parcel resting at the door and walks off toward the camera/steps.",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:Don't Tempt a Thief with Unattended Parcels.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:Don%27t_Tempt_a_Thief_with_Unattended_Parcels.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Don%27t_Tempt_a_Thief_with_Unattended_Parcels.ogv",
+        "author": "Vancouver Police Department (YouTube: vpdonline)",
+        "author_url": "https://www.youtube.com/user/vpdonline",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "74a2d03b2be828a1bb09aa086cad9174ff4add6d82edcb132122a3e940365bc6"
+      },
+      "trim": {"start": 0.0, "end": 24.8},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.62, 0.3], [1.0, 0.3], [1.0, 1.0], [0.62, 1.0]],
+        "PORCH_DEPOSIT_ROI": [[0.37, 0.84], [0.53, 0.84], [0.53, 1.0], [0.37, 1.0]],
+        "DOOR_THRESHOLD_PLANE": [[0.18, 0.0], [0.42, 0.0], [0.42, 0.83], [0.18, 0.83]],
+        "PRIVATE_MASKS": [
+          [[0.0, 0.0], [0.35, 0.0], [0.35, 0.1], [0.0, 0.1]],
+          [[0.7, 0.84], [0.86, 0.84], [0.86, 0.92], [0.7, 0.92]]
+        ]
+      }
+    },
+    {
+      "id": "RS06_PICKUP_INWARD",
+      "file": "RS06_PICKUP_INWARD.mp4",
+      "mode": "porch_watchdog",
+      "expected": "TRANSFER_OBSERVED",
+      "scenario": "A resident opens the door, picks up two boxes from the step and carries them inside; the door closes.",
+      "source": {
+        "platform": "Pexels",
+        "title": "A Woman Taking Her Packages Inside",
+        "page_url": "https://www.pexels.com/video/a-woman-taking-her-packages-inside-8927178/",
+        "download_url": "https://videos.pexels.com/video-files/8927178/8927178-sd_640_360_25fps.mp4",
+        "author": "Kampus Production",
+        "author_url": "https://www.pexels.com/@kampus/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "794df13a46fd07fee4e6700c8afebf42fcd77b1343d75b1367cbc990541ed6d6"
+      },
+      "trim": {"start": 0.0, "end": 17.4},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.55, 0.62], [1.0, 0.62], [1.0, 1.0], [0.55, 1.0]],
+        "PORCH_DEPOSIT_ROI": [[0.18, 0.5], [0.47, 0.5], [0.47, 0.93], [0.18, 0.93]],
+        "DOOR_THRESHOLD_PLANE": [[0.1, 0.0], [0.44, 0.0], [0.44, 0.86], [0.1, 0.86]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS07_PASSERBY_DRIVEWAY",
+      "file": "RS07_PASSERBY_DRIVEWAY.mp4",
+      "mode": "porch_watchdog",
+      "expected": "NO_REMOVAL",
+      "scenario": "Fixed driveway CCTV: a person walks along the far sidewalk past the house. The porch itself is outside this camera's view; the ROI is calibrated on the house-side walkway.",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:Package Theft from home.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:Package_Theft_from_home.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Package_Theft_from_home.ogv",
+        "author": "DonGar37 (YouTube)",
+        "author_url": "https://www.youtube.com/user/DonGar37",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "567cb7e75ea312823a52f1f2c05593b4d18da87668045f541469529254f89451"
+      },
+      "trim": {"start": 46.5, "end": 67.0},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.0, 0.0], [1.0, 0.0], [1.0, 0.3], [0.0, 0.3]],
+        "PORCH_DEPOSIT_ROI": [[0.0, 0.45], [0.15, 0.45], [0.06, 0.7], [0.0, 0.7]],
+        "DOOR_THRESHOLD_PLANE": [[0.0, 0.0], [0.08, 0.0], [0.08, 0.2], [0.0, 0.2]],
+        "PRIVATE_MASKS": [
+          [[0.68, 0.0], [0.98, 0.0], [0.98, 0.09], [0.68, 0.09]],
+          [[0.0, 0.9], [0.1, 0.9], [0.1, 1.0], [0.0, 1.0]]
+        ]
+      }
+    },
+    {
+      "id": "RS08_ARRIVAL_BOTTLE_VISIBLE",
+      "file": "RS08_ARRIVAL_BOTTLE_VISIBLE.mp4",
+      "mode": "threshold",
+      "expected": "VISIBLE_MATCH",
+      "scenario": "A person walks toward the camera carrying a bottle of water in hand (outdoor road; no doorway in this scene).",
+      "source": {
+        "platform": "Pexels",
+        "title": "A Woman Drinking on a Bottled Water While Walking",
+        "page_url": "https://www.pexels.com/video/a-woman-drinking-on-a-bottled-water-while-walking-8865610/",
+        "download_url": "https://videos.pexels.com/video-files/8865610/8865610-sd_640_338_25fps.mp4",
+        "author": "MART PRODUCTION",
+        "author_url": "https://www.pexels.com/@mart-production/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "b2747409d502464472da89394df65b6d124b43ebf3dcb3911478f392aa732380"
+      },
+      "trim": {"start": 0.0, "end": 14.0},
+      "encode": {"fps": 10, "height": 338},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.0, 0.0], [1.0, 0.0], [1.0, 0.1], [0.0, 0.1]],
+        "PORCH_DEPOSIT_ROI": [[0.0, 0.9], [0.1, 0.9], [0.1, 1.0], [0.0, 1.0]],
+        "DOOR_THRESHOLD_PLANE": [[0.15, 0.85], [0.85, 0.85], [0.85, 1.0], [0.15, 1.0]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS09_ARRIVAL_HANDS_EMPTY",
+      "file": "RS09_ARRIVAL_HANDS_EMPTY.mp4",
+      "mode": "threshold",
+      "expected": "NOT_VISIBLE",
+      "scenario": "A person walks up to a door empty-handed, knocks, and walks back toward the camera (hand-held camera).",
+      "source": {
+        "platform": "Pexels",
+        "title": "Man Knocking Door",
+        "page_url": "https://www.pexels.com/video/man-knocking-door-11680516/",
+        "download_url": "https://videos.pexels.com/video-files/11680516/11680516-sd_640_360_30fps.mp4",
+        "author": "Andrew Kota",
+        "author_url": "https://www.pexels.com/@andrew-kota-1968573/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "8a88545a17d5ffc7bbb172c1f75cf8742fe25f680f7e63ea0d3cade1336d37e2"
+      },
+      "trim": {"start": 0.0, "end": 12.85},
+      "encode": {"fps": 10, "height": 360},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.0, 0.88], [1.0, 0.88], [1.0, 1.0], [0.0, 1.0]],
+        "PORCH_DEPOSIT_ROI": [[0.28, 0.72], [0.62, 0.72], [0.62, 0.88], [0.28, 0.88]],
+        "DOOR_THRESHOLD_PLANE": [[0.3, 0.05], [0.62, 0.05], [0.62, 0.85], [0.3, 0.85]],
+        "PRIVATE_MASKS": []
+      }
+    },
+    {
+      "id": "RS10_ARRIVAL_PAPER_BAGS",
+      "file": "RS10_ARRIVAL_PAPER_BAGS.mp4",
+      "mode": "threshold",
+      "expected": "AMBIGUOUS",
+      "scenario": "A person walks along a city sidewalk toward the camera carrying paper shopping bags; contents are not visible.",
+      "source": {
+        "platform": "Pexels",
+        "title": "Woman Walking on the Sidewalk Carrying Paper Bags",
+        "page_url": "https://www.pexels.com/video/woman-walking-on-the-sidewalk-carrying-paper-bags-7234080/",
+        "download_url": "https://videos.pexels.com/video-files/7234080/7234080-uhd_2160_3840_24fps.mp4",
+        "author": "Blue Bird",
+        "author_url": "https://www.pexels.com/@blue-bird/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "0dab25bcf1f81ff87b107aa0ebf50acb102bb4564892db7a19e50bbc4ae49bdd"
+      },
+      "trim": {"start": 0.0, "end": 10.0},
+      "encode": {"fps": 10, "height": 480},
+      "analysis_fps": 5,
+      "zones": {
+        "STREET_PERIMETER": [[0.0, 0.0], [1.0, 0.0], [1.0, 0.4], [0.0, 0.4]],
+        "PORCH_DEPOSIT_ROI": [[0.0, 0.92], [0.1, 0.92], [0.1, 1.0], [0.0, 1.0]],
+        "DOOR_THRESHOLD_PLANE": [[0.1, 0.85], [0.9, 0.85], [0.9, 1.0], [0.1, 1.0]],
+        "PRIVATE_MASKS": []
+      }
+    }
+  ]
+}

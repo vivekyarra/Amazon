@@ -111,6 +111,15 @@
       "id": "F24",
       "test": "mobile layout, consent pause, and TV keyboard navigation",
       "limitation": "Web preview only; native device test BLOCKED"
+    },
+    {
+      "id": "F17",
+      "test": "test_F17_14_locked_15_unlocks_via_pixels",
+      "limitation": "Generated marker cycles, human-video proof pending"
+    },
+    {
+      "id": "F18",
+      "test": "test_F18_half_squats_static_duplicates_occlusion"
     }
   ],
   "pose_video_fixtures": [
@@ -149,5 +158,267 @@
     "url": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
     "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a",
     "fetched_by": "scripts/fetch-pose-model.py (ignored artifacts/vision/pose-lite.task)"
+  },
+  "real_recorded_stock": {
+    "provenance": "REAL_RECORDED_STOCK",
+    "description": "Freely licensed public recordings (Pexels License / CC BY 3.0 on Wikimedia Commons), trimmed and downscaled. Not Ring, not the user's home, not consented household footage; independent scenes.",
+    "config": "real-stock/scene-fixtures.json",
+    "reproduce": "scripts/build-real-stock-fixtures.py --sources <dir> --download",
+    "detector": {
+      "name": "MediaPipe Object Detector EfficientDet-Lite0 (float32, COCO)",
+      "url": "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite",
+      "sha256": "40338edf5ec70d43e318b0a716a84d4564cd1802759a7a07170c7e43796dbf58",
+      "license": "Apache-2.0 (MediaPipe model card)",
+      "note": "COCO has no parcel/box class. Parcels are inferred from persistent background change inside PORCH_DEPOSIT_ROI, optionally supported by COCO luggage classes (suitcase/handbag/backpack)."
+    },
+    "limitations": [
+      "COCO has no parcel class; parcels are inferred from persistent person-free change inside the calibrated ROI.",
+      "Watchdog verdicts assume the baseline contains the custodied parcel (only reachable after DEPOSIT_CONFIRMED).",
+      "Pixel trajectories only; world-space trajectory unavailable.",
+      "Zones are hand-calibrated per clip; RS07/RS08/RS10 scenes contain no real porch/doorway.",
+      "Ten clips are far too few to estimate accuracy; results are behavioral checks, not benchmarks."
+    ],
+    "clips": [
+      {
+        "id": "RS01_DEPOSIT_DOORSTEP_STACK",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS01_DEPOSIT_DOORSTEP_STACK.mp4",
+        "sha256": "f35684161ca3d80b3072763eed1cbe0d5c1a86723ee20d389d11b049cb075785",
+        "bytes": 223687,
+        "mode": "porch_deposit",
+        "expected": "DEPOSIT_CONFIRMED",
+        "source_url": "https://www.pexels.com/video/putting-the-boxes-on-a-doorstep-8926524/",
+        "download_url": "https://videos.pexels.com/video-files/8926524/8926524-sd_640_360_25fps.mp4",
+        "source_sha256": "9d1b2760b739b4d969aa785b9c7be173010889c6843a930ff3908e63e1d1bf87",
+        "author": "Kampus Production",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "trim_seconds": [
+          0.0,
+          13.05
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS02_DEPOSIT_MAILER_DOORMAT",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS02_DEPOSIT_MAILER_DOORMAT.mp4",
+        "sha256": "9ace09661d6ac35329633356fc11972f53a88859198f2c8ab50f752050bb9177",
+        "bytes": 284359,
+        "mode": "porch_deposit",
+        "expected": "DEPOSIT_CONFIRMED",
+        "source_url": "https://www.pexels.com/video/a-person-leaving-a-parcel-at-the-door-6667230/",
+        "download_url": "https://videos.pexels.com/video-files/6667230/6667230-sd_640_360_25fps.mp4",
+        "source_sha256": "64453a78a3be90c606cfbf3cb63bb14aae1d04de00cad8cd7dba9cf40ee3f6e5",
+        "author": "Kampus Production",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "trim_seconds": [
+          0.0,
+          11.7
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS03_COURIER_NO_DEPOSIT",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS03_COURIER_NO_DEPOSIT.mp4",
+        "sha256": "409c2c8133050ec8505e2bed96ec716b16c159117bdef757dc22a57f6cb513a2",
+        "bytes": 757286,
+        "mode": "porch_deposit",
+        "expected": "MISMATCH",
+        "source_url": "https://commons.wikimedia.org/wiki/File:FedEx_fails_delivery_without_knocking.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/40/FedEx_fails_delivery_without_knocking.ogv",
+        "source_sha256": "0d80bb4f8bb1d6585f7b143bab21901694ad9bf347f96a7b276223ff28916427",
+        "author": "Mac Manson (YouTube: stabaho1)",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "trim_seconds": [
+          10.0,
+          82.0
+        ],
+        "encode": {
+          "fps": 5,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS04_PORCH_REMOVAL_CCTV",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS04_PORCH_REMOVAL_CCTV.mp4",
+        "sha256": "ef7a0993402058b3dc58b7497c72baca975f2710cad067680665ae162a041769",
+        "bytes": 140351,
+        "mode": "porch_watchdog",
+        "expected": "REMOVAL_UNDER_REVIEW",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Front_Porch_Theft_2012_11_17_101117.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/41/Front_Porch_Theft_2012_11_17_101117.ogv",
+        "source_sha256": "2c095254dbe094013d7b93a54e46968d46d51803381d831e666f3a6ba057ffec",
+        "author": "Trevor Fiatal (YouTube: tafiatal)",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "trim_seconds": [
+          0.0,
+          14.1
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS05_PORCH_REMOVAL_DOORBELL",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS05_PORCH_REMOVAL_DOORBELL.mp4",
+        "sha256": "c63063656b97ff718abb924c9e74013eea111e130d9ffbd9e99941f7a209bc96",
+        "bytes": 584125,
+        "mode": "porch_watchdog",
+        "expected": "REMOVAL_UNDER_REVIEW",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Don%27t_Tempt_a_Thief_with_Unattended_Parcels.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Don%27t_Tempt_a_Thief_with_Unattended_Parcels.ogv",
+        "source_sha256": "74a2d03b2be828a1bb09aa086cad9174ff4add6d82edcb132122a3e940365bc6",
+        "author": "Vancouver Police Department (YouTube: vpdonline)",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "trim_seconds": [
+          0.0,
+          24.8
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS06_PICKUP_INWARD",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS06_PICKUP_INWARD.mp4",
+        "sha256": "af8d915f60a3163b1626d48c9c292fc8b72bb4677ad93c0f91b3c39083f978de",
+        "bytes": 334361,
+        "mode": "porch_watchdog",
+        "expected": "TRANSFER_OBSERVED",
+        "source_url": "https://www.pexels.com/video/a-woman-taking-her-packages-inside-8927178/",
+        "download_url": "https://videos.pexels.com/video-files/8927178/8927178-sd_640_360_25fps.mp4",
+        "source_sha256": "794df13a46fd07fee4e6700c8afebf42fcd77b1343d75b1367cbc990541ed6d6",
+        "author": "Kampus Production",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "trim_seconds": [
+          0.0,
+          17.4
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS07_PASSERBY_DRIVEWAY",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS07_PASSERBY_DRIVEWAY.mp4",
+        "sha256": "8791284c5a12c76c867724eb7cafa51b8ee9021b167e810a10e6db929aff5df9",
+        "bytes": 135021,
+        "mode": "porch_watchdog",
+        "expected": "NO_REMOVAL",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Package_Theft_from_home.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Package_Theft_from_home.ogv",
+        "source_sha256": "567cb7e75ea312823a52f1f2c05593b4d18da87668045f541469529254f89451",
+        "author": "DonGar37 (YouTube)",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "trim_seconds": [
+          46.5,
+          67.0
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS08_ARRIVAL_BOTTLE_VISIBLE",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS08_ARRIVAL_BOTTLE_VISIBLE.mp4",
+        "sha256": "82833bb9806712ff5d60cfa6f430e3e225f4f314ef43fbd3ec8410a735097603",
+        "bytes": 429843,
+        "mode": "threshold",
+        "expected": "VISIBLE_MATCH",
+        "source_url": "https://www.pexels.com/video/a-woman-drinking-on-a-bottled-water-while-walking-8865610/",
+        "download_url": "https://videos.pexels.com/video-files/8865610/8865610-sd_640_338_25fps.mp4",
+        "source_sha256": "b2747409d502464472da89394df65b6d124b43ebf3dcb3911478f392aa732380",
+        "author": "MART PRODUCTION",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "trim_seconds": [
+          0.0,
+          14.0
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 338
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS09_ARRIVAL_HANDS_EMPTY",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS09_ARRIVAL_HANDS_EMPTY.mp4",
+        "sha256": "5af18cd58032e88c766c12ddbeeeeaf98a0866fa2d0d701d8661ccebe29a669f",
+        "bytes": 544325,
+        "mode": "threshold",
+        "expected": "NOT_VISIBLE",
+        "source_url": "https://www.pexels.com/video/man-knocking-door-11680516/",
+        "download_url": "https://videos.pexels.com/video-files/11680516/11680516-sd_640_360_30fps.mp4",
+        "source_sha256": "8a88545a17d5ffc7bbb172c1f75cf8742fe25f680f7e63ea0d3cade1336d37e2",
+        "author": "Andrew Kota",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "trim_seconds": [
+          0.0,
+          12.85
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 360
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      },
+      {
+        "id": "RS10_ARRIVAL_PAPER_BAGS",
+        "provenance": "REAL_RECORDED_STOCK",
+        "file": "real-stock/RS10_ARRIVAL_PAPER_BAGS.mp4",
+        "sha256": "80742e82ad81ad3f5633b35e90750194fba577068bbc23b9f9ffe81d99c674d8",
+        "bytes": 227435,
+        "mode": "threshold",
+        "expected": "AMBIGUOUS",
+        "source_url": "https://www.pexels.com/video/woman-walking-on-the-sidewalk-carrying-paper-bags-7234080/",
+        "download_url": "https://videos.pexels.com/video-files/7234080/7234080-uhd_2160_3840_24fps.mp4",
+        "source_sha256": "0dab25bcf1f81ff87b107aa0ebf50acb102bb4564892db7a19e50bbc4ae49bdd",
+        "author": "Blue Bird",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "trim_seconds": [
+          0.0,
+          10.0
+        ],
+        "encode": {
+          "fps": 10,
+          "height": 480
+        },
+        "test": "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts"
+      }
+    ]
   }
 }

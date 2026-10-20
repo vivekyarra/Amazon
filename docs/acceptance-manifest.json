@@ -351,17 +351,24 @@
     {
       "requirement_id": "P0-020",
       "requirement": "Vision processes actual source frames/recordings and identifies courier deposit vs fake-deposit correctly on required fixtures.",
-      "verification_result": "BLOCKED",
+      "verification_result": "IMPLEMENTED_UNVERIFIED",
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/scene.py"
       ],
-      "automated_tests": [],
-      "evidence": null,
+      "automated_tests": [
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS01_DEPOSIT_DOORSTEP_STACK]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS02_DEPOSIT_MAILER_DOORMAT]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS03_COURIER_NO_DEPOSIT]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_deposit_stage_uses_shared_reducers_and_labels_source",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_no_deposit_is_disputed_without_watchdog"
+      ],
+      "evidence": "docs/evidence/scene-vision.json",
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Generated marker pixels processed; real-world video deposit detection not implemented."
+        "Real-frame pipeline (MediaPipe EfficientDet-Lite0 + ROI change detection + tracker) decodes actual recorded video and returns DEPOSIT_CONFIRMED on two REAL_RECORDED_STOCK deposit clips and MISMATCH on one courier-without-drop clip (docs/evidence/scene-vision.json). These are public stock/CC BY recordings, not Ring recordings of the household; no parcel class exists in COCO, parcels are inferred from persistent ROI change. Ring-sourced deposit proof is still missing."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -405,17 +412,22 @@
     {
       "requirement_id": "P0-023",
       "requirement": "Removal toward street creates one incident and evidence with timestamp, best available person crop, clip and trajectory, with truthful quality/duration labels.",
-      "verification_result": "BLOCKED",
+      "verification_result": "IMPLEMENTED_UNVERIFIED",
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/scene.py"
       ],
-      "automated_tests": [],
-      "evidence": null,
+      "automated_tests": [
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS04_PORCH_REMOVAL_CCTV]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS05_PORCH_REMOVAL_DOORBELL]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_removal_creates_one_incident_with_truthful_clip_labels"
+      ],
+      "evidence": "docs/evidence/scene-vision.json",
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "15-second generated source/annotated clips, snapshots/crop/trajectory implemented; no live Ring detection or recording."
+        "Two public CC BY porch-camera recordings produce REMOVAL_UNDER_REVIEW through the shared incident reducers with original clip, annotated derived clip/frame (parent-linked), person crop and pixel trajectory; the 14.1 s source is labeled EVIDENCE_INCOMPLETE. Not Ring footage; live Ring detection/recording remains blocked."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -463,10 +475,17 @@
       "integration_source": "SIMULATED_VERIFIED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/scene.py"
       ],
       "automated_tests": [
-        "test_pixel_detector_negative_cases"
+        "test_pixel_detector_negative_cases",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS07_PASSERBY_DRIVEWAY]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_interrupted_video_never_concludes",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_passerby_and_non_deposit_do_not_raise_incidents",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_camera_loss_dark_and_occluded_frames_are_not_evidence",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_static_false_person_is_scene_fixture_not_actor",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_removal_creates_one_incident_with_truthful_clip_labels"
       ],
       "evidence": "artifacts/backend-results.xml",
       "scope": "Synthetic local development workflow; no live/device inference",
@@ -567,17 +586,20 @@
     {
       "requirement_id": "P0-032",
       "requirement": "07:45 arrival can trigger a real/recorded Ring processing path and cross-reference the morning drinks contract.",
-      "verification_result": "BLOCKED",
+      "verification_result": "IMPLEMENTED_UNVERIFIED",
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/scene.py"
       ],
-      "automated_tests": [],
-      "evidence": null,
+      "automated_tests": [
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
+      ],
+      "evidence": "docs/evidence/scene-vision.json",
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Arrival cross-references promise using generated markers; no actual Ring/recorded pipeline."
+        "Stage 5 can consume a REAL_RECORDED_STOCK arrival clip (branches real_visible/real_empty/real_bags) and cross-reference the morning drinks contract through the same reducers. The clips are public stock scenes (two without a real doorway), not a Ring recording or live trigger."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -589,10 +611,15 @@
       "integration_source": "SIMULATED_VERIFIED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/scene.py"
       ],
       "automated_tests": [
-        "test_F13_F14_F15_threshold_uncertainty"
+        "test_F13_F14_F15_threshold_uncertainty",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS08_ARRIVAL_BOTTLE_VISIBLE]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS09_ARRIVAL_HANDS_EMPTY]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS10_ARRIVAL_PAPER_BAGS]",
+        "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
       ],
       "evidence": "artifacts/backend-results.xml",
       "scope": "Synthetic local development workflow; no live/device inference",

@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from .models import ApiError, BeeInput
 from . import vision
+from . import scene
 from . import commitments as nl
 from . import privacy
 
@@ -152,6 +153,7 @@ def add_evidence(
     parent_evidence_id=None,
     sensor=None,
     privacy_mask=None,
+    confidence=1.0,
 ):
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Evidence collection is paused.")
@@ -186,7 +188,7 @@ def add_evidence(
         retention_days_at_capture=privacy.retention_days(s),
         decision="VALIDATED",
         capture_gaps=[],
-        confidence=1.0,
+        confidence=confidence,
         model_name_version=sensor.get(
             "model",
             "owner-statement-v1" if provenance == "USER_CONFIRMED" else "synthetic-calibrated-markers-v1",
@@ -825,6 +827,8 @@ def run_scenario(s, db, household, stage, branch):
         )
         if c.get("deposit_status"):
             return
+        if branch.startswith("real_"):
+            return scene.real_deposit_stage(s, db, household, c, branch)
         frames = [
             privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, f)[0]
             for f in vision.fixture_frames("fake" if branch == "fake" else "deposit")
@@ -877,6 +881,8 @@ def run_scenario(s, db, household, stage, branch):
                 s, "watchdog.observation_updated", dict(contract_id=c["contract_id"], result="PARCEL_REMAINS")
             )
             return
+        if branch.startswith("real_"):
+            return scene.real_watchdog_stage(s, db, household, c, branch)
         frames = [
             privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, f)[0] for f in vision.fixture_frames("removal")
         ]
@@ -953,6 +959,8 @@ def run_scenario(s, db, household, stage, branch):
             incident_action(s, db, household, "inc_parcel", "authorize-pickup", {})
     elif stage == 5:
         c = contract(s, "drinks")
+        if branch.startswith("real_"):
+            return scene.real_threshold_stage(s, db, household, c, branch)
         frame = vision.scene(
             280 if not s["incidents"] else None,
             310,
