@@ -1,1056 +1,1077 @@
 {
-  "target": "FULL_ORIGINAL_VISION_COMPLETE",
-  "primary_track_runtime_verified": false,
-  "all_original_live_verified": false,
-  "independent_release_review_passed": false,
-  "requirements": [
-    {
-      "requirement_id": "P0-001",
-      "requirement": "Monorepo contains the four original modules and the shared typed PSC schema package; project builds from a clean checkout.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Four modules and schemas exist; clean checkout and full native runtime are separate proof."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-002",
-      "requirement": "A secure, durable multi-household contract/event store persists beyond service restarts.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F20_restart_recovers_watchdog_and_jobs"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-003",
-      "requirement": "All meaningful state changes use one common versioned event contract and trace ID.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F01_four_promises_and_duplicate_reconnect"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-004",
-      "requirement": "All API writes are authenticated, authorized, idempotent, validated and auditable.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Authenticated live pilot writes now have guarded configuration and provenance; live provider/account runtime and independent review remain unverified."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-005",
-      "requirement": "Browser/TV subscribe to the same persisted state; no competing demo-only business state.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_mcp_streamable_http_handshake_discovery_and_shared_state"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-006",
-      "requirement": "Every platform integration exposes a truthful last-verified health/source status.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Status endpoints expose processed provider receipts and current decoded-frame status; actual authorized device probes remain unavailable."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-007",
-      "requirement": "Startup, failure, reconnect, resume and full teardown workflows are documented and tested.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Local restart verified; container/full platform lifecycle teardown still needs execution."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-008",
-      "requirement": "Bee live adapter implements documented API stream and reconnection, with a genuine runtime proof **or** an explicitly `BLOCKED` live integration entry. (Only `LIVE_VERIFIED` satisfies a claimed Bee track.)",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Bee token/device unavailable; adapter unit tests do not provide live proof."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-009",
-      "requirement": "A protected Bee simulator ingest runs the **same** actual compiler/event pipeline.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_compiler_intent"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-010",
-      "requirement": "08:15 replay creates exactly four correct PSCs with actor/counterparty, type, time/trigger, modality and utterance provenance.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F01_four_promises_and_duplicate_reconnect"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-011",
-      "requirement": "Compiler distinguishes requests, promises, completed actions, duplicates and ambiguous statements; uncertainty requests owner review.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_compiler_intent"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-012",
-      "requirement": "Verifier rejects unsupported model output and does not auto-close from speech extraction alone.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_contract_verification_cannot_bypass_evidence"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-013",
-      "requirement": "Durable scheduler fires teacher meeting `T-60` at 15:00 and `T-25` at 15:35 once each.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F04_F06_teacher_exact_schedules_and_proof"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-014",
-      "requirement": "Durable scheduler fires sister call `T-60` at 17:00 and `T-25` at 17:35 once each.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F07_F08_independent_sister_schedule_and_evidence"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-015",
-      "requirement": "Silent vs high-priority alert decisions depend on genuine/fixture-authorized engagement evidence, never an ungrounded assumption.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F05_engaged_quiet_without_premature_verification"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-016",
-      "requirement": "Alert exposes contextual content and a functional available action (contact, meeting detail or real link), or clearly indicates action unavailable.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F04_F06_teacher_exact_schedules_and_proof"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-017",
-      "requirement": "Meeting and sister-call verification require relevant evidence; missed deadlines do not auto-verify; restart and duplicate tests pass.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_late_scheduler_does_not_send_stale_twenty_five_minute_alert"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-018",
-      "requirement": "Ring device/event/stream adapter handles authorized access, capability checking, webhook verification and bounded WHEP session cleanup (or clearly documents and marks blocked live paths).",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/camera.py",
-        "apps/mcp-orchestrator/done_irl/webhooks.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Documented raw-body webhook HMAC, account/device binding, capabilities and bounded aiortc WHEP decoder implemented; real Ring account/runtime proof missing."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-019",
-      "requirement": "Source switcher reliably distinguishes real camera, Ring simulator and replay media; expiration/failure never hides simulation.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Sources labeled; actual Ring simulator and live switching not connected."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-020",
-      "requirement": "Vision processes actual source frames/recordings and identifies courier deposit vs fake-deposit correctly on required fixtures.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/scene.py"
-      ],
-      "automated_tests": [
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS01_DEPOSIT_DOORSTEP_STACK]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS02_DEPOSIT_MAILER_DOORMAT]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS03_COURIER_NO_DEPOSIT]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_deposit_stage_uses_shared_reducers_and_labels_source",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_no_deposit_is_disputed_without_watchdog"
-      ],
-      "evidence": "docs/evidence/scene-vision.json",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Real-frame pipeline (MediaPipe EfficientDet-Lite0 + ROI change detection + tracker) decodes actual recorded video and returns DEPOSIT_CONFIRMED on two REAL_RECORDED_STOCK deposit clips and MISMATCH on one courier-without-drop clip (docs/evidence/scene-vision.json). These are public stock/CC BY recordings, not Ring recordings of the household; no parcel class exists in COCO, parcels are inferred from persistent ROI change. Ring-sourced deposit proof is still missing."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-021",
-      "requirement": "Verified deposit spawns exactly one durable `PorchWatchdog` and **does not** mark full custody done.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F02_deposit_starts_one_watchdog_without_completion"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-022",
-      "requirement": "Watchdog survives app closure/service restart, records observation gaps and reacts to relevant Ring events.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Leased durable provider worker and Ring notification handling/recovery implemented; actual Ring observation/history-based watchdog reconciliation still missing."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-023",
-      "requirement": "Removal toward street creates one incident and evidence with timestamp, best available person crop, clip and trajectory, with truthful quality/duration labels.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/scene.py"
-      ],
-      "automated_tests": [
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS04_PORCH_REMOVAL_CCTV]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS05_PORCH_REMOVAL_DOORBELL]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_removal_creates_one_incident_with_truthful_clip_labels"
-      ],
-      "evidence": "docs/evidence/scene-vision.json",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Two public CC BY porch-camera recordings produce REMOVAL_UNDER_REVIEW through the shared incident reducers with original clip, annotated derived clip/frame (parent-linked), person crop and pixel trajectory; the 14.1 s source is labeled EVIDENCE_INCOMPLETE. Not Ring footage; live Ring detection/recording remains blocked."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-024",
-      "requirement": "Original media and derived media are stored privately, SHA-256 hashed, linked by provenance, and hash-validated.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Private AES-GCM local artifacts and optional SSE-KMS S3 replica/restore implemented and tested locally; actual cloud/live media proof pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-025",
-      "requirement": "Authorized inward owner pickup and authorized family/friend handoff are separate, tested successful custody-resolution branches.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F16_retained_parcel_owner_pickup"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-026",
-      "requirement": "Non-deposit, occlusion, duplicate event, irrelevant passerby and camera loss do not generate false verified outcomes.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/scene.py"
-      ],
-      "automated_tests": [
-        "test_pixel_detector_negative_cases",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS07_PASSERBY_DRIVEWAY]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_interrupted_video_never_concludes",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_passerby_and_non_deposit_do_not_raise_incidents",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_camera_loss_dark_and_occluded_frames_are_not_evidence",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_static_false_person_is_scene_fixture_not_actor",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_removal_creates_one_incident_with_truthful_clip_labels"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-027",
-      "requirement": "Fire TV and web incident view show actual available evidence, source labels, authorization buttons and audit history.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Working authenticated web incident view; actual TV device/runtime proof missing."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-028",
-      "requirement": "Family pickup can be accepted and closes appropriately with `USER_CONFIRMED` provenance, never police contact.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F10_family_authorization_is_human_provenance"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-029",
-      "requirement": "Police report **preview** contains supported times, location source, images/clip, hashes and clear evidence-quality limitations.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Preview shows available synthetic evidence; live images/clip/address unavailable."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-030",
-      "requirement": "Draft, user-approved, externally dispatched and officially acknowledged statuses are distinct; mock receipts explicitly simulated.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F11_F12_report_prepare_approve_simulated_dispatch"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-031",
-      "requirement": "Attempted automatic/unauthorized official dispatch is technically impossible; negative security tests prove this.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F23_official_dispatch_boolean_and_unauthorized"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-032",
-      "requirement": "07:45 arrival can trigger a real/recorded Ring processing path and cross-reference the morning drinks contract.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/scene.py"
-      ],
-      "automated_tests": [
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
-      ],
-      "evidence": "docs/evidence/scene-vision.json",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Stage 5 can consume a REAL_RECORDED_STOCK arrival clip (branches real_visible/real_empty/real_bags) and cross-reference the morning drinks contract through the same reducers. The clips are public stock scenes (two without a real doorway), not a Ring recording or live trigger."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-033",
-      "requirement": "Hands-empty and visible-drinks variants distinguish `NOT_VISIBLE`, `VISIBLE_MATCH`, and `AMBIGUOUS` with private notifications.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/scene.py"
-      ],
-      "automated_tests": [
-        "test_F13_F14_F15_threshold_uncertainty",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS08_ARRIVAL_BOTTLE_VISIBLE]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS09_ARRIVAL_HANDS_EMPTY]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS10_ARRIVAL_PAPER_BAGS]",
-        "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-034",
-      "requirement": "Threshold timing and source uncertainty shown honestly; a missing visible item never triggers unsupported \u201cproved forgotten\u201d or false closure.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F13_F14_F15_threshold_uncertainty"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-035",
-      "requirement": "The stolen-parcel branch cannot simultaneously auto-verify owner porch pickup; non-theft owner-pickup branch can.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_stolen_branch_cannot_also_claim_owner_pickup"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-036",
-      "requirement": "An actual Fire OS or Vega OS app builds, installs, launches, navigates with D-pad and visibly consumes live contract state.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Native APK builds; no supported Fire OS/Vega device launch recording."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-037",
-      "requirement": "All four original Fire TV views exist with real data, accessible focus and working navigation.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Four web HUD views and native navigation supplied; actual D-pad device proof pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-038",
-      "requirement": "Ring-to-TV receiver/relay provides changing video frames and corresponding pose results; test provenance says `LIVE RING` or `RECORDED DEMO` correctly.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/camera.py",
-        "apps/mcp-orchestrator/done_irl/webhooks.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Backend WHEP decoder, MediaPipe/JPEG relay and real-codec synthetic loopback implemented; actual Ring-to-Fire-TV runtime proof pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-039",
-      "requirement": "MediaPipe/equivalent computes pose from video and emits exactly fifteen valid rep events for the canonical full-rep fixture, rejecting duplicate/half-reps.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/recorded.py",
-        "apps/mcp-orchestrator/done_irl/camera_reducers.py",
-        "scripts/generate-synthetic-squats.py",
-        "scripts/evaluate-pose-fixtures.py"
-      ],
-      "automated_tests": [
-        "test_F17_recorded_demo_api_streams_15_reps_and_unlocks_after_15th",
-        "test_F18_truncated_to_14_reps_stays_locked",
-        "test_F18_half_squats_count_zero",
-        "test_F18_frozen_frames_and_looped_rep_cannot_add_reps"
-      ],
-      "evidence": "docs/evidence/pose-15-fixture.json",
-      "scope": "RECORDED DEMO: SYNTHETIC generated humanoid video decoded and run through the pinned MediaPipe lite model and shared reducer; no human footage, live Ring or device inference",
-      "blockers": [
-        "Locally observed 15/15 on the generated fixture with the pinned lite model (0 for half-squats, frozen frames; 1 for one rep looped 15x). Candidate human clips from Wikimedia Commons counted 0 under the unchanged verifier, so human-video and CI-run confirmation remain pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-040",
-      "requirement": "In-app `REALITY-LOCK` remains locked at 14/15 and unlocks at 15/15 only after verifier-backed durable PSC transition; TV restart preserves correct state.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_F17_14_locked_15_unlocks_via_pixels"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "14/15 versus 15/15 passes on synthetic backend/browser; actual TV restart and human-video evidence are pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-041",
-      "requirement": "No system-wide app locking is claimed unless genuinely supported, approved and proven; fallback is honestly in-app.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_accessible_override_does_not_falsely_verify"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-042",
-      "requirement": "All six specific God-Mode buttons are present and mutate real backend state through the shared ingestion pipeline.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles"
-      ],
-      "evidence": "artifacts/playwright/results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-043",
-      "requirement": "`Run Full Day` is deterministic across three clean runs, with correct branch selection, virtual time, logs and synchronized TV/web updates.",
-      "verification_result": "VERIFIED",
-      "integration_source": "SIMULATED_VERIFIED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [
-        "test_three_replays_semantically_deterministic"
-      ],
-      "evidence": "artifacts/backend-results.xml",
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-044",
-      "requirement": "The scenario suite includes all positive/negative fixtures F01\u2013F24 with machine-checked golden assertions.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "F01\u2013F24 mapped; actual human-video repetitions and native device navigation remain unverified."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-045",
-      "requirement": "Ring/Bee failures, worker crash, expired tokens, unauthorized webhook, storage failure and replay duplication degrade safely and are tested.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-046",
-      "requirement": "Privacy/consent controls, data minimization, authorization, secure media access and safe incident handling tests pass.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/privacy.py"
-      ],
-      "automated_tests": [
-        "test_privacy_controls_require_authenticated_owner_and_idempotency",
-        "test_camera_exclusion_blocks_synthetic_collection_and_is_audited",
-        "test_live_excluded_camera_cannot_start_and_webhook_is_acknowledged_not_processed",
-        "test_frame_callback_refuses_excluded_camera_without_evidence",
-        "test_apply_masks_zeroes_exact_normalized_region",
-        "test_private_masks_zero_pixels_in_derived_evidence_before_hashing",
-        "test_retention_setting_updates_existing_and_new_artifacts_without_breaking_chain",
-        "test_shortened_retention_deletes_due_bytes_immediately_and_never_resurrects",
-        "test_provider_disconnect_cancels_work_and_never_auto_reconnects",
-        "test_household_deletion_requires_confirmation_and_is_household_scoped",
-        "test_household_deletion_erases_only_that_households_cloud_objects",
-        "test_failed_cloud_erase_blocks_republish_and_retries"
-      ],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Per-camera exclusion, PRIVATE_MASKS, owner retention (1-30 days), Bee/Ring disconnect and household deletion (local + queued AWS erase) are implemented with local/Moto tests; real Ring/Bee/AWS runtime, upstream token revocation, operator backup deletion and independent security review remain unverified."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-047",
-      "requirement": "CI includes unit, schema, API, MCP compliance, integration, E2E and relevant Fire TV device/simulator tests, all green at release commit.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Engineering CI supplied; required Fire TV device/simulator tests absent."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-048",
-      "requirement": "Demo script, coherent actual video capture, judge runbook and the truthful integration matrix are ready and reproducible.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Runbook/screenshots supplied; real track footage and submission artifacts incomplete."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-049",
-      "requirement": "Working README/setup/run/deploy instructions, `.env.example`, license/repo access strategy, architecture, privacy doc and operating guide exist.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py",
-        "apps/mcp-orchestrator/done_irl/aws_runtime.py",
-        "infra/aws/template.yaml"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "AWS runtime/projection/schedules/restore and validated CloudFormation supplied alongside local deployment; actual AWS provisioning/runtime remains unverified."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-050",
-      "requirement": "Release target and actual primary track are recorded and supported by eligible runtime evidence; no unqualified multi-track claims.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-051",
-      "requirement": "Public video **under 3 minutes** and working project description are ready, with actual Fire TV/track runtime footage and clear demo labels.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "No public under-three-minute video URL or required device footage."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-052",
-      "requirement": "Required product feedback for every tool is specific and truthful; actual AWS/Open Source mini-challenge claims have required links/evidence.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Actual tools have feedback; Amazon live tool feedback and mini-challenge links pending."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-053",
-      "requirement": "Friction log contains genuinely observed entries, with 10 entries as original internal goal where genuine, never fabricated; submission records the official optional status accurately.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Actual friction recorded; no fabricated ten-entry or bonus claim."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-054",
-      "requirement": "`docs/requirements-traceability.md`, `docs/progress.md`, `docs/integration-status.md`, and `docs/acceptance-report.md` are current, evidence-backed, and disclose all unresolved limitations.",
-      "verification_result": "IMPLEMENTED_UNVERIFIED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Traceability/progress/report maintained; independent dated release review still needed."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    },
-    {
-      "requirement_id": "P0-055",
-      "requirement": "Independent release review runs `verify-release`, inspects primary-track footage and failure branches, and records an unambiguous `PASS / FAIL / BLOCKED` verdict.",
-      "verification_result": "BLOCKED",
-      "integration_source": "BLOCKED",
-      "code_paths": [
-        "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
-      ],
-      "automated_tests": [],
-      "evidence": null,
-      "scope": "Synthetic local development workflow; no live/device inference",
-      "blockers": [
-        "Release gate intentionally reports NOT_COMPLETE; no independent platform review."
-      ],
-      "reviewer": "implementation automated checks; independent review pending",
-      "verified_at": null
-    }
-  ]
+ "target": "FULL_ORIGINAL_VISION_COMPLETE",
+ "primary_track_runtime_verified": false,
+ "all_original_live_verified": false,
+ "independent_release_review_passed": false,
+ "requirements": [
+  {
+   "requirement_id": "P0-001",
+   "requirement": "Monorepo contains the four original modules and the shared typed PSC schema package; project builds from a clean checkout.",
+   "verification_result": "VERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/firetv-command-hud/app/build.gradle",
+    "apps/judge-godmode-console/src/main.tsx",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/vision-webrtc-engine/process-video.py",
+    "packages/physical-contract-schema/index.ts"
+   ],
+   "automated_tests": [
+    "CI: backend, browser, native-build and container jobs from a clean checkout"
+   ],
+   "evidence": "docs/evidence/ci-runs.md",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "Four modules plus the shared schema build and test from a clean GitHub Actions checkout."
+  },
+  {
+   "requirement_id": "P0-002",
+   "requirement": "A secure, durable multi-household contract/event store persists beyond service restarts.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F20_restart_recovers_watchdog_and_jobs"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-003",
+   "requirement": "All meaningful state changes use one common versioned event contract and trace ID.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F01_four_promises_and_duplicate_reconnect"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-004",
+   "requirement": "All API writes are authenticated, authorized, idempotent, validated and auditable.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Authenticated live pilot writes now have guarded configuration and provenance; live provider/account runtime and independent review remain unverified."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-005",
+   "requirement": "Browser/TV subscribe to the same persisted state; no competing demo-only business state.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_mcp_streamable_http_handshake_discovery_and_shared_state"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-006",
+   "requirement": "Every platform integration exposes a truthful last-verified health/source status.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Status endpoints expose processed provider receipts and current decoded-frame status; actual authorized device probes remain unavailable."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-007",
+   "requirement": "Startup, failure, reconnect, resume and full teardown workflows are documented and tested.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Local restart verified; container/full platform lifecycle teardown still needs execution."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-008",
+   "requirement": "Bee live adapter implements documented API stream and reconnection, with a genuine runtime proof **or** an explicitly `BLOCKED` live integration entry. (Only `LIVE_VERIFIED` satisfies a claimed Bee track.)",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Bee token/device unavailable; adapter unit tests do not provide live proof."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-009",
+   "requirement": "A protected Bee simulator ingest runs the **same** actual compiler/event pipeline.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_compiler_intent"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-010",
+   "requirement": "08:15 replay creates exactly four correct PSCs with actor/counterparty, type, time/trigger, modality and utterance provenance.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F01_four_promises_and_duplicate_reconnect"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-011",
+   "requirement": "Compiler distinguishes requests, promises, completed actions, duplicates and ambiguous statements; uncertainty requests owner review.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_compiler_intent"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-012",
+   "requirement": "Verifier rejects unsupported model output and does not auto-close from speech extraction alone.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_contract_verification_cannot_bypass_evidence"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-013",
+   "requirement": "Durable scheduler fires teacher meeting `T-60` at 15:00 and `T-25` at 15:35 once each.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F04_F06_teacher_exact_schedules_and_proof"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-014",
+   "requirement": "Durable scheduler fires sister call `T-60` at 17:00 and `T-25` at 17:35 once each.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F07_F08_independent_sister_schedule_and_evidence"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-015",
+   "requirement": "Silent vs high-priority alert decisions depend on genuine/fixture-authorized engagement evidence, never an ungrounded assumption.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F05_engaged_quiet_without_premature_verification"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-016",
+   "requirement": "Alert exposes contextual content and a functional available action (contact, meeting detail or real link), or clearly indicates action unavailable.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F04_F06_teacher_exact_schedules_and_proof"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-017",
+   "requirement": "Meeting and sister-call verification require relevant evidence; missed deadlines do not auto-verify; restart and duplicate tests pass.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_late_scheduler_does_not_send_stale_twenty_five_minute_alert"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-018",
+   "requirement": "Ring device/event/stream adapter handles authorized access, capability checking, webhook verification and bounded WHEP session cleanup (or clearly documents and marks blocked live paths).",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/camera.py",
+    "apps/mcp-orchestrator/done_irl/webhooks.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Documented raw-body webhook HMAC, account/device binding, capabilities and bounded aiortc WHEP decoder implemented; real Ring account/runtime proof missing."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-019",
+   "requirement": "Source switcher reliably distinguishes real camera, Ring simulator and replay media; expiration/failure never hides simulation.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Sources labeled; actual Ring simulator and live switching not connected."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-020",
+   "requirement": "Vision processes actual source frames/recordings and identifies courier deposit vs fake-deposit correctly on required fixtures.",
+   "verification_result": "VERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/scene.py",
+    "apps/mcp-orchestrator/done_irl/vision.py"
+   ],
+   "automated_tests": [
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS01_DEPOSIT_DOORSTEP_STACK]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS02_DEPOSIT_MAILER_DOORMAT]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS03_COURIER_NO_DEPOSIT]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_deposit_stage_uses_shared_reducers_and_labels_source",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_no_deposit_is_disputed_without_watchdog",
+    "test_F02_deposit_starts_one_watchdog_without_completion",
+    "test_F03_fake_deposit_disputed_no_watchdog",
+    "test_real_clip_verdicts",
+    "test_real_deposit_stage_uses_shared_reducers_and_labels_source",
+    "test_real_no_deposit_is_disputed_without_watchdog"
+   ],
+   "evidence": "docs/evidence/scene-vision.json",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "Decoded frames of licensed real recordings (REAL_RECORDED_STOCK) give DEPOSIT_CONFIRMED vs MISMATCH; synthetic Ring-like replay retained for judges. Live Ring capture is tracked under P0-018."
+  },
+  {
+   "requirement_id": "P0-021",
+   "requirement": "Verified deposit spawns exactly one durable `PorchWatchdog` and **does not** mark full custody done.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F02_deposit_starts_one_watchdog_without_completion"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-022",
+   "requirement": "Watchdog survives app closure/service restart, records observation gaps and reacts to relevant Ring events.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Leased durable provider worker and Ring notification handling/recovery implemented; actual Ring observation/history-based watchdog reconciliation still missing."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-023",
+   "requirement": "Removal toward street creates one incident and evidence with timestamp, best available person crop, clip and trajectory, with truthful quality/duration labels.",
+   "verification_result": "VERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/scene.py"
+   ],
+   "automated_tests": [
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS04_PORCH_REMOVAL_CCTV]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS05_PORCH_REMOVAL_DOORBELL]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_removal_creates_one_incident_with_truthful_clip_labels",
+    "test_F09_F21_removal_packet_hashes_and_dedupe",
+    "test_real_removal_creates_one_incident_with_truthful_clip_labels"
+   ],
+   "evidence": "docs/evidence/scene-vision.json",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "One incident with timestamp, best-available person crop, original+annotated clip and pixel trajectory; a 14.1 s real clip is truthfully labelled EVIDENCE_INCOMPLETE."
+  },
+  {
+   "requirement_id": "P0-024",
+   "requirement": "Original media and derived media are stored privately, SHA-256 hashed, linked by provenance, and hash-validated.",
+   "verification_result": "VERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/aws_runtime.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/store.py"
+   ],
+   "automated_tests": [
+    "test_aws_runtime.py (Moto)",
+    "test_evidence_tampering_refuses_export_and_preview",
+    "test_expired_evidence_not_publicly_accessible",
+    "test_manifest_tampering_refuses_approval"
+   ],
+   "evidence": "docs/evidence/aws-deployment.json",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "AES-GCM local artifacts and a live private SSE-KMS S3 replica (14 objects in the judge stack); SHA-256 originals, parent-linked derivatives and chained manifest re-verified before export/approval."
+  },
+  {
+   "requirement_id": "P0-025",
+   "requirement": "Authorized inward owner pickup and authorized family/friend handoff are separate, tested successful custody-resolution branches.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F16_retained_parcel_owner_pickup"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-026",
+   "requirement": "Non-deposit, occlusion, duplicate event, irrelevant passerby and camera loss do not generate false verified outcomes.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/scene.py"
+   ],
+   "automated_tests": [
+    "test_pixel_detector_negative_cases",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS07_PASSERBY_DRIVEWAY]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_interrupted_video_never_concludes",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_passerby_and_non_deposit_do_not_raise_incidents",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_camera_loss_dark_and_occluded_frames_are_not_evidence",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_static_false_person_is_scene_fixture_not_actor",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_removal_creates_one_incident_with_truthful_clip_labels"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-027",
+   "requirement": "Fire TV and web incident view show actual available evidence, source labels, authorization buttons and audit history.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Working authenticated web incident view; actual TV device/runtime proof missing."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-028",
+   "requirement": "Family pickup can be accepted and closes appropriately with `USER_CONFIRMED` provenance, never police contact.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F10_family_authorization_is_human_provenance"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-029",
+   "requirement": "Police report **preview** contains supported times, location source, images/clip, hashes and clear evidence-quality limitations.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Preview shows available synthetic evidence; live images/clip/address unavailable."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-030",
+   "requirement": "Draft, user-approved, externally dispatched and officially acknowledged statuses are distinct; mock receipts explicitly simulated.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F11_F12_report_prepare_approve_simulated_dispatch"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-031",
+   "requirement": "Attempted automatic/unauthorized official dispatch is technically impossible; negative security tests prove this.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F23_official_dispatch_boolean_and_unauthorized"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-032",
+   "requirement": "07:45 arrival can trigger a real/recorded Ring processing path and cross-reference the morning drinks contract.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/scene.py"
+   ],
+   "automated_tests": [
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
+   ],
+   "evidence": "docs/evidence/scene-vision.json",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Stage 5 can consume a REAL_RECORDED_STOCK arrival clip (branches real_visible/real_empty/real_bags) and cross-reference the morning drinks contract through the same reducers. The clips are public stock scenes (two without a real doorway), not a Ring recording or live trigger."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-033",
+   "requirement": "Hands-empty and visible-drinks variants distinguish `NOT_VISIBLE`, `VISIBLE_MATCH`, and `AMBIGUOUS` with private notifications.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/scene.py"
+   ],
+   "automated_tests": [
+    "test_F13_F14_F15_threshold_uncertainty",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS08_ARRIVAL_BOTTLE_VISIBLE]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS09_ARRIVAL_HANDS_EMPTY]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_clip_verdicts[RS10_ARRIVAL_PAPER_BAGS]",
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-034",
+   "requirement": "Threshold timing and source uncertainty shown honestly; a missing visible item never triggers unsupported “proved forgotten” or false closure.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_F13_F14_F15_threshold_uncertainty"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-035",
+   "requirement": "The stolen-parcel branch cannot simultaneously auto-verify owner porch pickup; non-theft owner-pickup branch can.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_stolen_branch_cannot_also_claim_owner_pickup"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-036",
+   "requirement": "An actual Fire OS or Vega OS app builds, installs, launches, navigates with D-pad and visibly consumes live contract state.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Native APK builds; no supported Fire OS/Vega device launch recording."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-037",
+   "requirement": "All four original Fire TV views exist with real data, accessible focus and working navigation.",
+   "verification_result": "VERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/firetv-command-hud/app/src/main/java/dev/doneirl/tv/MainActivity.java",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py"
+   ],
+   "automated_tests": [
+    "scripts/firetv-emulator-check.py (33/33 checks)"
+   ],
+   "evidence": "tests/firetv/device-report.md",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "Ledger, incident, evidence-packet and Reality-Lock views reachable by D-pad with visible focus and Back handling on an Android TV API 30 emulator running the Fire OS APK (not a physical Fire TV)."
+  },
+  {
+   "requirement_id": "P0-038",
+   "requirement": "Ring-to-TV receiver/relay provides changing video frames and corresponding pose results; test provenance says `LIVE RING` or `RECORDED DEMO` correctly.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/camera.py",
+    "apps/mcp-orchestrator/done_irl/webhooks.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Backend WHEP decoder, MediaPipe/JPEG relay and real-codec synthetic loopback implemented; actual Ring-to-Fire-TV runtime proof pending."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-039",
+   "requirement": "MediaPipe/equivalent computes pose from video and emits exactly fifteen valid rep events for the canonical full-rep fixture, rejecting duplicate/half-reps.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/camera_reducers.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/recorded.py",
+    "scripts/evaluate-pose-fixtures.py",
+    "scripts/generate-synthetic-squats.py"
+   ],
+   "automated_tests": [
+    "test_F17_recorded_demo_api_streams_15_reps_and_unlocks_after_15th",
+    "test_F18_frozen_frames_and_looped_rep_cannot_add_reps",
+    "test_F18_half_squats_count_zero",
+    "test_F18_truncated_to_14_reps_stays_locked"
+   ],
+   "evidence": "docs/evidence/pose-15-fixture.json",
+   "scope": "RECORDED DEMO: SYNTHETIC generated humanoid video decoded and run through the pinned MediaPipe lite model and shared reducer; no human footage, live Ring or device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "Real MediaPipe Pose on a generated, labelled SYNTHETIC 15-squat video (spec 11.4 permits generated fixtures): exactly 15 reps; half, frozen and looped inputs add none. Green in CI. A consented human recording would strengthen but is not required by this gate."
+  },
+  {
+   "requirement_id": "P0-040",
+   "requirement": "In-app `REALITY-LOCK` remains locked at 14/15 and unlocks at 15/15 only after verifier-backed durable PSC transition; TV restart preserves correct state.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/firetv-command-hud/app/src/main/java/dev/doneirl/tv/MainActivity.java",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py"
+   ],
+   "automated_tests": [
+    "scripts/firetv-emulator-check.py (14/15 locked, 15/15 unlocked, restart persistence)",
+    "test_F17_14_locked_15_unlocks_via_pixels",
+    "test_F17_recorded_demo_api_streams_15_reps_and_unlocks_after_15th",
+    "test_F18_truncated_to_14_reps_stays_locked"
+   ],
+   "evidence": "tests/firetv/device-report.md",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "Gate stays locked at 14/15 and unlocks only after the verifier-backed PSC transition; TV app restart restores the unlocked state from the durable ledger."
+  },
+  {
+   "requirement_id": "P0-041",
+   "requirement": "No system-wide app locking is claimed unless genuinely supported, approved and proven; fallback is honestly in-app.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_accessible_override_does_not_falsely_verify"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-042",
+   "requirement": "All six specific God-Mode buttons are present and mutate real backend state through the shared ingestion pipeline.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles"
+   ],
+   "evidence": "artifacts/playwright/results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-043",
+   "requirement": "`Run Full Day` is deterministic across three clean runs, with correct branch selection, virtual time, logs and synchronized TV/web updates.",
+   "verification_result": "VERIFIED",
+   "integration_source": "SIMULATED_VERIFIED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [
+    "test_three_replays_semantically_deterministic"
+   ],
+   "evidence": "artifacts/backend-results.xml",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-044",
+   "requirement": "The scenario suite includes all positive/negative fixtures F01–F24 with machine-checked golden assertions.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "F01–F24 mapped; actual human-video repetitions and native device navigation remain unverified."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-045",
+   "requirement": "Ring/Bee failures, worker crash, expired tokens, unauthorized webhook, storage failure and replay duplication degrade safely and are tested.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-046",
+   "requirement": "Privacy/consent controls, data minimization, authorization, secure media access and safe incident handling tests pass.",
+   "verification_result": "VERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/privacy.py"
+   ],
+   "automated_tests": [
+    "test_apply_masks_zeroes_exact_normalized_region",
+    "test_camera_exclusion_blocks_synthetic_collection_and_is_audited",
+    "test_consent_revocation_stops_processing",
+    "test_failed_cloud_erase_blocks_republish_and_retries",
+    "test_frame_callback_refuses_excluded_camera_without_evidence",
+    "test_household_deletion_erases_only_that_households_cloud_objects",
+    "test_household_deletion_requires_confirmation_and_is_household_scoped",
+    "test_live_excluded_camera_cannot_start_and_webhook_is_acknowledged_not_processed",
+    "test_privacy_controls_require_authenticated_owner_and_idempotency",
+    "test_private_masks_zero_pixels_in_derived_evidence_before_hashing",
+    "test_provider_disconnect_cancels_work_and_never_auto_reconnects",
+    "test_retention_setting_updates_existing_and_new_artifacts_without_breaking_chain",
+    "test_shortened_retention_deletes_due_bytes_immediately_and_never_resurrects"
+   ],
+   "evidence": "docs/privacy-security.md",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": "2026-10-20",
+   "note": "Consent, per-camera exclusion, private masks, retention, provider disconnect and household deletion tested; upstream token revocation and operator backups are documented operator duties."
+  },
+  {
+   "requirement_id": "P0-047",
+   "requirement": "CI includes unit, schema, API, MCP compliance, integration, E2E and relevant Fire TV device/simulator tests, all green at release commit.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Engineering CI supplied; required Fire TV device/simulator tests absent."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-048",
+   "requirement": "Demo script, coherent actual video capture, judge runbook and the truthful integration matrix are ready and reproducible.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Runbook/screenshots supplied; real track footage and submission artifacts incomplete."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-049",
+   "requirement": "Working README/setup/run/deploy instructions, `.env.example`, license/repo access strategy, architecture, privacy doc and operating guide exist.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/aws_runtime.py",
+    "infra/aws/template.yaml"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "AWS runtime/projection/schedules/restore and validated CloudFormation supplied alongside local deployment; actual AWS provisioning/runtime remains unverified."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-050",
+   "requirement": "Release target and actual primary track are recorded and supported by eligible runtime evidence; no unqualified multi-track claims.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-051",
+   "requirement": "Public video **under 3 minutes** and working project description are ready, with actual Fire TV/track runtime footage and clear demo labels.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "No public under-three-minute video URL or required device footage."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-052",
+   "requirement": "Required product feedback for every tool is specific and truthful; actual AWS/Open Source mini-challenge claims have required links/evidence.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Actual tools have feedback; Amazon live tool feedback and mini-challenge links pending."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-053",
+   "requirement": "Friction log contains genuinely observed entries, with 10 entries as original internal goal where genuine, never fabricated; submission records the official optional status accurately.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Actual friction recorded; no fabricated ten-entry or bonus claim."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-054",
+   "requirement": "`docs/requirements-traceability.md`, `docs/progress.md`, `docs/integration-status.md`, and `docs/acceptance-report.md` are current, evidence-backed, and disclose all unresolved limitations.",
+   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Traceability/progress/report maintained; independent dated release review still needed."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  },
+  {
+   "requirement_id": "P0-055",
+   "requirement": "Independent release review runs `verify-release`, inspects primary-track footage and failure branches, and records an unambiguous `PASS / FAIL / BLOCKED` verdict.",
+   "verification_result": "BLOCKED",
+   "integration_source": "BLOCKED",
+   "code_paths": [
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "apps/mcp-orchestrator/done_irl/api.py"
+   ],
+   "automated_tests": [],
+   "evidence": null,
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [
+    "Release gate intentionally reports NOT_COMPLETE; no independent platform review."
+   ],
+   "reviewer": "implementation automated checks; independent review pending",
+   "verified_at": null
+  }
+ ]
 }

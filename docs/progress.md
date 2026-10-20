@@ -1,11 +1,32 @@
 # Implementation progress
 
-20 October 2026. Release target: **FULL_ORIGINAL_VISION_COMPLETE**. Verdict: **NOT COMPLETE**.
+20 October 2026 (evening IST). Release target: **FULL_ORIGINAL_VISION_COMPLETE** (unchanged). Verdict: **NOT COMPLETE** — see [acceptance report](acceptance-report.md) and `scripts/verify-release.py`.
 
-The synthetic six-stage product, shared encrypted ledger, browser/companion/native shell, MCP transport, evidence policies and generated media are implemented. This checkpoint adds wall-clock scheduling, a durable leased provider inbox, documented Ring webhook verification, actual WHEP decode/MediaPipe/JPEG relay, authenticated TV pairing, encrypted artifact retention/deletion, and optional AWS outbox/S3/DynamoDB/Scheduler/SQS/restore with validated infrastructure.
+## What exists and was observed working
 
-Backend validation reached **91 passing tests**, including real WebRTC codec loopback and eight AWS-emulation tests. The updated APK and TypeScript/Vite build pass. Final browser/container and hosted CI evidence is retained by the checkpoint workflow. Actual public-reference MediaPipe inference accepted **one** rep from 363 frames; it is not fifteen-rep acceptance or live Ring proof.
+| Area | Status | Proof |
+|---|---|---|
+| Durable ledger, reducers, six canonical scenes, all branches | VERIFIED (synthetic) | backend suite (176+ tests), browser journeys, three-run determinism |
+| Everyday commitments ("real buddy") | IMPLEMENTED + tested | any spoken promise → typed contract with deadline/trigger, T-60/T-25/deadline jobs, recurring series, spoken completion → `EVIDENCE_PENDING`, owner `USER_CONFIRMED` closure, 08:00 private briefing (`test_everyday.py`) |
+| Bee live adapter | BLOCKED (ready) | real stream shapes per official bee-cli; `scripts/bee-live-probe.py` waits for a `BEE_TOKEN` |
+| MCP Streamable HTTP (Alexa+ route) | LIVE on hosted HTTPS | 11 tools, `2025-11-25`, compliance tests, external SDK client + Inspector CLI, hosted `initialize` + tool call |
+| Simulated Alexa+ experience | SIMULATED_VERIFIED | console voice/typed panel calling `/mcp/`, labelled simulated |
+| AWS runtime | LIVE_VERIFIED | `done-irl-judge` stack: DynamoDB, S3 SSE-KMS, EventBridge Scheduler→SQS, CloudWatch; HTTPS judge URL |
+| Real-scene vision | VERIFIED on licensed recorded footage | 10/10 clips correct (`scene-vision.json`); not Ring |
+| Pose / Reality-Lock | VERIFIED (generated fixture) | real MediaPipe: 15/15 unlock, 14 locked, half/frozen/looped rejected |
+| Fire OS APK on TV runtime | VERIFIED on Android TV emulator | 33/33 D-pad checks, restart persistence; not a physical Fire TV |
+| Vega OS app | IN_PROGRESS | Vega SDK + Virtual Device build in WSL (KVM available) |
+| Privacy/consent | VERIFIED | exclusions, masks, retention, disconnect, deletion tests |
+| Companion Web Push | IMPLEMENTED + tested | VAPID push, generic lock-screen copy; not yet observed on a real phone |
+| Ring live | BLOCKED (ready) | `scripts/ring-live-probe.py` waits for a Playground token |
+| Open-source Agent Skill | READY | `packages/agent-skills/evidence-backed-commitments`; PR to `AmazonAppDev/devices-agent-skills` awaits owner approval |
 
-Actual Bee/Ring/Alexa+/Fire TV account/device tests, a general parcel/drinks scene model, fifteen-human-rep acceptance, privacy exclusion/delete controls, actual AWS deployment, eligible primary-track evidence, public video/submission and independent review remain incomplete. All 55 requirements remain in the manifest; previous narrow synthetic verification statuses are not upgraded from mocks.
+## Owner actions that unblock remaining gates
 
-The owner requested saving/pushing this checkpoint and continuing later. Read [continuation.md](continuation.md) for exact implementation state, commands, environment details, limitations and next priorities. The owner subsequently requested pushing the checkpoint immediately without waiting for checks. Hosted CI may still be pending at this checkpoint; inspect it before continuing. No background overnight execution is promised after this turn ends.
+1. `BEE_TOKEN` in an ignored `.env`, then `uv run python scripts/bee-live-probe.py` while speaking promises (P0-008, Bee evidence).
+2. Fresh Ring Playground token, then `uv run --extra ring-video python scripts/ring-live-probe.py` (P0-018/019/038).
+3. A consented recording of the owner doing 15 squats (strengthens P0-039 with human footage).
+4. Approve the public PR for the Agent Skill (Open Source mini challenge).
+5. Upload the under-three-minute demo video to YouTube/Vimeo (P0-051) and complete Devpost fields.
+
+Continuation details: [continuation.md](continuation.md).
