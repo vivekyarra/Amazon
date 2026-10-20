@@ -41,7 +41,7 @@ Use **Judge replay** to choose fake delivery, engaged meeting preparation, autho
 uv run ruff check apps/mcp-orchestrator
 uv run pytest -q --junitxml=artifacts/backend-results.xml
 npm run build
-# Locally uses /usr/bin/chromium; CI installs Playwright Chromium.
+# Uses /usr/bin/chromium when present, otherwise Playwright's Chromium. E2E_PORT overrides port 8091.
 npm run test:e2e
 ./scripts/verify-release.sh  # expected nonzero while original-vision gates are unresolved
 ```
@@ -60,6 +60,22 @@ Tests exercise exact scheduling, durable restart, evidence tampering, household 
 | `packages/testing-fixtures` | Synthetic source manifest and reproducible geometric fixtures |
 
 Fire OS build/install and runtime validation are described in [TV instructions](apps/firetv-command-hud/README.md). Web TV mode is explicitly a preview. The primary candidate track is Alexa+ via compliant MCP/simulated orchestration, pending actual eligibility review and recorded proof; other track claims require their device evidence.
+
+## Simulated Alexa+ experience
+
+There is **no real Alexa device or Alexa+ account connection**. Under the hackathon's simulated-Alexa+ entry route, the **Judge replay** page includes a panel labeled **SIMULATED ALEXA+ — not an Alexa device**:
+
+- Speak (browser Web Speech API, where available) or type, e.g. "Alexa, what did I promise today?", "Alexa, is my parcel safe?", "Alexa, start Reality-Lock", "Alexa, did I call my sister?", "Alexa, report it to the police", "Alexa, are my devices connected?", "Alexa, remember I'll call my sister before 6 PM".
+- A deterministic router (fixed rules, no LLM) maps each request to MCP tool calls made from the browser as real JSON-RPC to the same-origin, authenticated `/mcp/` endpoint (`initialize` → `tools/call`). The panel's right rail shows every request/response.
+- Answers are built only from tool results and are read aloud with `speechSynthesis`; each carries the simulation badge. T-25 escalation and arrival-check alerts from the shared ledger appear as a **SIMULATED WHISPER — not delivered to any device**, using the spec 5.4 copy.
+- Voice cannot verify a promise or file a report: `dispatch_police_evidence_dossier` always returns `DENIED` (audited) and the live Ring→Fire TV bridge reports `BLOCKED` in demo mode.
+
+External MCP proof (official Python SDK client over real HTTP, plus the MCP Inspector CLI):
+
+```bash
+uv run --extra ring-video --extra aws python scripts/mcp-external-client.py --inspector
+# -> docs/evidence/mcp-external-client.json, docs/evidence/mcp-inspector-cli.json (credentials redacted)
+```
 
 ## Safety and privacy
 

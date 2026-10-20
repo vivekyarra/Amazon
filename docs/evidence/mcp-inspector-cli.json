@@ -1,0 +1,22 @@
+{
+  "tool": "@modelcontextprotocol/inspector --cli",
+  "command": "npx -y @modelcontextprotocol/inspector --cli http://127.0.0.1:51114/mcp/ --transport http --method tools/list --header 'Authorization: Bearer [REDACTED]'",
+  "ran_at": "2026-10-20T11:29:09.426499+00:00",
+  "exit_code": 0,
+  "outcome": "PASS",
+  "tools": [
+    "bridge_ring_camera_to_firetv",
+    "compile_ambient_commitment",
+    "dispatch_police_evidence_dossier",
+    "evaluate_deadline_escalation",
+    "get_contract_state",
+    "get_incident_packet",
+    "get_integration_health",
+    "get_watchdog_status",
+    "list_active_contracts",
+    "request_user_verification",
+    "spawn_watchdog_subagent"
+  ],
+  "stdout_head": null,
+  "stderr_tail": ""
+}

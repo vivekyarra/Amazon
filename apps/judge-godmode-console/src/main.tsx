@@ -46,6 +46,7 @@ import type {
   State,
 } from "../../../packages/physical-contract-schema";
 import "./style.css";
+import AlexaSimulator from "./AlexaSimulator";
 
 type Page =
   | "overview"
@@ -1205,6 +1206,7 @@ function App() {
                   )}
                 </section>
               </div>
+              <AlexaSimulator state={state} />
             </>
           )}
           {page === "contracts" && (

@@ -32,6 +32,7 @@ from .camera import CameraBridge
 from .camera_reducers import frame_received, camera_ended
 from .models import CameraInput
 from . import engine as e
+from . import mcp_ext
 
 
 def create_app(data_dir=None, passwords=None):
@@ -85,7 +86,13 @@ def create_app(data_dir=None, passwords=None):
         ]
         if any(not os.getenv(name) for name in required):
             raise RuntimeError("AWS synchronization configuration is incomplete.")
-    mcp = FastMCP("DONE/IRL", stateless_http=True, json_response=True, streamable_http_path="/")
+    mcp = FastMCP(
+        "DONE/IRL",
+        stateless_http=True,
+        json_response=True,
+        streamable_http_path="/",
+        transport_security=mcp_ext.transport_security(demo),
+    )
     rates = {}
 
     def fresh(household):
@@ -906,7 +913,8 @@ def create_app(data_dir=None, passwords=None):
                 {
                     "name": "Alexa+",
                     "status": "NOT_CONNECTED",
-                    "reason": "MCP server available; no verified Alexa account connection.",
+                    "reason": "No verified Alexa account/device connection. Judge console offers a labeled "
+                    + "SIMULATED Alexa+ experience over the real MCP server.",
                 },
                 {
                     "name": "Fire TV",
@@ -1049,13 +1057,29 @@ def create_app(data_dir=None, passwords=None):
     @mcp.tool()
     def dispatch_police_evidence_dossier(incident_id: str, human_confirmed_boolean: bool) -> dict:
         """Never dispatch from a model's boolean. Owner must approve exact packet in the UI."""
-        mcp_principal()
-        return {
-            "status": "DENIED",
-            "code": "OWNER_APPROVAL_REQUIRED",
-            "external_sends": 0,
-            "reason": "Use authenticated owner review. MCP cannot grant report approval.",
-        }
+
+        def op(s, db, p):
+            # Audited denial: the attempt is recorded, nothing is approved or sent.
+            s["_event_source"] = {"source": "MCP_TOOL_CALL"}
+            e.emit(
+                s,
+                "incident.mcp_dispatch_denied",
+                dict(
+                    incident_id=incident_id,
+                    human_confirmed_boolean=bool(human_confirmed_boolean),
+                    reason="OWNER_APPROVAL_REQUIRED",
+                    external_sends=0,
+                ),
+            )
+            s.pop("_event_source", None)
+            return {
+                "status": "DENIED",
+                "code": "OWNER_APPROVAL_REQUIRED",
+                "external_sends": 0,
+                "reason": "Use authenticated owner review. MCP cannot grant report approval.",
+            }
+
+        return tool_command("dispatch", [incident_id, bool(human_confirmed_boolean)], op)
 
     @mcp.tool()
     async def bridge_ring_camera_to_firetv(
@@ -1096,17 +1120,14 @@ def create_app(data_dir=None, passwords=None):
             "tv_device_runtime_verified": False,
         }
 
+    mcp_ext.register_read_tools(mcp, principal=mcp_principal, initial=initial, integrations=integrations)
+    mcp_tool_names = frozenset(t.name for t in mcp._tool_manager.list_tools())
     app.mount("/mcp", mcp.streamable_http_app())
 
     # Authentication applies to discovery/initialize as well as tool calls.
     @app.middleware("http")
     async def protect_mcp(request, call_next):
-        if request.url.path.startswith("/mcp"):
-            try:
-                authenticate(request)
-            except ApiError as error:
-                return error_response(error)
-        return await call_next(request)
+        return await mcp_ext.guard(request, call_next, authenticate, error_response, mcp_tool_names)
 
     dist = root / "dist"
     if (dist / "assets").is_dir():

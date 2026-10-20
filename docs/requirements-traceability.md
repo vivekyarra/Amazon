@@ -45,7 +45,7 @@ All 55 original P0 gates are retained. VERIFIED rows refer only to reproducible 
 | [P0-039](product-spec.md) | BLOCKED | Actual MediaPipe processed a licensed public video and counted one rep; canonical fifteen distinct human-rep acceptance remains unmet. |
 | [P0-040](product-spec.md) | IMPLEMENTED_UNVERIFIED | Synthetic 14/15 versus 15/15 passes; actual TV restart and human-video proof pending. |
 | [P0-041](product-spec.md) | VERIFIED | `test_accessible_override_does_not_falsely_verify` — Synthetic local development workflow; no live/device inference |
-| [P0-042](product-spec.md) | VERIFIED | `canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles` — Synthetic local development workflow; no live/device inference |
+| [P0-042](product-spec.md) | VERIFIED | `canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles` — Synthetic local development workflow; no live/device inference. Also exercised by `simulated Alexa+ answers from real MCP tool calls over the shared ledger` (buttons 1, 2, 3 and 5 mutate state that the simulated Alexa+ panel then reads back through `/mcp/`). |
 | [P0-043](product-spec.md) | VERIFIED | `test_three_replays_semantically_deterministic` — Synthetic local development workflow; no live/device inference |
 | [P0-044](product-spec.md) | IMPLEMENTED_UNVERIFIED | F01–F24 mapped; F17 human-video and F24 native runtime remain incomplete. |
 | [P0-045](product-spec.md) | IMPLEMENTED_UNVERIFIED | Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified. |
@@ -53,7 +53,7 @@ All 55 original P0 gates are retained. VERIFIED rows refer only to reproducible 
 | [P0-047](product-spec.md) | BLOCKED | Engineering CI supplied; required Fire TV device/simulator tests absent. |
 | [P0-048](product-spec.md) | BLOCKED | Runbook/screenshots supplied; real track footage and submission artifacts incomplete. |
 | [P0-049](product-spec.md) | IMPLEMENTED_UNVERIFIED | AWS runtime/projection/schedules/restore and validated CloudFormation supplied alongside local deployment; actual AWS provisioning/runtime remains unverified. |
-| [P0-050](product-spec.md) | BLOCKED | Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending. |
+| [P0-050](product-spec.md) | BLOCKED | Candidate Alexa+ route recorded via the rules' simulated-Alexa+ alternative: MCP 2025-11-25 server (`test_mcp_compliance.py`, `test_mcp.py`), external SDK client transcript `docs/evidence/mcp-external-client.json`, MCP Inspector CLI `docs/evidence/mcp-inspector-cli.json`, and the labeled simulated Alexa+ console panel (`tests/e2e/alexa-sim.spec.ts`). Still pending: final track-eligibility decision, recorded submission demo, hosted HTTPS MCP endpoint; no Alexa device/account integration is claimed. |
 | [P0-051](product-spec.md) | BLOCKED | No public under-three-minute video URL or required device footage. |
 | [P0-052](product-spec.md) | IMPLEMENTED_UNVERIFIED | Actual tools have feedback; Amazon live tool feedback and mini-challenge links pending. |
 | [P0-053](product-spec.md) | IMPLEMENTED_UNVERIFIED | Actual friction recorded; no fabricated ten-entry or bonus claim. |
