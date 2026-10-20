@@ -283,6 +283,8 @@ def compile_bee(s, bee: BeeInput):
     if nl.INJECTION.search(text):
         emit(s, "commitment.rejected_input", {"source_event_id": bee.event_id, "decision": "POLICY_TEXT_IGNORED"})
         return []
+    if bee.source_kind == "BEE_TODO":
+        return _compile_bee_todo(s, bee, zone)
     claim = nl.completion_claim(bee.utterance)
     if claim and bee.speaker == "SELF":
         _completion_claim(s, bee, claim)
@@ -390,6 +392,36 @@ def compile_bee(s, bee: BeeInput):
             created.append(cid)
     for cid in created:
         next(c for c in s["contracts"] if c["contract_id"] == cid)["timezone"] = bee.timezone
+    return created
+
+
+def _compile_bee_todo(s, bee, zone):
+    """A todo Bee itself extracted is the wearer's own list item: track it, keep Bee's alarm."""
+    text = bee.utterance.strip()
+    phrased = "I need to " + text[:1].lower() + text[1:]
+    cands = [c for c in nl.parse(phrased, bee.occurred_at.astimezone(zone)) if not c.get("negated")]
+    if not cands:
+        return []
+    created = []
+    for cand in cands[:1]:
+        due = cand["due_local"].astimezone(timezone.utc).isoformat() if cand["due_local"] else None
+        if not due and bee.due_at:
+            due = bee.due_at.astimezone(timezone.utc).isoformat()
+        cid = _upsert(s, bee, cand["key"], cand["title"], cand["counterparty"], cand["modality"], due,
+                      cand["trigger"], False)
+        c = next(c for c in s["contracts"] if c["contract_id"] == cid)
+        c.update(
+            commitment_origin="BEE_TODO",
+            type=cand["type"],
+            item_class=cand["item_class"],
+            target_reps=cand["reps"],
+            deadline_assumption=None if bee.due_at else cand["assumption"],
+            original_utterance=bee.utterance,
+            timezone=bee.timezone,
+        )
+        if cand["modality"] == "AUTHORIZED_MANUAL_CONFIRMATION":
+            c["verification_note"] = "No sensor can prove this task; completion is recorded as USER_CONFIRMED."
+        created.append(cid)
     return created
 
 

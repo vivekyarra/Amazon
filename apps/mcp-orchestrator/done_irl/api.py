@@ -91,7 +91,9 @@ def create_app(data_dir=None, passwords=None):
     def fresh(household):
         s = e.fresh()
         s["household_id"] = household
-        if not demo:
+        # Only the isolated judge namespace replays the virtual canonical day. Every real
+        # household (including the owner of a demo deployment) runs on wall-clock time.
+        if not demo or household != "demo":
             from datetime import datetime, timezone
 
             s.update(
@@ -205,8 +207,8 @@ def create_app(data_dir=None, passwords=None):
 
         async def receive_bee(payload, event_id):
             household = os.getenv("BEE_HOUSEHOLD", "house_owner")
-            # Only the documented typed utterance envelope is normalized. Unknown shapes
-            # remain visibly rejected rather than guessing that a conversation is an utterance.
+            # The adapter already mapped documented Bee shapes onto BeeInput; unknown shapes
+            # never reach this point, and the envelope is validated again here.
             if not event_id:
                 event_id = payload.get("event_id")
             if not event_id:
@@ -248,7 +250,7 @@ def create_app(data_dir=None, passwords=None):
             if os.getenv("AWS_LEDGER_TABLE"):
                 app.state.cloud_status = "STARTING"
                 tasks.append(asyncio.create_task(cloud_sync()))
-            if not demo and bee.token:
+            if bee.token:
                 with store.lock:
                     row = store.db.execute(
                         "SELECT cursor FROM provider_cursors WHERE household=? AND provider='bee'",

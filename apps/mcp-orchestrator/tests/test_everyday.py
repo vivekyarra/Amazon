@@ -135,3 +135,20 @@ def test_missed_deadline_without_proof_and_quiet_when_claimed(post):
     assert c["status"] == "MISSED"
     kinds = [a["kind"] for a in s["alerts"] if a["contract_id"] == c["contract_id"]]
     assert kinds == ["SILENT_PREP", "ACTIVE_ESCALATION"]
+
+
+def test_bee_todo_keeps_bee_alarm_as_deadline(post):
+    s = post(
+        "/ingest/bee-simulated",
+        dict(
+            event_id="bee:todo:99",
+            utterance="Renew passport",
+            speaker="SELF",
+            occurred_at=e.at("08:15"),
+            source_kind="BEE_TODO",
+            due_at=e.at("17:00"),
+        ),
+    )["state"]
+    [c] = general(s)
+    assert c["commitment_origin"] == "BEE_TODO" and c["title"] == "Renew passport"
+    assert c["due_at"] == e.at("17:00") and c["status"] == "ACTIVE"

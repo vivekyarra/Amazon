@@ -16,6 +16,9 @@ class BeeInput(StrictModel):
     counterparty: str = Field(default="Household", max_length=100)
     occurred_at: AwareDatetime
     timezone: str = "Asia/Kolkata"
+    # Bee's own extracted todo (todo-created) carries its alarm as an explicit deadline.
+    source_kind: Literal["UTTERANCE", "BEE_TODO"] = "UTTERANCE"
+    due_at: AwareDatetime | None = None
 
 
 class CameraInput(StrictModel):
