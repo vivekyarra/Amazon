@@ -32,6 +32,7 @@ from .camera import CameraBridge
 from .camera_reducers import frame_received, camera_ended
 from .models import CameraInput
 from . import engine as e
+from . import privacy
 
 
 def create_app(data_dir=None, passwords=None):
@@ -73,7 +74,9 @@ def create_app(data_dir=None, passwords=None):
     runtime = Runtime(store)
     bee = BeeAdapter()
     camera = CameraBridge(
-        lambda *args: frame_received(store, *args), lambda *args: camera_ended(store, *args)
+        lambda *args: frame_received(store, *args),
+        lambda *args: camera_ended(store, *args),
+        masks=lambda household, device: privacy.polygons(store.read(household), device),
     )
     if os.getenv("AWS_LEDGER_TABLE"):
         required = [
@@ -221,6 +224,10 @@ def create_app(data_dir=None, passwords=None):
                         state = store.read(household)
                         if not state or not state["consent"]:
                             await camera.stop(household, "CONSENT_REVOKED")
+                        elif household in camera.sessions and privacy.camera_session_blocked(
+                            state, camera.sessions[household]["device_id"]
+                        ):
+                            await camera.stop(household, "PRIVACY_EXCLUDED")
                     app.state.worker_status = "RUNNING"
                 except Exception as error:
                     app.state.worker_status = "DEGRADED"
@@ -273,6 +280,12 @@ def create_app(data_dir=None, passwords=None):
             if os.getenv("AWS_LEDGER_TABLE"):
                 app.state.cloud_status = "STARTING"
                 tasks.append(asyncio.create_task(cloud_sync()))
+            if bee.token and privacy.provider_revoked(
+                store.read(os.getenv("BEE_HOUSEHOLD", "house_owner")), "bee"
+            ):
+                # Owner revocation survives restarts; never auto-reconnect the wearable stream.
+                bee.token = None
+                bee.stopped = True
             if bee.token:
                 with store.lock:
                     row = store.db.execute(
@@ -296,6 +309,7 @@ def create_app(data_dir=None, passwords=None):
     app.state.runtime = runtime
     app.state.camera = camera
     app.state.mutate = mutate
+    app.state.bee = bee
 
     @app.middleware("http")
     async def perimeter(request, call_next):
@@ -667,6 +681,8 @@ def create_app(data_dir=None, passwords=None):
         def intent(s, db):
             if not s["consent"]:
                 raise ApiError(409, "CONSENT_REQUIRED", "Enable camera consent first.")
+            privacy.require_provider(s, "ring")
+            privacy.require_camera_allowed(s, body.device_id)
             previous = s.get("camera_request", {})
             if previous.get("status") in {"PENDING", "OPEN", "CONNECTING"}:
                 raise ApiError(
@@ -868,6 +884,13 @@ def create_app(data_dir=None, passwords=None):
         )
         if demo:
             raise ApiError(409, "ISOLATED_DEMO", "Live webhooks require a separate live deployment.")
+        blocked = privacy.inbox_block_reason(store.read(household), "ring", payload)
+        if blocked:
+            # Acknowledge so the provider stops retrying; nothing is stored or reduced.
+            return JSONResponse(
+                {"receipt_id": None, "duplicate": False, "processed": False, "reason": blocked},
+                status_code=202,
+            )
         receipt, created = runtime.enqueue(household, "ring", event_id, payload)
         return JSONResponse({"receipt_id": receipt, "duplicate": not created}, status_code=202)
 
@@ -920,6 +943,13 @@ def create_app(data_dir=None, passwords=None):
         stream = camera.status(p["household"])
 
         def provider(name, receipt):
+            if privacy.provider_revoked(s, receipt):
+                return {
+                    "name": name,
+                    "status": "NOT_CONNECTED",
+                    "last_verified_at": None,
+                    "reason": "Owner disconnected this provider; automatic reconnection is disabled.",
+                }
             return {
                 "name": name,
                 "status": "LIVE_VERIFIED" if last.get(receipt) else "BLOCKED",
@@ -939,7 +969,9 @@ def create_app(data_dir=None, passwords=None):
                 provider("Ring", "ring"),
                 {
                     "name": "Ring video",
-                    "status": stream["source_mode"],
+                    "status": "NOT_CONNECTED"
+                    if privacy.provider_revoked(s, "ring")
+                    else stream["source_mode"],
                     "reason": "Decoded frames: "
                     + str(stream.get("frames_decoded", 0))
                     + "; no silent fallback to demo.",
@@ -1070,7 +1102,12 @@ def create_app(data_dir=None, passwords=None):
             (a for a in s["subagents"] if a["contract_id"] == contract_id and a["kind"] == "PorchWatchdog"),
             None,
         )
-        if camera_device_id != "synthetic-porch" or not agent or not s["consent"]:
+        if (
+            camera_device_id != "synthetic-porch"
+            or not agent
+            or not s["consent"]
+            or privacy.camera_excluded(s, camera_device_id)
+        ):
             return {"status": "BLOCKED", "reason": "Approved synthetic camera and observed deposit required."}
         return {"status": agent["status"], "subagent_id": agent["subagent_id"], "source_mode": e.MODE}
 
@@ -1136,6 +1173,18 @@ def create_app(data_dir=None, passwords=None):
             "household_authenticated": True,
             "tv_device_runtime_verified": False,
         }
+
+    privacy.register(
+        app,
+        owner=owner,
+        command=command,
+        initial=initial,
+        fresh=fresh,
+        store=store,
+        camera=camera,
+        bee=bee,
+        demo=demo,
+    )
 
     app.mount("/mcp", mcp.streamable_http_app())
 

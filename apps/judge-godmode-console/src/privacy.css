@@ -1,0 +1,48 @@
+.privacy-controls {
+  grid-column: 1 / -1;
+}
+.privacy-row {
+  padding: 18px 23px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  border-top: 1px solid var(--line);
+  color: #90a184;
+}
+.privacy-row > div,
+.privacy-row > form {
+  flex: 1;
+}
+.privacy-row strong {
+  font-size: 12px;
+  color: inherit;
+}
+.privacy-row p {
+  font-size: 10px;
+  color: #9da89a;
+  margin-top: 7px;
+}
+.privacy-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 11px;
+}
+.privacy-inline > span {
+  flex: 1;
+  min-width: 160px;
+}
+.privacy-inline input {
+  flex: 1;
+  min-width: 80px;
+  font-size: 11px;
+}
+.privacy-inline input[type="number"] {
+  flex: 0 0 70px;
+}
+.privacy-controls > p.muted {
+  padding: 0 23px 12px;
+  font-size: 10px;
+}

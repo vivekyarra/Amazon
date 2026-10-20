@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 from .models import ApiError, BeeInput
 from . import vision
 from . import commitments as nl
+from . import privacy
 
 DAY = "2026-10-20"
 ZONE = "Asia/Kolkata"
@@ -147,6 +148,7 @@ def add_evidence(
     duration_ms=0,
     parent_evidence_id=None,
     sensor=None,
+    privacy_mask=None,
 ):
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Evidence collection is paused.")
@@ -175,7 +177,10 @@ def add_evidence(
         consent_grant_id="household-explicit-consent"
         if s.get("clock_mode") == "WALL"
         else "demo-explicit-consent",
-        retention_expires_at=(datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        retention_expires_at=(
+            datetime.now(timezone.utc) + timedelta(days=privacy.retention_days(s))
+        ).isoformat(),
+        retention_days_at_capture=privacy.retention_days(s),
         decision="VALIDATED",
         capture_gaps=[],
         confidence=1.0,
@@ -184,6 +189,8 @@ def add_evidence(
             "owner-statement-v1" if provenance == "USER_CONFIRMED" else "synthetic-calibrated-markers-v1",
         ),
     )
+    if privacy_mask is not None:
+        item["privacy_mask"] = privacy_mask
     item["chain_hash"] = digest(item)
     db.put_artifact(evidence_id, household, mime, data, sha)
     s["evidence"].append(item)
@@ -193,6 +200,17 @@ def add_evidence(
         dict(contract_id=c["contract_id"], evidence_id=evidence_id, kind=kind, sha256=sha),
     )
     return evidence_id
+
+
+def frame_evidence(s, db, household, c, kind, frame, crop=None, camera=privacy.SYNTHETIC_CAMERA):
+    """Store a camera-derived snapshot/crop with PRIVATE_MASKS zeroed before encoding and hashing."""
+    privacy.require_camera_allowed(s, camera)
+    masked, meta = privacy.mask_frame(s, camera, frame)
+    if crop:
+        y0, y1, x0, x1 = crop
+        masked = masked[y0:y1, x0:x1]
+        meta = {**meta, "crop_pixels_y0_y1_x0_x1": list(crop)}
+    return add_evidence(s, db, household, c, kind, vision.png(masked), "image/png", privacy_mask=meta)
 
 
 def create_contract(s, key, title, quote, counterparty, modality, due=None, trigger=None, uncertain=False):
@@ -666,6 +684,9 @@ def run_scenario(s, db, household, stage, branch):
             "SOURCE_UNAVAILABLE",
             "An injected source/storage failure is active; clear it before observation.",
         )
+    if stage in {2, 4, 5}:
+        # The synthetic porch camera honors owner exclusion exactly like a linked device.
+        privacy.require_camera_allowed(s, privacy.SYNTHETIC_CAMERA)
     s["scenario"] = stage
     if stage == 1:
         if not s["contracts"]:
@@ -709,9 +730,12 @@ def run_scenario(s, db, household, stage, branch):
         )
         if c.get("deposit_status"):
             return
-        verdict = vision.deposit_verdict(vision.fixture_frames("fake" if branch == "fake" else "deposit"))
-        frame = vision.fixture_frames("fake" if branch == "fake" else "deposit")[-1]
-        ev = add_evidence(s, db, household, c, "DEPOSIT_OBSERVATION", vision.png(frame), "image/png")
+        frames = [
+            privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, f)[0]
+            for f in vision.fixture_frames("fake" if branch == "fake" else "deposit")
+        ]
+        verdict = vision.deposit_verdict(frames)
+        ev = frame_evidence(s, db, household, c, "DEPOSIT_OBSERVATION", frames[-1])
         if verdict == "DEPOSIT_CONFIRMED":
             c.update(deposit_status="DEPOSIT_VERIFIED", custody_status="DEPOSIT_VERIFIED_CUSTODY_ACTIVE")
             c["evidence_ids"].append(ev)
@@ -758,20 +782,31 @@ def run_scenario(s, db, household, stage, branch):
                 s, "watchdog.observation_updated", dict(contract_id=c["contract_id"], result="PARCEL_REMAINS")
             )
             return
-        frames = vision.fixture_frames("removal")
+        frames = [
+            privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, f)[0] for f in vision.fixture_frames("removal")
+        ]
         if vision.removal_verdict(frames) != "REMOVAL_UNDER_REVIEW":
             return
         if s["incidents"]:
             return
-        ev = add_evidence(s, db, household, c, "REMOVAL_FRAME", vision.png(frames[-1]), "image/png")
-        crop = frames[-1][80:270, 45:110]
-        crop_ev = add_evidence(s, db, household, c, "PERSON_CROP", vision.png(crop), "image/png")
-        video = vision.synthetic_removal_video()
+        ev = frame_evidence(s, db, household, c, "REMOVAL_FRAME", frames[-1])
+        crop_ev = frame_evidence(s, db, household, c, "PERSON_CROP", frames[-1], crop=(80, 270, 45, 110))
+        regions = privacy.polygons(s, privacy.SYNTHETIC_CAMERA)
+        clip_mask = privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, frames[-1])[1]
+        video = vision.synthetic_removal_video(regions)
         source_clip = None
         annotated_clip = None
         if video:
             source_clip = add_evidence(
-                s, db, household, c, "REMOVAL_CLIP_ORIGINAL", video[0], "video/webm", duration_ms=15000
+                s,
+                db,
+                household,
+                c,
+                "REMOVAL_CLIP_ORIGINAL",
+                video[0],
+                "video/webm",
+                duration_ms=15000,
+                privacy_mask={**clip_mask, "masked_regions": 0, "scope": "ORIGINAL_UNMASKED_ENCRYPTED"},
             )
             annotated_clip = add_evidence(
                 s,
@@ -783,6 +818,7 @@ def run_scenario(s, db, household, stage, branch):
                 "video/webm",
                 duration_ms=15000,
                 parent_evidence_id=source_clip,
+                privacy_mask=clip_mask,
             )
         packet = {
             "deposit_evidence_ids": c["evidence_ids"][:],
@@ -828,11 +864,12 @@ def run_scenario(s, db, household, stage, branch):
             drinks=branch == "visible",
             occluded=branch == "ambiguous",
         )
+        frame = privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, frame)[0]
         obs = vision.detect(frame)
         result = (
             "VISIBLE_MATCH" if "drinks" in obs else ("AMBIGUOUS" if "person" not in obs else "NOT_VISIBLE")
         )
-        ev = add_evidence(s, db, household, c, "THRESHOLD_OBSERVATION", vision.png(frame), "image/png")
+        ev = frame_evidence(s, db, household, c, "THRESHOLD_OBSERVATION", frame)
         c.update(
             visibility=result,
             observation_status="SUPPORTING_OBSERVATION" if result == "VISIBLE_MATCH" else "NEEDS_USER_CHECK",
@@ -958,7 +995,10 @@ def verify_artifacts(s, db, household):
             )
         if not row or hashlib.sha256(row["data"]).hexdigest() != item["sha256_original"]:
             raise ApiError(409, "EVIDENCE_TAMPERED", "Evidence integrity check failed.")
-        expected = {k: v for k, v in item.items() if k != "chain_hash"}
+        # Owner retention changes update the effective expiry; the chain covers the at-capture value.
+        expected = {k: v for k, v in item.items() if k not in {"chain_hash", "retention_expires_at_original"}}
+        if "retention_expires_at_original" in item:
+            expected["retention_expires_at"] = item["retention_expires_at_original"]
         if item["previous_hash"] != previous or digest(expected) != item["chain_hash"]:
             raise ApiError(409, "CHAIN_TAMPERED", "Evidence manifest chain is invalid.")
         previous = item["chain_hash"]

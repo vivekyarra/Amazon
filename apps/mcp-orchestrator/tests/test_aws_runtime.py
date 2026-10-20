@@ -200,3 +200,89 @@ def test_cloud_purge_deletes_all_expired_media_versions_without_refreshing_age(a
     assert not cloud.s3.list_objects_v2(Bucket=cloud.bucket, Prefix=key).get("Contents")
     cloud.flush()  # Expired local data cannot be uploaded again.
     assert not cloud.s3.list_objects_v2(Bucket=cloud.bucket, Prefix=key).get("Contents")
+
+
+def house_snapshot(store, household):
+    state = e.fresh()
+    state["household_id"] = household
+    future = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+    c = e.create_contract(
+        state, "teacher", "Meeting", "I'll attend", "Teacher", "BEE_CONVERSATION_AUDIT", due=future
+    )
+    with store.transaction() as db:
+        e.add_evidence(state, db, household, c, "TEST_SNAPSHOT", b"private-media-" + household.encode())
+        store.save(db, household, state)
+    return state
+
+
+def test_household_deletion_erases_only_that_households_cloud_objects(aws):
+    from boto3.dynamodb.conditions import Key
+
+    from done_irl import privacy
+    from done_irl.aws_runtime import schedule_name
+
+    store, cloud = aws
+    house_snapshot(store, "house_owner")
+    # A prefix-sharing household id must survive: "house_owner/" never matches "house_owner2/".
+    other = house_snapshot(store, "house_owner2")
+    assert cloud.flush() == 2
+    assert len(cloud.scheduler.list_schedules()["Schedules"]) == 6
+
+    def objects(prefix):
+        page = cloud.s3.list_object_versions(Bucket=cloud.bucket, Prefix=prefix)
+        return [o["Key"] for o in [*page.get("Versions", []), *page.get("DeleteMarkers", [])]]
+
+    def items(household):
+        return cloud.table.query(KeyConditionExpression=Key("pk").eq("HOUSE#" + household))["Items"]
+
+    other_objects, other_items = objects("house_owner2/"), items("house_owner2")
+    assert any("/evidence/" in key for key in objects("house_owner/"))
+    with store.transaction() as db:
+        state = store.read("house_owner")
+        receipt = privacy.delete_household(state, db, "house_owner", e.fresh())
+        store.save(db, "house_owner", state)
+    assert receipt["cloud_deletion"] == "QUEUED"
+    assert cloud.flush() == 1  # Erase first, then publish only the minimal receipt snapshot.
+    remaining = objects("house_owner/")
+    assert remaining and all(key.startswith("house_owner/snapshots/") for key in remaining)
+    assert {item["sk"] for item in items("house_owner")} == {"SNAPSHOT", "AUDIT#evt_000001"}
+    restored = cloud.store.decode(
+        cloud.s3.get_object(Bucket=cloud.bucket, Key=remaining[0])["Body"].read().decode(),
+        "state:house_owner",
+    )
+    assert restored["contracts"] == [] and restored["deletion_receipts"] == [receipt]
+    names = {s["Name"] for s in cloud.scheduler.list_schedules()["Schedules"]}
+    assert names == {
+        schedule_name("house_owner2", c["contract_id"], job["kind"])
+        for c in other["contracts"]
+        for job in c["scheduled_jobs"]
+    }
+    assert objects("house_owner2/") == other_objects and items("house_owner2") == other_items
+    row = store.db.execute("SELECT status,attempts FROM cloud_deletions").fetchone()
+    assert tuple(row) == ("DONE", 0)
+
+
+def test_failed_cloud_erase_blocks_republish_and_retries(aws, monkeypatch):
+    from done_irl import privacy
+
+    store, cloud = aws
+    house_snapshot(store, "house_owner")
+    cloud.flush()
+    with store.transaction() as db:
+        state = store.read("house_owner")
+        privacy.delete_household(state, db, "house_owner", e.fresh())
+        store.save(db, "house_owner", state)
+    real = cloud.s3.delete_objects
+
+    def failed(**kwargs):
+        raise OSError("injected deletion failure")
+
+    monkeypatch.setattr(cloud.s3, "delete_objects", failed)
+    with pytest.raises(OSError):
+        cloud.flush()
+    row = store.db.execute("SELECT status,attempts,error_code FROM cloud_deletions").fetchone()
+    assert tuple(row) == ("PENDING", 1, "OSError")
+    assert store.db.execute("SELECT status FROM cloud_outbox").fetchone()["status"] == "PENDING"
+    monkeypatch.setattr(cloud.s3, "delete_objects", real)
+    assert cloud.flush() == 1
+    assert store.db.execute("SELECT status FROM cloud_deletions").fetchone()["status"] == "DONE"

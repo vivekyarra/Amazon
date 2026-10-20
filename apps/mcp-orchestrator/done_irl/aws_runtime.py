@@ -12,6 +12,10 @@ import time
 from datetime import datetime, timezone
 
 
+def schedule_name(household, contract_id, kind):
+    return "dirl-" + hashlib.sha256(f"{household}:{contract_id}:{kind}".encode()).hexdigest()[:48]
+
+
 class AWSRuntime:
     def __init__(
         self,
@@ -124,12 +128,7 @@ class AWSRuntime:
         from botocore.exceptions import ClientError
 
         for job in contract["scheduled_jobs"]:
-            name = (
-                "dirl-"
-                + hashlib.sha256(f"{household}:{contract['contract_id']}:{job['kind']}".encode()).hexdigest()[
-                    :48
-                ]
-            )
+            name = schedule_name(household, contract["contract_id"], job["kind"])
             future = datetime.fromisoformat(job["at"]).timestamp() > time.time()
             active = job["status"] == "PENDING" and contract["status"] not in {
                 "VERIFIED",
@@ -200,7 +199,67 @@ class AWSRuntime:
                 "DELETE FROM cloud_outbox WHERE status='DONE' AND completed<?", (time.time() - 7 * 86400,)
             )
 
+    def erase(self):
+        """Process owner household-deletion requests before any newer snapshot is republished."""
+        from boto3.dynamodb.conditions import Key
+        from botocore.exceptions import ClientError
+
+        with self.store.lock:
+            rows = [
+                dict(row)
+                for row in self.store.db.execute(
+                    "SELECT * FROM cloud_deletions WHERE status='PENDING' ORDER BY id"
+                ).fetchall()
+            ]
+        erased = 0
+        for row in rows:
+            household = row["household"]
+            try:
+                # Trailing slash: house_a/ never matches house_ab/. All versions and delete markers go.
+                paginator = self.s3.get_paginator("list_object_versions")
+                for page in paginator.paginate(Bucket=self.bucket, Prefix=household + "/"):
+                    objects = [
+                        {"Key": obj["Key"], "VersionId": obj["VersionId"]}
+                        for obj in [*page.get("Versions", []), *page.get("DeleteMarkers", [])]
+                        if obj["Key"].startswith(household + "/")
+                    ]
+                    for start in range(0, len(objects), 1000):
+                        self.s3.delete_objects(
+                            Bucket=self.bucket, Delete={"Objects": objects[start : start + 1000]}
+                        )
+                query = {"KeyConditionExpression": Key("pk").eq("HOUSE#" + household), "ConsistentRead": True}
+                while True:
+                    page = self.table.query(**query)
+                    with self.table.batch_writer() as batch:
+                        for item in page.get("Items", []):
+                            batch.delete_item(Key={"pk": item["pk"], "sk": item["sk"]})
+                    if "LastEvaluatedKey" not in page:
+                        break
+                    query["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+                for name in json.loads(row["schedules"]):
+                    try:
+                        self.scheduler.delete_schedule(Name=name)
+                    except ClientError as error:
+                        if error.response["Error"]["Code"] != "ResourceNotFoundException":
+                            raise
+            except Exception as error:
+                with self.store.transaction() as db:
+                    db.execute(
+                        "UPDATE cloud_deletions SET attempts=attempts+1,error_code=? WHERE id=?",
+                        (type(error).__name__, row["id"]),
+                    )
+                raise
+            with self.store.transaction() as db:
+                db.execute(
+                    "UPDATE cloud_deletions SET status='DONE',completed=?,error_code=NULL WHERE id=?",
+                    (time.time(), row["id"]),
+                )
+            erased += 1
+        return erased
+
     def flush(self, limit=10):
+        # Deletion first: a failed erase blocks republishing the household's post-deletion receipt.
+        self.erase()
         self.purge()
         # Refresh snapshots daily so the seven-day bucket lifecycle preserves a current backup.
         with self.store.transaction() as db:

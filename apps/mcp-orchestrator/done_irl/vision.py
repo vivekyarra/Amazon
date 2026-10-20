@@ -182,19 +182,20 @@ def cycle_frames(half=False, offset=0):
     return [synthetic_pose_frame(a, offset + i % 3) for i, a in enumerate(angles)]
 
 
-def synthetic_removal_video():
+def synthetic_removal_video(masks=()):
     """Generate and preserve a real 15s synthetic video plus a derived annotated clip.
 
-    This uses our own geometric content only. It is never a Ring recording.
+    This uses our own geometric content only. It is never a Ring recording. PRIVATE_MASKS
+    regions (normalized polygons) are zeroed in the derived clip; the source clip is unmasked.
     """
-    return _cached_removal_video()
+    return _cached_removal_video(tuple(masks))
 
 
 from functools import lru_cache  # noqa: E402
 
 
-@lru_cache(maxsize=1)
-def _cached_removal_video():
+@lru_cache(maxsize=2)
+def _cached_removal_video(masks=()):
     import shutil
     import subprocess
     import tempfile
@@ -202,6 +203,8 @@ def _cached_removal_video():
 
     if not shutil.which("ffmpeg"):
         return None
+    from .privacy import apply_masks
+
     source = []
     annotated = []
     for index in range(150):
@@ -214,8 +217,8 @@ def _cached_removal_video():
             person_x = parcel_x
         frame = scene(parcel_x, person_x)
         source.append(frame.tobytes())
-        derived = frame.copy()
-        for name, (x, y, w, h) in detect(frame).items():
+        derived = apply_masks(frame, masks).copy()
+        for name, (x, y, w, h) in detect(derived).items():
             cv2.rectangle(derived, (x, y), (x + w, y + h), (160, 245, 185), 2)
             cv2.putText(derived, name, (x, max(40, y - 7)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (180, 240, 200), 1)
         cv2.putText(
@@ -227,7 +230,8 @@ def _cached_removal_video():
             (200, 225, 210),
             1,
         )
-        annotated.append(derived.tobytes())
+        # Overlays never re-expose a masked region.
+        annotated.append(apply_masks(derived, masks).tobytes())
     results = []
     with tempfile.TemporaryDirectory(prefix="done-irl-video-") as temp:
         for label, frames in [("original", source), ("annotated", annotated)]:

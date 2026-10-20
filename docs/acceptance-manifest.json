@@ -827,13 +827,27 @@
       "integration_source": "BLOCKED",
       "code_paths": [
         "apps/mcp-orchestrator/done_irl/engine.py",
-        "apps/mcp-orchestrator/done_irl/api.py"
+        "apps/mcp-orchestrator/done_irl/api.py",
+        "apps/mcp-orchestrator/done_irl/privacy.py"
       ],
-      "automated_tests": [],
+      "automated_tests": [
+        "test_privacy_controls_require_authenticated_owner_and_idempotency",
+        "test_camera_exclusion_blocks_synthetic_collection_and_is_audited",
+        "test_live_excluded_camera_cannot_start_and_webhook_is_acknowledged_not_processed",
+        "test_frame_callback_refuses_excluded_camera_without_evidence",
+        "test_apply_masks_zeroes_exact_normalized_region",
+        "test_private_masks_zero_pixels_in_derived_evidence_before_hashing",
+        "test_retention_setting_updates_existing_and_new_artifacts_without_breaking_chain",
+        "test_shortened_retention_deletes_due_bytes_immediately_and_never_resurrects",
+        "test_provider_disconnect_cancels_work_and_never_auto_reconnects",
+        "test_household_deletion_requires_confirmation_and_is_household_scoped",
+        "test_household_deletion_erases_only_that_households_cloud_objects",
+        "test_failed_cloud_erase_blocks_republish_and_retries"
+      ],
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Encrypted storage, retention byte deletion and live consent propagation implemented; per-camera exclusions, retention settings and disconnect/delete workflows still missing."
+        "Per-camera exclusion, PRIVATE_MASKS, owner retention (1-30 days), Bee/Ring disconnect and household deletion (local + queued AWS erase) are implemented with local/Moto tests; real Ring/Bee/AWS runtime, upstream token revocation, operator backup deletion and independent security review remain unverified."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null

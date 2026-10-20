@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from . import engine as e
+from . import privacy
 from .models import ApiError, BeeInput
 
 
@@ -23,6 +24,8 @@ class Runtime:
             state = self.store.read(household)
             if not state or not state["consent"] or state.get("clock_mode") != "WALL":
                 raise ApiError(409, "CONSENT_REQUIRED", "Enable consent in the linked live household first.")
+            # Revocation is durable; no provider event may silently reconnect collection (spec 12.4).
+            privacy.require_provider(state, provider)
             result = self.store.enqueue(db, household, provider, event_id, payload, self.clock())
             if cursor:
                 db.execute(
@@ -67,6 +70,15 @@ class Runtime:
                     )
                     return
                 payload = self.store.decode(row["payload"], f"inbox:{row['id']}")
+                blocked = privacy.inbox_block_reason(state, row["provider"], payload)
+                if blocked:
+                    # Acknowledged, never reduced into an observation; payload is discarded.
+                    db.execute(
+                        "UPDATE inbox SET status='CANCELLED',payload=NULL,completed=?,lease_until=NULL,"
+                        "error_code=? WHERE id=?",
+                        (now, blocked, row["id"]),
+                    )
+                    return
                 state["now"] = datetime.fromtimestamp(now, timezone.utc).isoformat()
                 state["_trace_id"] = row["id"]
                 state["_event_source"] = {
