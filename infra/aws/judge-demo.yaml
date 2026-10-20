@@ -1,0 +1,335 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  DONE/IRL public judge deployment. One EC2 reducer in DEMO_MODE (synthetic, clearly labeled scenarios)
+  behind CloudFront HTTPS, with live DynamoDB/S3/KMS/EventBridge Scheduler/SQS coordination.
+Parameters:
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet with outbound internet access.
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  RuntimeSecretArn:
+    Type: String
+    AllowedPattern: 'arn:aws[a-z-]*:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+'
+    Description: Secret JSON with OWNER_PASSWORD, DEMO_ADMIN_PASSWORD and LEDGER_KEY_BASE64 (never stack parameters).
+  RepoUrl:
+    Type: String
+    Default: https://github.com/vivekyarra/Amazon.git
+  GitCommit:
+    Type: String
+    AllowedPattern: '[a-f0-9]{40}'
+    Description: Exact public commit the instance builds; updating it rebuilds the image.
+  CloudFrontPrefixList:
+    Type: String
+    Default: pl-3b927c52
+    Description: com.amazonaws.global.cloudfront.origin-facing prefix list for this region (us-east-1 default).
+  AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.medium, t3.large, t3.xlarge]
+Resources:
+  DataKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      EnableKeyRotation: true
+      PendingWindowInDays: 30
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
+            Action: 'kms:*'
+            Resource: '*'
+  Ledger:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: pk, AttributeType: S}
+        - {AttributeName: sk, AttributeType: S}
+      KeySchema:
+        - {AttributeName: pk, KeyType: HASH}
+        - {AttributeName: sk, KeyType: RANGE}
+      SSESpecification: {SSEEnabled: true, SSEType: KMS, KMSMasterKeyId: !GetAtt DataKey.Arn}
+      PointInTimeRecoverySpecification: {PointInTimeRecoveryEnabled: true}
+      DeletionProtectionEnabled: true
+  Evidence:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls: {Rules: [{ObjectOwnership: BucketOwnerEnforced}]}
+      VersioningConfiguration: {Status: Enabled}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: 'aws:kms', KMSMasterKeyID: !GetAtt DataKey.Arn}
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: RetainSevenDays
+            Status: Enabled
+            ExpirationInDays: 7
+            NoncurrentVersionExpiration: {NoncurrentDays: 7}
+            AbortIncompleteMultipartUpload: {DaysAfterInitiation: 1}
+  EvidencePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Evidence
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource: [!GetAtt Evidence.Arn, !Sub '${Evidence.Arn}/*']
+            Condition: {Bool: {'aws:SecureTransport': false}}
+  DeadLetters:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      KmsMasterKeyId: !Ref DataKey
+  WakeQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 345600
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref DataKey
+      RedrivePolicy: {deadLetterTargetArn: !GetAtt DeadLetters.Arn, maxReceiveCount: 6}
+  SchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: scheduler.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+              ArnLike: {'aws:SourceArn': !Sub 'arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule-group/default'}
+      Policies:
+        - PolicyName: WakeOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - {Effect: Allow, Action: 'sqs:SendMessage', Resource: !GetAtt WakeQueue.Arn}
+              - Effect: Allow
+                Action: ['kms:Decrypt', 'kms:GenerateDataKey']
+                Resource: !GetAtt DataKey.Arn
+  ServiceLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {RetentionInDays: 7}
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns: [!Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore']
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: ec2.amazonaws.com}, Action: 'sts:AssumeRole'}
+      Policies:
+        - PolicyName: LedgerRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:Query', 'dynamodb:DeleteItem']
+                Resource: !GetAtt Ledger.Arn
+              - Effect: Allow
+                Action: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:DeleteObjectVersion']
+                Resource: !Sub '${Evidence.Arn}/*'
+              - Effect: Allow
+                Action: ['s3:ListBucket', 's3:ListBucketVersions']
+                Resource: !GetAtt Evidence.Arn
+              - Effect: Allow
+                Action: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:GetQueueAttributes']
+                Resource: !GetAtt WakeQueue.Arn
+              - Effect: Allow
+                Action: ['scheduler:CreateSchedule', 'scheduler:UpdateSchedule', 'scheduler:DeleteSchedule', 'scheduler:GetSchedule']
+                Resource: !Sub 'arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/default/dirl-*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt SchedulerRole.Arn
+                Condition: {StringEquals: {'iam:PassedToService': scheduler.amazonaws.com}}
+              - {Effect: Allow, Action: 'secretsmanager:GetSecretValue', Resource: !Ref RuntimeSecretArn}
+              - Effect: Allow
+                Action: ['kms:Decrypt', 'kms:GenerateDataKey']
+                Resource: !GetAtt DataKey.Arn
+              - Effect: Allow
+                Action: ['logs:CreateLogStream', 'logs:PutLogEvents']
+                Resource: !GetAtt ServiceLogs.Arn
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: {Roles: [!Ref InstanceRole]}
+  ServiceGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: DONE/IRL backend reachable only from CloudFront origin-facing addresses; no SSH
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourcePrefixListId: !Ref CloudFrontPrefixList}
+  ServiceInstance:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal: {Count: 1, Timeout: PT40M}
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      NetworkInterfaces:
+        - {DeviceIndex: '0', AssociatePublicIpAddress: true, SubnetId: !Ref SubnetId, GroupSet: [!Ref ServiceGroup]}
+      MetadataOptions: {HttpTokens: required, HttpPutResponseHopLimit: 2}
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: {VolumeType: gp3, VolumeSize: 30, Encrypted: true, KmsKeyId: !GetAtt DataKey.Arn, DeleteOnTermination: false}
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}-judge-reducer'}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          signal() { /opt/aws/bin/cfn-signal -e "$1" --stack '${AWS::StackName}' --resource ServiceInstance --region '${AWS::Region}' || true; }
+          trap 'signal 1' ERR
+          umask 077
+          dnf install -y docker git python3-pip aws-cfn-bootstrap
+          install -d -m 0755 /usr/libexec/docker/cli-plugins
+          curl --fail -sSL --proto '=https' 'https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v0.19.3.linux-amd64' -o /usr/libexec/docker/cli-plugins/docker-buildx
+          echo '32ed111e941e385c2fb8261eba06a4056915718fd606f8278834ac1931d261a2  /usr/libexec/docker/cli-plugins/docker-buildx' | sha256sum -c -
+          chmod 0755 /usr/libexec/docker/cli-plugins/docker-buildx
+          systemctl enable --now docker
+          install -d -m 0700 /srv/done-irl /srv/done-irl/data /srv/done-irl/config
+          chown -R 10001:10001 /srv/done-irl/data /srv/done-irl/config
+          python3 -m venv /opt/done-irl-aws
+          /opt/done-irl-aws/bin/pip install -q 'boto3>=1.40,<2'
+          export DONE_REGION='${AWS::Region}' DONE_SECRET='${RuntimeSecretArn}'
+          /opt/done-irl-aws/bin/python - <<'PY'
+          import base64, json, os
+          from pathlib import Path
+          import boto3
+          raw = boto3.client('secretsmanager', region_name=os.environ['DONE_REGION']).get_secret_value(SecretId=os.environ['DONE_SECRET'])['SecretString']
+          secret = json.loads(raw)
+          key = base64.b64decode(secret.pop('LEDGER_KEY_BASE64'), validate=True)
+          if len(key) != 32 or len(secret['OWNER_PASSWORD']) < 16 or len(secret['DEMO_ADMIN_PASSWORD']) < 16:
+              raise SystemExit('Invalid provisioned owner/key configuration')
+          config = Path('/srv/done-irl/config')
+          (config / 'ledger.key').write_bytes(key)
+          rows = []
+          for name in ('OWNER_PASSWORD', 'DEMO_ADMIN_PASSWORD'):
+              value = secret[name]
+              if not isinstance(value, str) or any(c in value for c in '\r\n\x00'):
+                  raise SystemExit('Invalid secret encoding')
+              rows.append(name + '=' + value)
+          Path('/srv/done-irl/runtime.env').write_text('\n'.join(rows) + '\n')
+          for p in config.iterdir():
+              p.chmod(0o600)
+              os.chown(p, 10001, 10001)
+          PY
+          curl --fail -sS --proto '=https' --tlsv1.2 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task' -o /srv/done-irl/config/pose.task
+          echo '59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a  /srv/done-irl/config/pose.task' | sha256sum -c -
+          chown 10001:10001 /srv/done-irl/config/pose.task
+          rm -rf /srv/done-irl/src && git clone -q '${RepoUrl}' /srv/done-irl/src
+          git -C /srv/done-irl/src checkout -q '${GitCommit}'
+          docker build -q --build-arg ENABLE_LIVE_RUNTIME=true -f /srv/done-irl/src/infra/local/Dockerfile -t 'done-irl:${GitCommit}' /srv/done-irl/src
+          cat > /etc/systemd/system/done-irl.service <<'UNIT'
+          [Unit]
+          Description=DONE/IRL judge reducer (DEMO_MODE, single active writer)
+          Requires=docker.service
+          After=docker.service network-online.target
+          [Service]
+          Restart=always
+          RestartSec=10
+          ExecStartPre=-/usr/bin/docker rm -f done-irl
+          ExecStart=/usr/bin/docker run --name done-irl --init --read-only --tmpfs /tmp:rw,noexec,nosuid,size=256m --cap-drop=ALL --security-opt no-new-privileges --memory=3g --cpus=2 -p 8080:8080 --env-file /srv/done-irl/runtime.env -e DEMO_MODE=true -e DATA_DIR=/data -e LEDGER_KEY_FILE=/config/ledger.key -e AWS_REGION=${AWS::Region} -e AWS_LEDGER_TABLE=${Ledger} -e S3_EVIDENCE_BUCKET=${Evidence} -e AWS_WAKE_QUEUE_URL=${WakeQueue} -e AWS_WAKE_QUEUE_ARN=${WakeQueue.Arn} -e AWS_SCHEDULER_ROLE_ARN=${SchedulerRole.Arn} -e POSE_MODEL_FILE=/config/pose.task -e POSE_MODEL_SHA256=59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a -e MPLCONFIGDIR=/tmp/matplotlib -e XDG_CACHE_HOME=/tmp/cache -v /srv/done-irl/data:/data -v /srv/done-irl/config:/config:ro --log-driver awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=${ServiceLogs} --log-opt awslogs-stream=runtime 'done-irl:${GitCommit}' /app/.venv/bin/uvicorn done_irl.api:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips=*
+          ExecStop=/usr/bin/docker stop -t 30 done-irl
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+          systemctl daemon-reload
+          systemctl enable --now done-irl
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/health/ready >/dev/null; then signal 0; exit 0; fi
+            sleep 5
+          done
+          signal 1
+  ForwardedProto:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub '${AWS::StackName}-forwarded-proto'
+      AutoPublish: true
+      FunctionConfig: {Comment: Tell the origin the viewer used HTTPS, Runtime: cloudfront-js-2.0}
+      FunctionCode: |
+        function handler(event) {
+          event.request.headers['x-forwarded-proto'] = {value: 'https'};
+          return event.request;
+        }
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: DONE/IRL judge console (HTTPS)
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: reducer
+            DomainName: !GetAtt ServiceInstance.PublicDnsName
+            CustomOriginConfig:
+              HTTPPort: 8080
+              OriginProtocolPolicy: http-only
+              OriginReadTimeout: 60
+              OriginKeepaliveTimeout: 60
+        DefaultCacheBehavior:
+          TargetOriginId: reducer
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+          CachedMethods: [GET, HEAD]
+          Compress: false
+          # Managed CachingDisabled and AllViewer policies.
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+          FunctionAssociations:
+            - {EventType: viewer-request, FunctionARN: !GetAtt ForwardedProto.FunctionMetadata.FunctionARN}
+  QueueAgeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Wakeup queue delayed; inspect worker and DLQ before redrive.
+      Namespace: AWS/SQS
+      MetricName: ApproximateAgeOfOldestMessage
+      Dimensions: [{Name: QueueName, Value: !GetAtt WakeQueue.QueueName}]
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 180
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+  DeadLetterAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions: [{Name: QueueName, Value: !GetAtt DeadLetters.QueueName}]
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+Outputs:
+  JudgeURL: {Value: !Sub 'https://${Distribution.DomainName}'}
+  InstanceId: {Value: !Ref ServiceInstance}
+  LedgerTable: {Value: !Ref Ledger}
+  EvidenceBucket: {Value: !Ref Evidence}
+  WakeQueueUrl: {Value: !Ref WakeQueue}
+  DeadLetterQueue: {Value: !Ref DeadLetters}
