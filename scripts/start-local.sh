@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
+# Starts the API, MCP endpoint and built console on http://127.0.0.1:8080 (override with HOST/PORT).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export UV_CACHE_DIR="${UV_CACHE_DIR:-/workspace/.cache/uv}"
-export PYTHONPATH="$PWD/apps/mcp-orchestrator${PYTHONPATH:+:$PYTHONPATH}"
-exec uv run --frozen uvicorn done_irl.api:app --host "${HOST:-127.0.0.1}" --port "${PORT:-8080}"
+exec uv run --frozen --extra ring-video --extra aws uvicorn --app-dir apps/mcp-orchestrator done_irl.api:app \
+  --host "${HOST:-127.0.0.1}" --port "${PORT:-8080}"

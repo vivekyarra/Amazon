@@ -1,29 +1,54 @@
 # DONE/IRL
 
-**APIs lie. Reality doesn’t.** A durable reality ledger that turns consented commitments into evidence-backed outcomes.
+**APIs lie. Reality doesn’t.** DONE/IRL is a commitment daemon for the home. It hears the promises you make in passing, turns each one into a durable *physical state contract*, watches for real evidence, nudges you early (T-60 quietly, T-25 only if you are not on it), and refuses to call anything **done** until the evidence says so.
 
-DONE/IRL connects the morning promise, the parcel on the porch, the meeting you need to attend, and the movement before your evening TV. It keeps reminders separate from completion, custody separate from delivery, and observation separate from accusation.
+- **Everyday promises, no reminder commands.** "I'll pay the electricity bill by Friday", "I'm going to call Mom tonight", "I'll take out the bins every Monday", "Can you pick up groceries?" become typed contracts with deadlines or triggers (arriving home, before TV), recurring series, and a private 08:00 briefing. Saying "I already called her" is a lead, not proof: the contract waits for your confirmation (`USER_CONFIRMED`) or sensor evidence.
+- **Alexa+ (MCP).** A self-hosted Streamable HTTP MCP server (`2025-11-25`) with 11 tools, plus a clearly labelled *simulated Alexa+* voice panel that calls those tools over real JSON-RPC.
+- **Ring-style evidence.** Deposit vs fake delivery, porch removal, inward pickup and the "drinks not visible" arrival check run on real decoded video (licensed recorded footage) through MediaPipe object detection and tracking, with hash-chained evidence and a human-approval gate before any report.
+- **Fire TV Reality-Lock.** A D-pad TV app; 15 squats counted by MediaPipe Pose unlock the in-app entertainment gate (14 stays locked).
+- **AWS.** Live on DynamoDB, S3 (SSE-KMS), EventBridge Scheduler, SQS and CloudWatch.
 
-> **Current release: working synthetic development demo; original vision NOT COMPLETE.** Bee/Ring/Fire TV live verification and official hackathon submission evidence remain external gates. See [acceptance report](docs/acceptance-report.md) and [integration status](docs/integration-status.md). An Android build is not proof of a Fire TV device run.
+> **Honest status:** the product works end to end with real cloud infrastructure and real video processing. Live Bee data, a live Ring camera, a physical Fire TV / Vega device run and the public video are still outstanding, so the original-vision release is **NOT COMPLETE**. Every surface carries a source label (`LIVE_VERIFIED`, `SIMULATED_VERIFIED`, `REAL_RECORDED_STOCK`, `RECORDED DEMO`, `BLOCKED`). See [integration status](docs/integration-status.md), [traceability](docs/requirements-traceability.md) and the [acceptance report](docs/acceptance-report.md).
+
+## Try it online (judges)
+
+**https://100-49-183-59.sslip.io** — HTTPS, hosted on AWS until the end of judging. Sign in as `demo-admin` with the password from the Devpost testing instructions (not stored in this repository). The demo household replays one canonical day on a virtual clock and can be reset at any time; the `owner` household runs on wall-clock time.
+
+1. **Mission control → Run the full day**, or step through the six scene buttons (08:15 promises → 14:10 courier → 15:00/15:35 escalation → 16:30 removal → 19:45 arrival → 20:30 Reality-Lock).
+2. **Judge replay** lets you pick branches: fake vs real deposit, family pickup vs report review, visible vs empty vs occluded hands, and the `real_*` branches that run on licensed real footage.
+3. **Studio → Play RECORDED DEMO through MediaPipe** streams a 15-squat video through the real pose engine; watch 14/15 stay locked and 15/15 unlock.
+4. Talk or type to the **SIMULATED ALEXA+** panel ("Alexa, what did I promise today?") and watch the MCP JSON-RPC log.
+5. Point any MCP client at `https://100-49-183-59.sslip.io/mcp/` with the session token as a Bearer header.
 
 ![Mission control — actual synthetic web workspace](docs/images/mission-control.png)
 
-[Watch the actual 40-second synthetic browser demo](docs/demo/browser-demo.mp4) · [Validation evidence](docs/evidence/engineering.json)
+Evidence: [AWS deployment](docs/evidence/aws-deployment.json) · [live MCP + EventBridge](docs/evidence/aws-mcp-scheduler.json) · [real-scene vision](docs/evidence/scene-vision.json) · [pose 15-rep fixture](docs/evidence/pose-15-fixture.json) · [TV emulator walkthrough](docs/evidence/firetv/walkthrough.mp4) · [CI](docs/evidence/ci-runs.md)
 
 ## Run locally
 
-Requires Linux/macOS, Python 3.12+, [uv](https://docs.astral.sh/uv/), Node.js 22.12+ (24 recommended), and npm. Linux OpenCV requires the standard GL/glib runtime (`libgl1`, `libglib2.0-0` on Debian/Ubuntu); the optional MediaPipe worker also needs `libgles2`. No personal camera, cloud account, Docker, or device token is required for the synthetic workflow.
+Requires Python 3.12+ via [uv](https://docs.astral.sh/uv/), Node.js 22.12+ (24 recommended) and npm. Works on Linux, macOS and Windows (Git Bash). Linux needs `libgl1 libglib2.0-0 libgles2 libegl1` for OpenCV/MediaPipe. No camera, cloud account or device token is required.
 
 ```bash
 ./scripts/setup-local.sh
 ./scripts/start-local.sh
 ```
 
-The service listens on port 8080 by default and serves the built frontend and API together. In a private terminal, run `./scripts/access.sh` to read the generated `demo-admin` and `owner` passwords. Never include that output in a public issue, video, or CI log. Passwords and local state are ignored by Git. The administrator uses the isolated synthetic household; ordinary owners cannot invoke replay controls.
+The service listens on port 8080 and serves the built frontend and API together. Run `./scripts/access.sh` privately to read the generated `demo-admin` and `owner` passwords; never paste them into issues, videos or logs. For frontend development, run the backend and `npm run dev` separately.
 
-For frontend development, run the backend and `npm run dev` separately. Vite proxies `/api` to the backend.
+## Connect real devices (owner)
 
-## Try the connected day
+```bash
+# Bee: real wearable data (token from `bee login` / Bee developer settings)
+BEE_TOKEN=... uv run python scripts/bee-live-probe.py --seconds 120
+# Ring: Developer Playground token (~30 min lifetime)
+RING_ACCESS_TOKEN=... uv run --extra ring-video python scripts/ring-live-probe.py
+# Fire OS APK on an Android TV emulator (D-pad walkthrough + screenshots)
+uv run python scripts/firetv-emulator-check.py --boot --record
+```
+
+Probe reports are redacted (counts, shapes, hashes only). Live Bee events feed the owner household; unattributed speech is held for confirmation unless `BEE_SELF_SPEAKERS` names the wearer's speaker label.
+
+## The canonical day, step by step
 
 1. Sign in as `demo-admin`. Choose **Run the full day** in Mission control.
 2. Four morning utterances compile into four durable contracts. Nothing starts verified.
@@ -57,7 +82,8 @@ Tests exercise exact scheduling, durable restart, evidence tampering, household 
 | `apps/firetv-command-hud` | Native Fire OS Android TV shell; shared authenticated four-view web HUD |
 | `apps/judge-godmode-console` | React + TypeScript judge console, companion inbox, keyboard TV preview |
 | `packages/physical-contract-schema` | Shared TypeScript contracts and generated JSON schemas |
-| `packages/testing-fixtures` | Synthetic source manifest and reproducible geometric fixtures |
+| `packages/testing-fixtures` | Synthetic fixtures, generated 15-squat videos and licensed real-scene clips with provenance |
+| `packages/agent-skills/evidence-backed-commitments` | Open-source Agent Skill (MIT) packaging the commitment compiler and never-fake-done rules |
 
 Fire OS build/install and runtime validation are described in [TV instructions](apps/firetv-command-hud/README.md). Web TV mode is explicitly a preview. The primary candidate track is Alexa+ via compliant MCP/simulated orchestration, pending actual eligibility review and recorded proof; other track claims require their device evidence.
 
@@ -85,7 +111,7 @@ See [architecture](docs/architecture.md), [privacy](docs/privacy-security.md), [
 
 ## Repository workflow
 
-Work is developed on feature branches (`feat/done-irl`, then `feat/live-runtime`). CI must pass on the exact release commit before promotion to `main`. Credentials, local outputs, vendor directories, APKs and generated build bundles are ignored. Publication, third-party device registration, and submission video uploads need owner-controlled accounts and are not inferred from a passing local test.
+Work is developed on feature branches and merged to `main` only after CI passes. CI must pass on the exact release commit before promotion to `main`. Credentials, local outputs, vendor directories, APKs and generated build bundles are ignored. Publication, third-party device registration, and submission video uploads need owner-controlled accounts and are not inferred from a passing local test.
 
 
 ## Live runtime and AWS pilot

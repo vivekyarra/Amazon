@@ -1,6 +1,22 @@
 # AWS deployment
 
-This is an executable **single active reducer** deployment, not a distributed SQLite database. The CloudFormation stack provisions an HTTPS ALB, one EC2 host with encrypted persistent EBS, private SSE-KMS S3 evidence, DynamoDB projections/PITR, EventBridge Scheduler, SQS/DLQ, least-scope service roles, seven-day logs and queue alarms. Deployment has **not** been executed against an AWS account. Moto tests and CloudFormation lint are local verification, not cloud proof.
+## Judge deployment (`judge-demo.yaml`) — deployed
+
+`infra/aws/judge-demo.yaml` is the stack actually running for the hackathon (`done-irl-judge`, us-east-1, since 20 October 2026): one EC2 reducer in DEMO_MODE that builds an exact public commit, Caddy terminating HTTPS with an automatic Let's Encrypt certificate on `<elastic-ip>.sslip.io`, and the same DynamoDB (KMS, PITR), versioned SSE-KMS S3, EventBridge Scheduler → SQS (KMS, DLQ), CloudWatch logs and alarms as the pilot template below. No SSH; operations use SSM.
+
+```bash
+# one-time: a Secrets Manager secret with OWNER_PASSWORD, DEMO_ADMIN_PASSWORD (>=16 chars) and LEDGER_KEY_BASE64 (32 random bytes)
+aws cloudformation create-stack --stack-name done-irl-judge --template-body file://infra/aws/judge-demo.yaml   --capabilities CAPABILITY_IAM --parameters ParameterKey=SubnetId,ParameterValue=<public-subnet>   ParameterKey=VpcId,ParameterValue=<vpc> ParameterKey=RuntimeSecretArn,ParameterValue=<secret-arn>   ParameterKey=GitCommit,ParameterValue=<40-char sha>
+scripts/judge-redeploy.sh <40-char sha>          # rebuild/restart a newer commit via SSM
+DONE_URL=https://<ip>.sslip.io DEMO_ADMIN_PASSWORD=... uv run --extra aws python scripts/aws-judge-smoke.py
+aws cloudformation delete-stack --stack-name done-irl-judge   # after judging; then remove retained table/bucket/key
+```
+
+CloudFront was the first choice but the account returned "must be verified before you can add new CloudFront resources" (friction A4). Observed results: [deployment](../../docs/evidence/aws-deployment.json), [MCP + EventBridge](../../docs/evidence/aws-mcp-scheduler.json).
+
+## Live pilot template (`template.yaml`)
+
+This is an executable **single active reducer** deployment, not a distributed SQLite database. The CloudFormation stack provisions an HTTPS ALB, one EC2 host with encrypted persistent EBS, private SSE-KMS S3 evidence, DynamoDB projections/PITR, EventBridge Scheduler, SQS/DLQ, least-scope service roles, seven-day logs and queue alarms. This ALB/ACM pilot variant has **not** been executed (the judge stack above was). Moto tests and CloudFormation lint are local verification, not cloud proof.
 
 The runtime uses the existing transactional ledger as its authority. Every committed state update also writes an encrypted cloud outbox row. The cloud worker coalesces pending full snapshots, uploads available encrypted artifacts, writes a hash-checked S3 snapshot, conditionally advances the DynamoDB revision, projects queryable records, and creates/updates/cancels deadline schedules. Scheduler messages only wake the trusted reconciler; they cannot provide evidence or mark a contract verified. A one-second durable local reconciliation loop recovers missed scheduler deliveries. Exactly one active reducer owns a ledger volume; never start two restored copies against one table.
 
@@ -21,7 +37,6 @@ Build the optional native runtime and publish it to your private ECR repository 
 
 ```sh
 docker build --build-arg ENABLE_LIVE_RUNTIME=true -f infra/local/Dockerfile -t done-irl:live .
-# In this Codex cloud, use scripts/build-container-cloud.py --live-runtime --tag done-irl:live
 # Authenticate/push with ECR; use the resulting repository@sha256:digest as ImageUri.
 uvx --from cfn-lint==1.57.2 cfn-lint infra/aws/template.yaml
 aws cloudformation deploy --stack-name done-irl --template-file infra/aws/template.yaml \

@@ -16,7 +16,7 @@ docker compose -f infra/local/compose.yml down
 # Add --volumes only when deliberately deleting ALL local demo data.
 ```
 
-Docker is optional. The image was built and tested with all six scenarios, fifteen distinct pose cycles, evidence export, service restart, persisted contracts and teardown. See `docs/evidence/container.json`. In the supplied cloud proxy environment, use `python scripts/build-container-cloud.py` to preserve the proxy route and public CA trust; then `.venv/bin/python scripts/smoke-container.py` validates an isolated container and removes only its own container/volume. Standard Compose can be used on a normal network. The image exposes only the synthetic mode; it is not an AWS deployment. Put an owner-controlled TLS reverse proxy in front of any remote demo, restrict access, set ALLOWED_ORIGINS to the actual origin, and protect passwords. Do not expose the judge workspace anonymously.
+Docker is optional. The image was built and tested with all six scenarios, fifteen distinct pose cycles, evidence export, service restart, persisted contracts and teardown. See `docs/evidence/container.json`. Build with `docker build -f infra/local/Dockerfile -t done-irl:validation .`; then `uv run python scripts/smoke-container.py` validates an isolated container and removes only its own container/volume. Standard Compose can be used on a normal network. The local image defaults to synthetic mode. The public judge deployment on AWS is described in `infra/aws/README.md` (`judge-demo.yaml`). Put an owner-controlled TLS reverse proxy in front of any remote demo, restrict access, set ALLOWED_ORIGINS to the actual origin, and protect passwords. Do not expose the judge workspace anonymously.
 
 ## Fire OS client
 
