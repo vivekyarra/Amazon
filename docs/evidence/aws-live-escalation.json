@@ -1,25 +1,28 @@
 {
-  "checked_at": "2026-10-20T16:25:52.609312+00:00",
+  "checked_at": "2026-10-20T16:36:38.100272+00:00",
   "contract": {
     "title": "Call Mom",
-    "status": "ACTIVE",
+    "status": "MISSED",
     "due_at": "2026-10-20T14:32:03.392676+00:00"
   },
   "jobs": [
     {
       "kind": "T60",
       "at": "2026-10-20T13:32:03.392676+00:00",
-      "status": "PENDING"
+      "status": "EXECUTED",
+      "executed_at": "2026-10-20T16:36:18.375109+00:00"
     },
     {
       "kind": "T25",
       "at": "2026-10-20T14:07:03.392676+00:00",
-      "status": "PENDING"
+      "status": "EXECUTED",
+      "executed_at": "2026-10-20T16:36:18.375109+00:00"
     },
     {
       "kind": "DEADLINE",
       "at": "2026-10-20T14:32:03.392676+00:00",
-      "status": "PENDING"
+      "status": "EXECUTED",
+      "executed_at": "2026-10-20T16:36:18.375109+00:00"
     }
   ],
   "alerts": [],

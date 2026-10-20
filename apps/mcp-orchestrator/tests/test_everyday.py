@@ -186,3 +186,13 @@ def test_morning_briefing_summarizes_open_promises_once():
     briefings = [a for a in s["alerts"] if a["kind"] == "DAILY_BRIEFING"]
     assert len(briefings) == 1
     assert "1 due today: Call Mom (21:00)" in briefings[0]["message"] and "waiting on a trigger" in briefings[0]["message"]
+
+
+def test_wall_clock_household_uses_general_parser_for_canonical_words():
+    s = e.fresh()
+    s.update(household_id="h", clock_mode="WALL", now="2026-10-20T10:00:00+00:00")
+    [cid] = e.compile_bee(s, e.BeeInput(event_id="sis", utterance="I will call my sister in 63 minutes.",
+                                        occurred_at="2026-10-20T10:00:00+00:00"))
+    c = next(c for c in s["contracts"] if c["contract_id"] == cid)
+    assert c["key"].startswith("gen_") and c["due_at"] == "2026-10-20T11:03:00+00:00"
+    assert c["verification_modality"] == "BEE_CONVERSATION_AUDIT"

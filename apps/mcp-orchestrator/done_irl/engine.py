@@ -362,7 +362,9 @@ def compile_bee(s, bee: BeeInput):
         ),
     ]
     created = []
-    canonical = not re.search(r"\b(called|already|finished)\b", text)
+    # Canonical scene patterns (fixed 16:00/18:00 defaults) belong to the virtual judge day only;
+    # real wall-clock households always use the general parser so relative times are honoured.
+    canonical = s.get("clock_mode") != "WALL" and not re.search(r"\b(called|already|finished)\b", text)
     for key, pattern, title, person, modality, hm, trigger in specs if canonical else []:
         if re.search(pattern, text):
             due = None
