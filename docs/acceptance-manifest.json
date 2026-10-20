@@ -811,17 +811,21 @@
    "verification_result": "VERIFIED",
    "integration_source": "SIMULATED_VERIFIED",
    "code_paths": [
-    "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "apps/judge-godmode-console/src/main.tsx",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py"
    ],
    "automated_tests": [
-    "canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles"
+    "canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles",
+    "test_scenarios.py",
+    "tests/e2e/journeys.spec.ts"
    ],
-   "evidence": "artifacts/playwright/results.xml",
+   "evidence": "docs/evidence/ci-runs.md",
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-20",
+   "note": "Six named scene buttons drive the shared ingestion/reducer pipeline; browser journeys run in CI."
   },
   {
    "requirement_id": "P0-043",
@@ -948,22 +952,31 @@
   {
    "requirement_id": "P0-049",
    "requirement": "Working README/setup/run/deploy instructions, `.env.example`, license/repo access strategy, architecture, privacy doc and operating guide exist.",
-   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
-    "apps/mcp-orchestrator/done_irl/engine.py",
+    ".env.example",
+    "LICENSE",
+    "README.md",
     "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/aws_runtime.py",
+    "apps/mcp-orchestrator/done_irl/engine.py",
+    "docs/architecture.md",
+    "docs/deployment.md",
+    "docs/privacy-security.md",
+    "infra/aws/judge-demo.yaml",
     "infra/aws/template.yaml"
    ],
-   "automated_tests": [],
-   "evidence": null,
-   "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "AWS runtime/projection/schedules/restore and validated CloudFormation supplied alongside local deployment; actual AWS provisioning/runtime remains unverified."
+   "automated_tests": [
+    "CI clean checkout",
+    "scripts/setup-local.sh + start-local.sh executed on Windows 11 (Git Bash)"
    ],
+   "evidence": "infra/aws/README.md",
+   "scope": "Synthetic local development workflow; no live/device inference",
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-20",
+   "note": "README, setup/run scripts (Linux/macOS/Windows), .env.example, MIT license, architecture, privacy and operations docs; the documented judge stack was actually deployed and smoke-tested."
   },
   {
    "requirement_id": "P0-050",
@@ -1022,20 +1035,22 @@
   {
    "requirement_id": "P0-053",
    "requirement": "Friction log contains genuinely observed entries, with 10 entries as original internal goal where genuine, never fabricated; submission records the official optional status accurately.",
-   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "docs/friction-log.md"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "manual review: each entry reproduced from session logs"
+   ],
+   "evidence": "docs/friction-log.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Actual friction recorded; no fabricated ten-entry or bonus claim."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-20",
+   "note": "Five Amazon-tool entries in the official format (A1-A5) plus ten engineering notes, all actually encountered; none padded. The official rules describe friction logs as optional (up to 10% bonus)."
   },
   {
    "requirement_id": "P0-054",

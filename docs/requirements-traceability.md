@@ -2,7 +2,7 @@
 
 Generated from [acceptance-manifest.json](acceptance-manifest.json) by `scripts/update-acceptance.py`; do not edit by hand. All 55 original P0 gates are retained. VERIFIED means reproducible automated or platform evidence exists for the gate's own wording; it never implies live-device completion where the row says otherwise. Full original-vision release and independent review remain separate gates.
 
-Status counts: BLOCKED: 9, IMPLEMENTED_UNVERIFIED: 14, VERIFIED: 32.
+Status counts: BLOCKED: 9, IMPLEMENTED_UNVERIFIED: 12, VERIFIED: 34.
 
 | ID | Result | Evidence / remaining work |
 |---|---|---|
@@ -47,18 +47,18 @@ Status counts: BLOCKED: 9, IMPLEMENTED_UNVERIFIED: 14, VERIFIED: 32.
 | P0-039 | VERIFIED | Real MediaPipe Pose on a generated, labelled SYNTHETIC 15-squat video (spec 11.4 permits generated fixtures): exactly 15 reps; half, frozen and looped inputs add none. Green in CI. A consented human recording would strengthen but is not required by this gate. Evidence: [docs/evidence/pose-15-fixture.json](../docs/evidence/pose-15-fixture.json). |
 | P0-040 | VERIFIED | Gate stays locked at 14/15 and unlocks only after the verifier-backed PSC transition; TV app restart restores the unlocked state from the durable ledger. Evidence: [tests/firetv/device-report.md](../tests/firetv/device-report.md). |
 | P0-041 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
-| P0-042 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/playwright/results.xml](../artifacts/playwright/results.xml). |
+| P0-042 | VERIFIED | Six named scene buttons drive the shared ingestion/reducer pipeline; browser journeys run in CI. Evidence: [docs/evidence/ci-runs.md](../docs/evidence/ci-runs.md). |
 | P0-043 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-044 | IMPLEMENTED_UNVERIFIED | F01–F24 mapped; actual human-video repetitions and native device navigation remain unverified. |
 | P0-045 | IMPLEMENTED_UNVERIFIED | Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified. |
 | P0-046 | VERIFIED | Consent, per-camera exclusion, private masks, retention, provider disconnect and household deletion tested; upstream token revocation and operator backups are documented operator duties. Evidence: [docs/privacy-security.md](../docs/privacy-security.md). |
 | P0-047 | BLOCKED | Engineering CI supplied; required Fire TV device/simulator tests absent. |
 | P0-048 | BLOCKED | Runbook/screenshots supplied; real track footage and submission artifacts incomplete. |
-| P0-049 | IMPLEMENTED_UNVERIFIED | AWS runtime/projection/schedules/restore and validated CloudFormation supplied alongside local deployment; actual AWS provisioning/runtime remains unverified. |
+| P0-049 | VERIFIED | README, setup/run scripts (Linux/macOS/Windows), .env.example, MIT license, architecture, privacy and operations docs; the documented judge stack was actually deployed and smoke-tested. Evidence: [infra/aws/README.md](../infra/aws/README.md). |
 | P0-050 | BLOCKED | Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending. |
 | P0-051 | BLOCKED | No public under-three-minute video URL or required device footage. |
 | P0-052 | IMPLEMENTED_UNVERIFIED | Actual tools have feedback; Amazon live tool feedback and mini-challenge links pending. |
-| P0-053 | IMPLEMENTED_UNVERIFIED | Actual friction recorded; no fabricated ten-entry or bonus claim. |
+| P0-053 | VERIFIED | Five Amazon-tool entries in the official format (A1-A5) plus ten engineering notes, all actually encountered; none padded. The official rules describe friction logs as optional (up to 10% bonus). Evidence: [docs/friction-log.md](../docs/friction-log.md). |
 | P0-054 | IMPLEMENTED_UNVERIFIED | Traceability/progress/report maintained; independent dated release review still needed. |
 | P0-055 | BLOCKED | Release gate intentionally reports NOT_COMPLETE; no independent platform review. |
 

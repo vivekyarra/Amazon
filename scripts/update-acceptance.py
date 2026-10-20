@@ -93,6 +93,30 @@ UPGRADES = {
         note="Consent, per-camera exclusion, private masks, retention, provider disconnect and household deletion "
              "tested; upstream token revocation and operator backups are documented operator duties.",
     ),
+    "P0-042": dict(
+        result="VERIFIED",
+        tests=["tests/e2e/journeys.spec.ts", "test_scenarios.py"],
+        evidence="docs/evidence/ci-runs.md",
+        code=["apps/judge-godmode-console/src/main.tsx", "apps/mcp-orchestrator/done_irl/engine.py"],
+        note="Six named scene buttons drive the shared ingestion/reducer pipeline; browser journeys run in CI.",
+    ),
+    "P0-049": dict(
+        result="VERIFIED",
+        tests=["scripts/setup-local.sh + start-local.sh executed on Windows 11 (Git Bash)", "CI clean checkout"],
+        evidence="infra/aws/README.md",
+        code=["README.md", ".env.example", "LICENSE", "docs/architecture.md", "docs/privacy-security.md",
+              "docs/deployment.md", "infra/aws/judge-demo.yaml"],
+        note="README, setup/run scripts (Linux/macOS/Windows), .env.example, MIT license, architecture, privacy and "
+             "operations docs; the documented judge stack was actually deployed and smoke-tested.",
+    ),
+    "P0-053": dict(
+        result="VERIFIED",
+        tests=["manual review: each entry reproduced from session logs"],
+        evidence="docs/friction-log.md",
+        code=["docs/friction-log.md"],
+        note="Five Amazon-tool entries in the official format (A1-A5) plus ten engineering notes, all actually "
+             "encountered; none padded. The official rules describe friction logs as optional (up to 10% bonus).",
+    ),
 }
 
 

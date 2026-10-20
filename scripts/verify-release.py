@@ -7,7 +7,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
-manifest = json.loads((root / "docs/acceptance-manifest.json").read_text())
+manifest = json.loads((root / "docs/acceptance-manifest.json").read_text(encoding="utf-8"))
 requirements = manifest["requirements"]
 expected = {f"P0-{i:03}" for i in range(1, 56)}
 errors = []
@@ -53,6 +53,6 @@ report = {
     "remaining_gates": errors,
 }
 (root / "artifacts/release").mkdir(parents=True, exist_ok=True)
-(root / "artifacts/release/release-result.json").write_text(json.dumps(report, indent=2) + "\n")
+(root / "artifacts/release/release-result.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(report, indent=2))
 sys.exit(1 if errors else 0)
