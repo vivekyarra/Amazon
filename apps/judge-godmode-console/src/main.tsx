@@ -119,6 +119,16 @@ const fmt = (date: string) =>
 const human = (s: string) => s.toLowerCase().replaceAll("_", " ");
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// Fire OS / Android TV WebViews older than Chromium 92 lack crypto.randomUUID.
+const uuid = (): string => {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+};
+
 async function api(path: string, body?: unknown) {
   const response = await fetch("/api" + path, {
     method: body === undefined ? "GET" : "POST",
@@ -128,7 +138,7 @@ async function api(path: string, body?: unknown) {
         ? {}
         : {
             "Content-Type": "application/json",
-            "Idempotency-Key": crypto.randomUUID(),
+            "Idempotency-Key": uuid(),
           },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -250,15 +260,41 @@ function App() {
           ),
         ].filter((el) => el.offsetParent !== null);
         const current = items.indexOf(document.activeElement as HTMLElement);
+        const forward = ["ArrowDown", "ArrowRight"].includes(e.key);
         const next =
-          (current +
-            (["ArrowDown", "ArrowRight"].includes(e.key) ? 1 : -1) +
-            items.length) %
-          items.length;
-        items[next]?.focus();
+          (current + (forward ? 1 : -1) + items.length) % items.length;
         e.preventDefault();
+        // Ten-foot rule: content without focusable controls (counters, evidence text) must
+        // still be reachable. Up/Down scroll the page while the next control is off-screen.
+        const page = document.scrollingElement ?? document.documentElement;
+        const step = Math.round(window.innerHeight * 0.6);
+        const rect = items[next]?.getBoundingClientRect();
+        if (e.key === "ArrowDown") {
+          const atEnd =
+            page.scrollTop + window.innerHeight >= page.scrollHeight - 4;
+          if (
+            !atEnd &&
+            (next <= current || (rect && rect.top > window.innerHeight))
+          ) {
+            window.scrollBy(0, step);
+            return;
+          }
+        }
+        if (e.key === "ArrowUp") {
+          if (
+            page.scrollTop > 0 &&
+            (next >= current || (rect && rect.bottom < 0))
+          ) {
+            window.scrollBy(0, -step);
+            return;
+          }
+        }
+        items[next]?.focus();
       }
-      if (e.key === "Escape" || e.key === "Backspace") {
+      const typing = (e.target as HTMLElement | null)?.matches?.(
+        "input, textarea, select",
+      );
+      if (e.key === "Escape" || (e.key === "Backspace" && !typing)) {
         setSelected(null);
         setPage("overview");
       }
@@ -1251,7 +1287,7 @@ function App() {
                       ev.preventDefault();
                       void guarded(async () => {
                         await act("/ingest/bee-simulated", {
-                          event_id: crypto.randomUUID(),
+                          event_id: uuid(),
                           utterance: customUtterance,
                           speaker: "SELF",
                           counterparty: "Household",
