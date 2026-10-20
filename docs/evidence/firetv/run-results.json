@@ -1,0 +1,210 @@
+{
+  "apk_sha256": "5ebe657fba4824c444854388b37009103a3714aff740ed1ffcf714b1299f035d",
+  "device": {
+    "ro.build.version.sdk": "30",
+    "ro.build.version.release": "11",
+    "ro.product.model": "AOSP TV on x86",
+    "ro.build.fingerprint": "google/sdk_google_atv_x86/generic_x86:11/RTU1.221129.002/9351025:user/dev-keys",
+    "ro.build.characteristics": "emulator"
+  },
+  "results": [
+    {
+      "step": "emulator booted",
+      "ok": true,
+      "detail": "{\"ro.build.version.sdk\": \"30\", \"ro.build.version.release\": \"11\", \"ro.product.model\": \"AOSP TV on x86\", \"ro.build.fingerprint\": \"google/sdk_google_atv_x86/generic_x86:11/RTU1.221129.002/9351025:user/dev-keys\", \"ro.build.characteristics\": \"emulator\"}",
+      "t": 1792499476.8
+    },
+    {
+      "step": "apk sha256",
+      "ok": true,
+      "detail": "5ebe657fba4824c444854388b37009103a3714aff740ed1ffcf714b1299f035d",
+      "t": 1792499476.8
+    },
+    {
+      "step": "backend scenarios 1-6 played",
+      "ok": true,
+      "detail": "5 contracts, 1 incidents",
+      "t": 1792499478.3
+    },
+    {
+      "step": "apk installed",
+      "ok": true,
+      "detail": "",
+      "t": 1792499483.2
+    },
+    {
+      "step": "cold launch",
+      "ok": true,
+      "detail": "TotalTime: 7944",
+      "t": 1792499494.3
+    },
+    {
+      "step": "password entered via remote keyboard (length verified)",
+      "ok": true,
+      "detail": "attempts=1",
+      "t": 1792499545.7
+    },
+    {
+      "step": "signed in via D-pad + remote keyboard",
+      "ok": true,
+      "detail": "",
+      "t": 1792499558.7
+    },
+    {
+      "step": "Back moves focus to view bar (Ledger step)",
+      "ok": true,
+      "detail": "native focus='Ledger'",
+      "t": 1792499564.9
+    },
+    {
+      "step": "ENTER opens Ledger; focus enters web content",
+      "ok": true,
+      "detail": "native focus='DONE/IRL \u00b7 Reality ledger'",
+      "t": 1792499573.8
+    },
+    {
+      "step": "Ledger: DPAD_DOWN moves visible web focus",
+      "ok": true,
+      "detail": "BUTTON:Open notifications | outline=solid 4px | inView=true || BUTTON:Mission control | outline=solid 4px | inView=true || BUTTON:Commitment ledger | outline=solid 4px | inView=true",
+      "t": 1792499579.6
+    },
+    {
+      "step": "Back moves focus to view bar (Incident review step)",
+      "ok": true,
+      "detail": "native focus='Ledger'",
+      "t": 1792499584.9
+    },
+    {
+      "step": "DPAD_RIGHT focuses 'Incident review'",
+      "ok": true,
+      "detail": "native focus='Incident review'",
+      "t": 1792499589.7
+    },
+    {
+      "step": "ENTER opens Incident review; focus enters web content",
+      "ok": true,
+      "detail": "native focus='DONE/IRL \u00b7 Reality ledger'",
+      "t": 1792499598.7
+    },
+    {
+      "step": "Incident review: DPAD_DOWN moves visible web focus",
+      "ok": true,
+      "detail": "BUTTON:Open notifications | outline=solid 4px | inView=true || BUTTON:Mission control | outline=solid 4px | inView=true || BUTTON:Commitment ledger | outline=solid 4px | inView=true",
+      "t": 1792499604.4
+    },
+    {
+      "step": "Back moves focus to view bar (Evidence packet step)",
+      "ok": true,
+      "detail": "native focus='Incident review'",
+      "t": 1792499609.6
+    },
+    {
+      "step": "DPAD_RIGHT focuses 'Evidence packet'",
+      "ok": true,
+      "detail": "native focus='Evidence packet'",
+      "t": 1792499614.0
+    },
+    {
+      "step": "ENTER opens Evidence packet; focus enters web content",
+      "ok": true,
+      "detail": "native focus='DONE/IRL \u00b7 Reality ledger'",
+      "t": 1792499621.2
+    },
+    {
+      "step": "Evidence packet: DPAD_DOWN moves visible web focus",
+      "ok": true,
+      "detail": "BUTTON:Open notifications | outline=solid 4px | inView=true || BUTTON:Mission control | outline=solid 4px | inView=true || BUTTON:Commitment ledger | outline=solid 4px | inView=true",
+      "t": 1792499627.1
+    },
+    {
+      "step": "Back moves focus to view bar (Reality-Lock step)",
+      "ok": true,
+      "detail": "native focus='Evidence packet'",
+      "t": 1792499631.7
+    },
+    {
+      "step": "DPAD_RIGHT focuses 'Reality-Lock'",
+      "ok": true,
+      "detail": "native focus='Reality-Lock'",
+      "t": 1792499636.2
+    },
+    {
+      "step": "ENTER opens Reality-Lock; focus enters web content",
+      "ok": true,
+      "detail": "native focus='DONE/IRL \u00b7 Reality ledger'",
+      "t": 1792499643.9
+    },
+    {
+      "step": "Reality-Lock: DPAD_DOWN moves visible web focus",
+      "ok": true,
+      "detail": "BUTTON:Open notifications | outline=solid 4px | inView=true || BUTTON:Mission control | outline=solid 4px | inView=true || BUTTON:Commitment ledger | outline=solid 4px | inView=true",
+      "t": 1792499650.4
+    },
+    {
+      "step": "Reality-Lock 14/15 stays locked",
+      "ok": true,
+      "detail": "count=14 gate=LOCKED",
+      "t": 1792499662.2
+    },
+    {
+      "step": "D-pad reveals Reality-Lock counter (no unreachable content)",
+      "ok": true,
+      "detail": "5 DPAD_DOWN presses",
+      "t": 1792499679.3
+    },
+    {
+      "step": "TV shows 14/15 and gate locked",
+      "ok": true,
+      "detail": "web text '14 / 15', no 'gate unlocked'",
+      "t": 1792499679.3
+    },
+    {
+      "step": "Reality-Lock 15/15 unlocks",
+      "ok": true,
+      "detail": "count=15 gate=UNLOCKED",
+      "t": 1792499681.6
+    },
+    {
+      "step": "TV view reflects live 15/15 state",
+      "ok": true,
+      "detail": "web text '15 / 15' and 'gate unlocked'",
+      "t": 1792499692.3
+    },
+    {
+      "step": "network loss shows honest offline message",
+      "ok": true,
+      "detail": "status bar text checked",
+      "t": 1792499701.9
+    },
+    {
+      "step": "network return reloads live view",
+      "ok": true,
+      "detail": "offline message cleared, HUD reloaded",
+      "t": 1792499715.8
+    },
+    {
+      "step": "restart keeps connection, session and last view",
+      "ok": true,
+      "detail": "signed_in=True url=?tv=1&page=studio focus='WebView'",
+      "t": 1792499730.9
+    },
+    {
+      "step": "Back on view bar returns to Ledger",
+      "ok": true,
+      "detail": "native focus='Ledger'",
+      "t": 1792499745.5
+    },
+    {
+      "step": "Back on Ledger bar exits app (no trap)",
+      "ok": true,
+      "detail": "top package='com.google.android.tvlauncher'",
+      "t": 1792499748.6
+    },
+    {
+      "step": "app registered as LEANBACK_LAUNCHER entry (TV home row)",
+      "ok": true,
+      "detail": "",
+      "t": 1792499748.8
+    }
+  ]
+}
