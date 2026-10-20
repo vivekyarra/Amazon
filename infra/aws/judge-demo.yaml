@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   DONE/IRL public judge deployment. One EC2 reducer in DEMO_MODE (synthetic, clearly labeled scenarios)
-  behind CloudFront HTTPS, with live DynamoDB/S3/KMS/EventBridge Scheduler/SQS coordination.
+  behind Caddy automatic HTTPS (Let's Encrypt, <elastic-ip>.sslip.io), with live DynamoDB/S3/KMS/
+  EventBridge Scheduler/SQS coordination.
 Parameters:
   SubnetId:
     Type: AWS::EC2::Subnet::Id
@@ -19,10 +20,6 @@ Parameters:
     Type: String
     AllowedPattern: '[a-f0-9]{40}'
     Description: Exact public commit the instance builds; updating it rebuilds the image.
-  CloudFrontPrefixList:
-    Type: String
-    Default: pl-3b927c52
-    Description: com.amazonaws.global.cloudfront.origin-facing prefix list for this region (us-east-1 default).
   AmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
@@ -177,10 +174,19 @@ Resources:
   ServiceGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: DONE/IRL backend reachable only from CloudFront origin-facing addresses; no SSH
+      GroupDescription: DONE/IRL public HTTPS (and ACME HTTP challenge) through Caddy only; no SSH
       VpcId: !Ref VpcId
       SecurityGroupIngress:
-        - {IpProtocol: tcp, FromPort: 8080, ToPort: 8080, SourcePrefixListId: !Ref CloudFrontPrefixList}
+        - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+        - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+  PublicAddress:
+    Type: AWS::EC2::EIP
+    Properties: {Domain: vpc}
+  PublicAddressAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt PublicAddress.AllocationId
+      InstanceId: !Ref ServiceInstance
   ServiceInstance:
     Type: AWS::EC2::Instance
     CreationPolicy:
@@ -209,6 +215,7 @@ Resources:
           echo '32ed111e941e385c2fb8261eba06a4056915718fd606f8278834ac1931d261a2  /usr/libexec/docker/cli-plugins/docker-buildx' | sha256sum -c -
           chmod 0755 /usr/libexec/docker/cli-plugins/docker-buildx
           systemctl enable --now docker
+          docker network inspect done-irl-net >/dev/null 2>&1 || docker network create done-irl-net
           install -d -m 0700 /srv/done-irl /srv/done-irl/data /srv/done-irl/config
           chown -R 10001:10001 /srv/done-irl/data /srv/done-irl/config
           python3 -m venv /opt/done-irl-aws
@@ -251,56 +258,36 @@ Resources:
           Restart=always
           RestartSec=10
           ExecStartPre=-/usr/bin/docker rm -f done-irl
-          ExecStart=/usr/bin/docker run --name done-irl --init --read-only --tmpfs /tmp:rw,noexec,nosuid,size=256m --cap-drop=ALL --security-opt no-new-privileges --memory=3g --cpus=2 -p 8080:8080 --env-file /srv/done-irl/runtime.env -e DEMO_MODE=true -e DATA_DIR=/data -e LEDGER_KEY_FILE=/config/ledger.key -e AWS_REGION=${AWS::Region} -e AWS_LEDGER_TABLE=${Ledger} -e S3_EVIDENCE_BUCKET=${Evidence} -e AWS_WAKE_QUEUE_URL=${WakeQueue} -e AWS_WAKE_QUEUE_ARN=${WakeQueue.Arn} -e AWS_SCHEDULER_ROLE_ARN=${SchedulerRole.Arn} -e POSE_MODEL_FILE=/config/pose.task -e POSE_MODEL_SHA256=59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a -e MPLCONFIGDIR=/tmp/matplotlib -e XDG_CACHE_HOME=/tmp/cache -v /srv/done-irl/data:/data -v /srv/done-irl/config:/config:ro --log-driver awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=${ServiceLogs} --log-opt awslogs-stream=runtime 'done-irl:${GitCommit}' /app/.venv/bin/uvicorn done_irl.api:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips=*
+          ExecStart=/usr/bin/docker run --name done-irl --network done-irl-net --init --read-only --tmpfs /tmp:rw,noexec,nosuid,size=256m --cap-drop=ALL --security-opt no-new-privileges --memory=3g --cpus=2 --env-file /srv/done-irl/runtime.env -e DEMO_MODE=true -e DATA_DIR=/data -e LEDGER_KEY_FILE=/config/ledger.key -e AWS_REGION=${AWS::Region} -e AWS_LEDGER_TABLE=${Ledger} -e S3_EVIDENCE_BUCKET=${Evidence} -e AWS_WAKE_QUEUE_URL=${WakeQueue} -e AWS_WAKE_QUEUE_ARN=${WakeQueue.Arn} -e AWS_SCHEDULER_ROLE_ARN=${SchedulerRole.Arn} -e POSE_MODEL_FILE=/config/pose.task -e POSE_MODEL_SHA256=59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a -e MPLCONFIGDIR=/tmp/matplotlib -e XDG_CACHE_HOME=/tmp/cache -v /srv/done-irl/data:/data -v /srv/done-irl/config:/config:ro --log-driver awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=${ServiceLogs} --log-opt awslogs-stream=runtime 'done-irl:${GitCommit}' /app/.venv/bin/uvicorn done_irl.api:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips=*
           ExecStop=/usr/bin/docker stop -t 30 done-irl
+          [Install]
+          WantedBy=multi-user.target
+          UNIT
+          install -d -m 0700 /srv/done-irl/caddy
+          PUBLIC_HOST="$(echo '${PublicAddress}' | tr . -).sslip.io"
+          printf '%s {\n  encode zstd gzip\n  reverse_proxy done-irl:8080 {\n    flush_interval -1\n  }\n}\n' "$PUBLIC_HOST" > /srv/done-irl/Caddyfile
+          cat > /etc/systemd/system/done-irl-https.service <<'UNIT'
+          [Unit]
+          Description=DONE/IRL HTTPS terminator (Caddy, automatic Let's Encrypt)
+          Requires=docker.service done-irl.service
+          After=done-irl.service
+          [Service]
+          Restart=always
+          RestartSec=10
+          ExecStartPre=-/usr/bin/docker rm -f done-irl-https
+          ExecStart=/usr/bin/docker run --name done-irl-https --network done-irl-net --cap-drop=ALL --cap-add=NET_BIND_SERVICE --security-opt no-new-privileges -p 80:80 -p 443:443 -v /srv/done-irl/Caddyfile:/etc/caddy/Caddyfile:ro -v /srv/done-irl/caddy:/data caddy:2.8.4
+          ExecStop=/usr/bin/docker stop -t 10 done-irl-https
           [Install]
           WantedBy=multi-user.target
           UNIT
           systemctl daemon-reload
           systemctl enable --now done-irl
+          systemctl enable --now done-irl-https
           for i in $(seq 1 90); do
-            if curl -fsS http://127.0.0.1:8080/health/ready >/dev/null; then signal 0; exit 0; fi
+            if docker exec done-irl python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/health/ready')" >/dev/null 2>&1; then signal 0; exit 0; fi
             sleep 5
           done
           signal 1
-  ForwardedProto:
-    Type: AWS::CloudFront::Function
-    Properties:
-      Name: !Sub '${AWS::StackName}-forwarded-proto'
-      AutoPublish: true
-      FunctionConfig: {Comment: Tell the origin the viewer used HTTPS, Runtime: cloudfront-js-2.0}
-      FunctionCode: |
-        function handler(event) {
-          event.request.headers['x-forwarded-proto'] = {value: 'https'};
-          return event.request;
-        }
-  Distribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        Comment: DONE/IRL judge console (HTTPS)
-        HttpVersion: http2
-        PriceClass: PriceClass_100
-        Origins:
-          - Id: reducer
-            DomainName: !GetAtt ServiceInstance.PublicDnsName
-            CustomOriginConfig:
-              HTTPPort: 8080
-              OriginProtocolPolicy: http-only
-              OriginReadTimeout: 60
-              OriginKeepaliveTimeout: 60
-        DefaultCacheBehavior:
-          TargetOriginId: reducer
-          ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
-          CachedMethods: [GET, HEAD]
-          Compress: false
-          # Managed CachingDisabled and AllViewer policies.
-          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
-          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
-          FunctionAssociations:
-            - {EventType: viewer-request, FunctionARN: !GetAtt ForwardedProto.FunctionMetadata.FunctionARN}
   QueueAgeAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -327,7 +314,8 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 Outputs:
-  JudgeURL: {Value: !Sub 'https://${Distribution.DomainName}'}
+  PublicIp: {Value: !Ref PublicAddress}
+  JudgeURLHint: {Value: 'https://<PublicIp with dots replaced by dashes>.sslip.io'}
   InstanceId: {Value: !Ref ServiceInstance}
   LedgerTable: {Value: !Ref Ledger}
   EvidenceBucket: {Value: !Ref Evidence}

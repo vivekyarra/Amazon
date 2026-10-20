@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from .models import ApiError, BeeInput
 from . import vision
+from . import commitments as nl
 
 DAY = "2026-10-20"
 ZONE = "Asia/Kolkata"
@@ -109,7 +110,18 @@ def revise(s, c, status, reason, evidence_id=None):
             "parcel": {"AUTHORIZED_TRANSFER", "AUTHORIZED_INWARD_TRANSFER"},
             "squats": {"POSE_15_CYCLES"},
         }
-        if not record or record["kind"] not in allowed.get(c["key"], set()):
+        by_modality = {
+            "BEE_CONVERSATION_AUDIT": {"AUTHORIZED_PARTICIPATION", "USER_CONFIRMATION"},
+            "AUTHORIZED_MANUAL_CONFIRMATION": {"USER_CONFIRMATION"},
+            "RING_THRESHOLD_OBJECT_SCAN": {"USER_CONFIRMATION"},
+            "FIRE_TV_LIVE_POSE_CAMERA": {"POSE_15_CYCLES"},
+        }
+        policy = (
+            by_modality.get(c["verification_modality"], set())
+            if c["key"].startswith("gen_")
+            else allowed.get(c["key"], set())
+        )
+        if not record or record["kind"] not in policy:
             raise ApiError(
                 409, "EVIDENCE_POLICY_REJECTED", "Evidence does not satisfy this contract's verifier policy."
             )
@@ -268,13 +280,20 @@ def compile_bee(s, bee: BeeInput):
         dict(source_event_id=bee.event_id, utterance=bee.utterance, speaker=bee.speaker),
     )
     text = bee.utterance.lower().replace("’", "'")
+    if nl.INJECTION.search(text):
+        emit(s, "commitment.rejected_input", {"source_event_id": bee.event_id, "decision": "POLICY_TEXT_IGNORED"})
+        return []
+    claim = nl.completion_claim(bee.utterance)
+    if claim and bee.speaker == "SELF":
+        _completion_claim(s, bee, claim)
+        return []
     if not re.search(
         r"\b(i(?:'ll| will| promise)|i promised|i need to|i should|can you|please|bring)\b", text
+    ) and not nl.PROMISE.search(text):
+        return []
+    if re.search(r"\b(i will not|i won't|i cannot|i can't|do not|don't)\b", text) and not re.search(
+        r"don't (?:let me )?forget", text
     ):
-        return []
-    if re.search(r"\b(called|already|finished|ignore .*instructions|mark .*verified)\b", text):
-        return []
-    if re.search(r"\b(i will not|i won't|i cannot|i can't|do not|don't)\b", text):
         emit(
             s,
             "commitment.negation_observed",
@@ -286,20 +305,21 @@ def compile_bee(s, bee: BeeInput):
         or not re.search(r"^i(?:'ll| will| promise| promised)\b", text)
         or bool(re.search(r"\b(if|maybe|might)\b", text))
     )
+    # The four canonical demo promises keep their named verifiers and sub-agents.
     specs = [
         (
             "drinks",
-            r"drink|bottle",
+            r"\bdrinks?\b",
             "Bring cold drinks home",
             "Wife",
             "RING_THRESHOLD_OBJECT_SCAN",
             None,
             "ARRIVAL_HOME",
         ),
-        ("sister", r"sister", "Call your sister", "Sister", "BEE_CONVERSATION_AUDIT", "18:00", None),
+        ("sister", r"\bcall\b.*\bsister\b", "Call your sister", "Sister", "BEE_CONVERSATION_AUDIT", "18:00", None),
         (
             "teacher",
-            r"teacher|meeting",
+            r"\bteacher\b",
             "Attend nephew’s teacher meeting",
             "Nephew’s teacher",
             "BEE_CONVERSATION_AUDIT",
@@ -308,7 +328,7 @@ def compile_bee(s, bee: BeeInput):
         ),
         (
             "squats",
-            r"squat",
+            r"\bsquats?\b.*\b(tv|television|watch)",
             "15 squats before TV",
             "Self",
             "FIRE_TV_LIVE_POSE_CAMERA",
@@ -317,7 +337,8 @@ def compile_bee(s, bee: BeeInput):
         ),
     ]
     created = []
-    for key, pattern, title, person, modality, hm, trigger in specs:
+    canonical = not re.search(r"\b(called|already|finished)\b", text)
+    for key, pattern, title, person, modality, hm, trigger in specs if canonical else []:
         if re.search(pattern, text):
             due = None
             if hm:
@@ -332,33 +353,96 @@ def compile_bee(s, bee: BeeInput):
                     .astimezone(timezone.utc)
                     .isoformat()
                 )
-            existing_c = next((c for c in s["contracts"] if c["key"] == key), None)
-            if existing_c and due and existing_c["due_at"] != due and existing_c["status"] not in TERMINAL:
-                existing_c["due_at"] = due
-                existing_c["revision"] += 1
-                existing_c["scheduled_jobs"] = [
-                    dict(
-                        kind=t,
-                        at=(datetime.fromisoformat(due) - timedelta(minutes=m)).isoformat(),
-                        status="PENDING",
-                    )
-                    for t, m in [("T60", 60), ("T25", 25), ("DEADLINE", 0)]
-                ]
+            created.append(_upsert(s, bee, key, title, person, modality, due, trigger, uncertain))
+    if not created:
+        now_local = bee.occurred_at.astimezone(zone)
+        for cand in nl.parse(bee.utterance, now_local, request=bee.speaker != "SELF"):
+            if cand.get("negated"):
                 emit(
                     s,
-                    "commitment.updated",
-                    dict(contract_id=existing_c["contract_id"], reason="Authorized deadline amendment"),
+                    "commitment.negation_observed",
+                    {"source_event_id": bee.event_id, "decision": "NO_NEW_OBLIGATION"},
                 )
-                created.append(existing_c["contract_id"])
-            else:
-                created.append(
-                    create_contract(s, key, title, bee.utterance, person, modality, due, trigger, uncertain)[
-                        "contract_id"
-                    ]
-                )
+                continue
+            due = cand["due_local"].astimezone(timezone.utc).isoformat() if cand["due_local"] else None
+            cid = _upsert(
+                s,
+                bee,
+                cand["key"],
+                cand["title"],
+                cand["counterparty"] if bee.speaker == "SELF" else bee.counterparty,
+                cand["modality"],
+                due,
+                cand["trigger"],
+                bee.speaker != "SELF" or cand["hedged"],
+            )
+            c = next(c for c in s["contracts"] if c["contract_id"] == cid)
+            c.setdefault("commitment_origin", "GENERAL_PARSER")
+            c.update(
+                type=cand["type"],
+                item_class=cand["item_class"],
+                target_reps=cand["reps"],
+                deadline_assumption=cand["assumption"],
+                original_utterance=cand["sentence"],
+            )
+            if cand["modality"] == "AUTHORIZED_MANUAL_CONFIRMATION":
+                c["verification_note"] = "No sensor can prove this task; completion is recorded as USER_CONFIRMED."
+            created.append(cid)
     for cid in created:
         next(c for c in s["contracts"] if c["contract_id"] == cid)["timezone"] = bee.timezone
     return created
+
+
+def _upsert(s, bee, key, title, person, modality, due, trigger, uncertain):
+    existing_c = next((c for c in s["contracts"] if c["key"] == key), None)
+    if existing_c and due and existing_c["due_at"] != due and existing_c["status"] not in TERMINAL:
+        existing_c["due_at"] = due
+        existing_c["revision"] += 1
+        existing_c["scheduled_jobs"] = [
+            dict(
+                kind=t,
+                at=(datetime.fromisoformat(due) - timedelta(minutes=m)).isoformat(),
+                status="PENDING",
+            )
+            for t, m in [("T60", 60), ("T25", 25), ("DEADLINE", 0)]
+        ]
+        if not any(a.get("contract_id") == existing_c["contract_id"] for a in s["subagents"]):
+            s["subagents"].append(
+                dict(
+                    subagent_id="social_" + key,
+                    kind="SocialGraphAuditor",
+                    contract_id=existing_c["contract_id"],
+                    status="WATCHING",
+                    last_observation_at=s["now"],
+                )
+            )
+        emit(
+            s,
+            "commitment.updated",
+            dict(contract_id=existing_c["contract_id"], reason="Authorized deadline amendment"),
+        )
+        return existing_c["contract_id"]
+    return create_contract(s, key, title, bee.utterance, person, modality, due, trigger, uncertain)["contract_id"]
+
+
+def _completion_claim(s, bee, claim):
+    """A spoken "I already did it" is a lead, never proof: EVIDENCE_PENDING until the owner confirms."""
+    words = nl.tokens(claim)
+    best, score = None, 0
+    for c in s["contracts"]:
+        if not c["key"].startswith("gen_") or c["status"] not in {"ACTIVE", "ENGAGED", "MISSED"}:
+            continue
+        overlap = len(words & nl.tokens(c["title"] + " " + c["counterparty"]["label"]))
+        if overlap > score:
+            best, score = c, overlap
+    if not best or score < 2:
+        emit(s, "commitment.completion_unmatched", {"source_event_id": bee.event_id})
+        return
+    best["completion_claim"] = dict(source_event_id=bee.event_id, utterance=bee.utterance, at=s["now"])
+    if best["status"] in {"ACTIVE", "ENGAGED"}:
+        revise(s, best, "EVIDENCE_PENDING", "Spoken completion claim; owner confirmation still required.")
+    else:
+        emit(s, "commitment.updated", dict(contract_id=best["contract_id"], reason="Late completion claim recorded"))
 
 
 def alert(s, c, kind, message, action=None):
@@ -394,7 +478,13 @@ def tick(s, now):
                 continue
             job.update(status="EXECUTED", executed_at=now)
             late = current >= datetime.fromisoformat(c["due_at"])
-            if job["kind"] == "DEADLINE":
+            if c["status"] == "EVIDENCE_PENDING":
+                emit(
+                    s,
+                    "commitment.engagement_evaluated",
+                    dict(contract_id=c["contract_id"], tier=job["kind"], decision="AWAITING_OWNER_CONFIRMATION"),
+                )
+            elif job["kind"] == "DEADLINE":
                 revise(
                     s,
                     c,

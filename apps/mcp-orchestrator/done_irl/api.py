@@ -467,6 +467,22 @@ def create_app(data_dir=None, passwords=None):
                     provenance="USER_CONFIRMED",
                 )
                 e.revise(s, c, "VERIFIED", "Explicit owner confirmation, not sensor proof.", ev)
+            elif (
+                body.action == "confirm-done"
+                and c["key"].startswith("gen_")
+                and c["status"] in {"ACTIVE", "ENGAGED", "EVIDENCE_PENDING", "MISSED"}
+                and c["verification_modality"] != "FIRE_TV_LIVE_POSE_CAMERA"
+            ):
+                ev = e.add_evidence(
+                    s,
+                    db,
+                    p["household"],
+                    c,
+                    "USER_CONFIRMATION",
+                    {"owner_statement": "Owner confirms this commitment was completed"},
+                    provenance="USER_CONFIRMED",
+                )
+                e.revise(s, c, "VERIFIED", "Explicit owner confirmation (USER_CONFIRMED), not sensor proof.", ev)
             else:
                 raise ApiError(409, "PROOF_REQUIRED", "This action cannot bypass contract evidence policy.")
 
