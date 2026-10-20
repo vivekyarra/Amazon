@@ -51,7 +51,8 @@ class Store:
             fd = os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             with os.fdopen(fd, "wb") as f:
                 f.write(AESGCM.generate_key(bit_length=256))
-        if key_path.stat().st_mode & 0o077:
+        # POSIX modes only; Windows relies on the profile directory ACL.
+        if os.name != "nt" and key_path.stat().st_mode & 0o077:
             raise RuntimeError("Ledger key must be readable only by its owner (mode 0600).")
         key = key_path.read_bytes()
         if len(key) != 32:

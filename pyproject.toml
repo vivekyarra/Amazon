@@ -11,6 +11,7 @@ dependencies = [
     "numpy>=2,<3",
     "opencv-contrib-python>=4.11,<5",
     "cryptography>=44,<47",
+    "tzdata>=2025.2",
 ]
 
 [project.optional-dependencies]
