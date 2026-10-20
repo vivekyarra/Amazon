@@ -115,12 +115,14 @@ def test_F18_frozen_frames_and_looped_rep_cannot_add_reps(tmp_path, detector_fac
     frozen = [stand] * 15 + [bottom] * 30 + [stand] * 30
     state, _ = replay(tmp_path / "frozen", detector_factory, [(i * step, f) for i, f in enumerate(frozen)])
     assert rep_events(state) == [] and state["studio"]["count"] == 0
-    # Loop one physically complete rep 15 times on a monotonic clock: only the first is genuine.
+    # Standing lead-in, then one physically complete rep looped 15 times on a monotonic clock.
+    # The first pass is pixel-identical to the canonical opening rep; the 14 replays must not count.
+    lead = [f for _, f in full_frames[: plan[0]["start_frame"]]]
     first = [f for _, f in full_frames[plan[0]["start_frame"] : plan[0]["end_frame"] + 1]]
-    looped = [(i * step, f) for i, f in enumerate(first * 15)]
+    looped = [(i * step, f) for i, f in enumerate(lead + first * 15)]
     state, observations = replay(tmp_path / "loop", detector_factory, looped)
     assert len(rep_events(state)) == 1 and state["studio"]["count"] == 1
-    assert observations[len(first) - 1][0] == 1  # the single count came from the first pass
+    assert observations[len(lead) + len(first) - 1][0] == 1  # the single count came from the first pass
     assert state["studio"]["gate"] == "LOCKED"
     assert e.contract(state, "squats")["status"] == "ACTIVE"
 
@@ -170,6 +172,7 @@ def test_recorded_demo_is_refused_outside_demo_and_never_labelled_live(tmp_path,
 
     key = tmp_path / "ledger.key"
     key.write_bytes(b"k" * 32)
+    key.chmod(0o600)  # POSIX ledger-key permission check
     monkeypatch.setenv("DEMO_MODE", "false")
     monkeypatch.setenv("LEDGER_KEY_FILE", str(key))
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://example.test")

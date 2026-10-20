@@ -31,7 +31,7 @@
     "F17_full_15": {
       "frames_processed": 769,
       "frames_with_pose": 769,
-      "processing_fps": 22.1,
+      "processing_fps": 20.9,
       "rep_verified_events": 15,
       "reducer_count": 15,
       "gate": "UNLOCKED",
@@ -155,7 +155,7 @@
     "F17_truncated_14": {
       "frames_processed": 723,
       "frames_with_pose": 723,
-      "processing_fps": 21.5,
+      "processing_fps": 33.8,
       "rep_verified_events": 14,
       "reducer_count": 14,
       "gate": "LOCKED",
@@ -270,7 +270,7 @@
     "F18_half_squats_15": {
       "frames_processed": 746,
       "frames_with_pose": 746,
-      "processing_fps": 24.0,
+      "processing_fps": 37.2,
       "rep_verified_events": 0,
       "reducer_count": 0,
       "gate": "LOCKED",
@@ -286,7 +286,7 @@
     "F18_frozen_static_frames": {
       "frames_processed": 75,
       "frames_with_pose": 74,
-      "processing_fps": 23.4,
+      "processing_fps": 46.2,
       "rep_verified_events": 0,
       "reducer_count": 0,
       "gate": "LOCKED",
@@ -300,9 +300,9 @@
       "matches_expectation": true
     },
     "F18_one_rep_looped_15x": {
-      "frames_processed": 735,
-      "frames_with_pose": 735,
-      "processing_fps": 21.5,
+      "frames_processed": 753,
+      "frames_with_pose": 753,
+      "processing_fps": 31.9,
       "rep_verified_events": 1,
       "reducer_count": 1,
       "gate": "LOCKED",
@@ -313,13 +313,13 @@
       "reps": [
         {
           "rep": 1,
-          "frame_index": 32,
-          "timestamp_ms": 2112,
-          "min_knee_angle_deg": 68.6,
+          "frame_index": 50,
+          "timestamp_ms": 3300,
+          "min_knee_angle_deg": 67.3,
           "gate_after": "LOCKED"
         }
       ],
-      "input": "squats-15 rep-1 frames looped 15 times",
+      "input": "squats-15 standing lead-in, then rep-1 frames looped 15 times",
       "expected_rep_events": 1,
       "matches_expectation": true
     }
@@ -327,6 +327,7 @@
   "limitations": [
     "Generated ray-traced humanoid, not human footage; proves the pipeline counts complete movements from pixels, not real-world accuracy across bodies, clothing or cameras.",
     "Pinned lite model; the full model was also observed locally to miss reps on this fixture (see docs/public-references.md).",
-    "processing_fps is offline throughput on the recording machine, not live Fire TV FPS."
+    "processing_fps is offline throughput on the recording machine, not live Fire TV FPS.",
+    "Inference is not bit-identical across platforms: a bare rep-1 clip with no standing lead-in counted 1 on Windows but 0 on the Ubuntu CI runner, so the loop scenario starts from the fixture's standing lead-in."
   ]
 }

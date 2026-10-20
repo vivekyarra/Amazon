@@ -38,6 +38,7 @@ def scenarios():
     frames = [(ts, f) for _, ts, f in recorded.decode(full)]
     step = frames[1][0] - frames[0][0]
     cut = reps[14]["start_frame"]  # end of the 14th physical rep, taken from the generator plan
+    lead = frames[: reps[0]["start_frame"]]
     first = frames[reps[0]["start_frame"] : reps[0]["end_frame"] + 1]
     stand, bottom = frames[0][1], frames[reps[0]["bottom_frame"]][1]
 
@@ -54,8 +55,8 @@ def scenarios():
             0,
         ),
         "F18_one_rep_looped_15x": (
-            "squats-15 rep-1 frames looped 15 times",
-            lambda: iter(retime([f for _ in range(15) for _, f in first])),
+            "squats-15 standing lead-in, then rep-1 frames looped 15 times",
+            lambda: iter(retime([f for _, f in lead] + [f for _ in range(15) for _, f in first])),
             1,
         ),
     }
@@ -175,6 +176,9 @@ def main():
             "Pinned lite model; the full model was also observed locally to miss reps on this fixture "
             "(see docs/public-references.md).",
             "processing_fps is offline throughput on the recording machine, not live Fire TV FPS.",
+            "Inference is not bit-identical across platforms: a bare rep-1 clip with no standing lead-in "
+            "counted 1 on Windows but 0 on the Ubuntu CI runner, so the loop scenario starts from the "
+            "fixture's standing lead-in.",
         ],
     }
     out_json.write_text(json.dumps(evidence, indent=2) + "\n", newline="\n")
