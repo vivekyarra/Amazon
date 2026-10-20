@@ -85,3 +85,24 @@ async def test_mcp_streamable_http_handshake_discovery_and_shared_state(tmp_path
             process.wait(timeout=5)
         except subprocess.TimeoutExpired:
             process.kill()
+
+
+def test_mcp_accepts_configured_public_host_and_rejects_others(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from done_irl.api import create_app
+
+    monkeypatch.setenv("PUBLIC_HOSTS", "judge.example.test")
+    app = create_app(tmp_path, {"demo-admin": "public-host-password"})
+    body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}},
+    }
+    headers = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}
+    with TestClient(app, base_url="https://judge.example.test") as client:
+        client.post("/api/auth/login", json={"username": "demo-admin", "password": "public-host-password"})
+        auth = {**headers, "Authorization": "Bearer " + client.cookies.get("done_session")}
+        assert client.post("/mcp/", json=body, headers=auth).status_code == 200
+        rejected = client.post("/mcp/", json=body, headers={**auth, "Host": "attacker.example.test"})
+        assert rejected.status_code == 421

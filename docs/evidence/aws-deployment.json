@@ -1,0 +1,89 @@
+{
+  "checked_at": "2026-10-20T11:24:36.907803+00:00",
+  "url": "https://100-49-183-59.sslip.io",
+  "region": "us-east-1",
+  "stages": [
+    {
+      "stage": 1,
+      "branch": "deposit",
+      "ms": 282
+    },
+    {
+      "stage": 2,
+      "branch": "deposit",
+      "ms": 296
+    },
+    {
+      "stage": 3,
+      "branch": "disengaged",
+      "ms": 266
+    },
+    {
+      "stage": 4,
+      "branch": "unknown",
+      "ms": 2656
+    },
+    {
+      "stage": 5,
+      "branch": "empty",
+      "ms": 313
+    },
+    {
+      "stage": 6,
+      "branch": "deposit",
+      "ms": 312
+    }
+  ],
+  "health_ready": {
+    "status": "ready",
+    "storage": "encrypted-sqlite-wal",
+    "mode": "SYNTHETIC_DEMO",
+    "worker": "RUNNING",
+    "schema_version": "1.0",
+    "trace_id": "440127446a8d44dbaa141308a1ed72d9"
+  },
+  "final_contract_status": {
+    "drinks": "ACTIVE",
+    "sister": "MISSED",
+    "teacher": "VERIFIED",
+    "squats": "VERIFIED",
+    "parcel": "DISPUTED"
+  },
+  "studio": {
+    "count": 15,
+    "status": "COMPLETED",
+    "gate": "UNLOCKED"
+  },
+  "incidents": [
+    {
+      "status": "AWAITING_HUMAN_DECISION",
+      "quality": "SYNTHETIC_CLIP_AVAILABLE"
+    }
+  ],
+  "evidence_items": 8,
+  "dynamodb": {
+    "table": "done-irl-judge-Ledger-RU4E2ZI6GP75",
+    "items_for_demo_household": 69,
+    "by_sort_prefix": {
+      "AGENT": 3,
+      "AUDIT": 51,
+      "CONTRACT": 5,
+      "EVIDENCE": 8,
+      "INCIDENT": 1,
+      "SNAPSHOT": 1
+    }
+  },
+  "s3": {
+    "bucket": "done-irl-judge-evidence-r7iqnkg2ilwx",
+    "object_count": 14,
+    "server_side_encryption": "aws:kms"
+  },
+  "eventbridge_scheduler": {
+    "dirl_schedules": 0
+  },
+  "sqs_wake_queue": {
+    "ApproximateNumberOfMessages": "0",
+    "KmsMasterKeyId": "c57cf462-4a07-4f0e-abb8-8336d27ebd72",
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:643700104680:done-irl-judge-DeadLetters-T5axQkBaPF7d\",\"maxReceiveCount\":6}"
+  }
+}

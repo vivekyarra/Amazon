@@ -85,7 +85,30 @@ def create_app(data_dir=None, passwords=None):
         ]
         if any(not os.getenv(name) for name in required):
             raise RuntimeError("AWS synchronization configuration is incomplete.")
-    mcp = FastMCP("DONE/IRL", stateless_http=True, json_response=True, streamable_http_path="/")
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    # MCP DNS-rebinding protection: loopback plus explicitly configured public hostnames only.
+    public_hosts = {h.strip() for h in os.getenv("PUBLIC_HOSTS", "").split(",") if h.strip()}
+    public_hosts |= {
+        o.strip().removeprefix("https://") for o in os.getenv("ALLOWED_ORIGINS", "").split(",")
+        if o.strip().startswith("https://")
+    }
+    mcp = FastMCP(
+        "DONE/IRL",
+        stateless_http=True,
+        json_response=True,
+        streamable_http_path="/",
+        transport_security=TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=["127.0.0.1:*", "localhost:*", "[::1]:*", *sorted(public_hosts)],
+            allowed_origins=[
+                "http://127.0.0.1:*",
+                "http://localhost:*",
+                "http://[::1]:*",
+                *("https://" + h for h in sorted(public_hosts)),
+            ],
+        ),
+    )
     rates = {}
 
     def fresh(household):

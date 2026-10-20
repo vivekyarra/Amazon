@@ -265,6 +265,7 @@ Resources:
           UNIT
           install -d -m 0700 /srv/done-irl/caddy
           PUBLIC_HOST="$(echo '${PublicAddress}' | tr . -).sslip.io"
+          echo "PUBLIC_HOSTS=$PUBLIC_HOST" >> /srv/done-irl/runtime.env
           printf '%s {\n  encode zstd gzip\n  reverse_proxy done-irl:8080 {\n    flush_interval -1\n  }\n}\n' "$PUBLIC_HOST" > /srv/done-irl/Caddyfile
           cat > /etc/systemd/system/done-irl-https.service <<'UNIT'
           [Unit]
