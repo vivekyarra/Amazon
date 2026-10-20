@@ -1,4 +1,4 @@
-import {countdown, packetState, stageLabel, studioSourceLabel, statusGlyph} from '../src/format';
+import {countdown, deadlineLabel, packetState, stageLabel, studioSourceLabel, statusGlyph} from '../src/format';
 import {normalizeBase, idempotencyKey} from '../src/api';
 
 describe('format helpers', () => {
@@ -40,5 +40,13 @@ describe('format helpers', () => {
   it('normalizes backend URLs and issues unique idempotency keys', () => {
     expect(normalizeBase('example.test/')).toBe('https://example.test');
     expect(idempotencyKey('a')).not.toBe(idempotencyKey('a'));
+  });
+});
+
+describe('deadline labels', () => {
+  it('never calls a closed contract overdue', () => {
+    const now = Date.parse('2026-10-20T12:00:00Z');
+    expect(deadlineLabel({status: 'VERIFIED', due_at: '2026-10-20T11:00:00Z'}, now)).toBe('Closed (VERIFIED)');
+    expect(deadlineLabel({status: 'ACTIVE', due_at: '2026-10-20T11:00:00Z'}, now)).toBe('Overdue by 1h 0m');
   });
 });

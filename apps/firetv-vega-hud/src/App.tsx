@@ -3,7 +3,7 @@ import {AppState, BackHandler, Image, ScrollView, StyleSheet, Text, View} from '
 import {ApiError, DEFAULT_BACKEND, DoneIrlClient} from './api';
 import {Badge, C, DpadKeyboard, FocusButton, Row, px} from './ui';
 import {
-  countdown,
+  deadlineLabel,
   evidenceFor,
   evidenceStatus,
   eventsFor,
@@ -48,7 +48,6 @@ export const App = () => {
     null,
   );
   const [actionMsg, setActionMsg] = useState('');
-  const [frameBust, setFrameBust] = useState(0);
   const [frameOk, setFrameOk] = useState(true);
   const [showEntertainment, setShowEntertainment] = useState(false);
 
@@ -84,7 +83,6 @@ export const App = () => {
     const iv = setInterval(() => {
       if (active) {
         refresh();
-        setFrameBust((b) => b + 1);
       }
     }, POLL_MS);
     const t = setInterval(() => setTick((x) => x + 1), 1000);
@@ -242,7 +240,7 @@ export const App = () => {
 
   const header = (
     <View style={st.header}>
-      <View>
+      <View style={st.headerMain}>
         <Text style={st.brandSmall}>DONE/IRL</Text>
         <Text style={st.meta}>
           {(clientRef.current && clientRef.current.user) || '?'} ({clientRef.current && clientRef.current.role}) -{' '}
@@ -312,7 +310,7 @@ export const App = () => {
             <Row k="Actor" v={(c.actor && c.actor.role) + ' (' + (c.actor && c.actor.id) + ')'} />
             <Row k="Counterparty" v={(c.counterparty && c.counterparty.label) || '-'} />
             <Row k="Verification method" v={c.verification_modality} />
-            <Row k="Deadline" v={countdown(c.due_at, now) + (c.due_at ? ' (' + timeLabel(c.due_at, c.timezone) + ')' : '')} />
+            <Row k="Deadline" v={deadlineLabel(c, now) + (c.due_at ? ' (' + timeLabel(c.due_at, c.timezone) + ')' : '')} />
             <Row k="Escalation" v={stageLabel(c)} />
             <Row
               k="Last evidence"
@@ -345,7 +343,7 @@ export const App = () => {
                 <Text style={st.cTitle}>{c.title}</Text>
               </View>
               <Text style={st.cLine}>
-                {countdown(c.due_at, now)} - {stageLabel(c)}
+                {deadlineLabel(c, now)} - {stageLabel(c)}
               </Text>
               <Text style={st.cLine}>
                 Evidence: {evidenceStatus(state, c)}
@@ -552,7 +550,7 @@ export const App = () => {
             <Image
               style={st.frame}
               resizeMode="contain"
-              source={clientRef.current ? clientRef.current.frameSource('/api/studio/frame', frameBust) : undefined}
+              source={clientRef.current ? clientRef.current.frameSource('/api/studio/frame', studio.last_timestamp_ms || 0) : undefined}
               onError={() => setFrameOk(false)}
             />
           ) : (
@@ -652,8 +650,9 @@ const st = StyleSheet.create({
   loginBox: {width: px(1100), backgroundColor: C.panel, borderRadius: px(16), padding: px(32)},
   msg: {color: C.warn, fontSize: px(26), marginVertical: px(6)},
   header: {flexDirection: 'row', justifyContent: 'space-between'},
+  headerMain: {flex: 1, marginRight: px(16)},
   meta: {color: C.dim, fontSize: px(22)},
-  netBox: {alignItems: 'flex-end'},
+  netBox: {alignItems: 'flex-end', width: px(330)},
   net: {fontSize: px(26), fontWeight: '800'},
   tabs: {flexDirection: 'row', marginVertical: px(8)},
   tab: {minWidth: px(330)},

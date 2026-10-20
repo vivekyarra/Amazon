@@ -72,6 +72,14 @@ export function countdown(dueAt: string | null | undefined, now: number): string
   return past ? 'Overdue by ' + txt.trim() : 'Due in ' + txt.trim();
 }
 
+export function deadlineLabel(c: Json, now: number): string {
+  // A closed contract is never shown as "overdue".
+  if (TERMINAL.has(c.status)) {
+    return 'Closed (' + c.status + ')';
+  }
+  return countdown(c.due_at, now);
+}
+
 export function stageLabel(c: Json): string {
   const jobs: Json[] = c.scheduled_jobs || [];
   if (!jobs.length) {
