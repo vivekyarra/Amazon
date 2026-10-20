@@ -30,7 +30,8 @@ from .webhooks import verify_ring
 from .adapters import BeeAdapter
 from .camera import CameraBridge
 from .camera_reducers import frame_received, camera_ended
-from .models import CameraInput
+from .models import CameraInput, RecordedInput
+from . import recorded as recorded_source
 from . import engine as e
 
 
@@ -73,6 +74,10 @@ def create_app(data_dir=None, passwords=None):
     runtime = Runtime(store)
     bee = BeeAdapter()
     camera = CameraBridge(
+        lambda *args: frame_received(store, *args), lambda *args: camera_ended(store, *args)
+    )
+    # RECORDED DEMO: pinned fixture frames through the same pose detector and reducer as live frames.
+    recorded_demo = recorded_source.RecordedDemoBridge(
         lambda *args: frame_received(store, *args), lambda *args: camera_ended(store, *args)
     )
     if os.getenv("AWS_LEDGER_TABLE"):
@@ -196,6 +201,10 @@ def create_app(data_dir=None, passwords=None):
                         state = store.read(household)
                         if not state or not state["consent"]:
                             await camera.stop(household, "CONSENT_REVOKED")
+                    for household in list(recorded_demo.sessions):
+                        state = store.read(household)
+                        if not state or not state["consent"]:
+                            await recorded_demo.stop(household, "CONSENT_REVOKED")
                     app.state.worker_status = "RUNNING"
                 except Exception as error:
                     app.state.worker_status = "DEGRADED"
@@ -264,12 +273,14 @@ def create_app(data_dir=None, passwords=None):
                     task.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
                 await camera.shutdown()
+                await recorded_demo.shutdown()
                 await bee.client.aclose()
 
     app = FastAPI(title="DONE/IRL", version="0.1.0", lifespan=lifespan)
     app.state.store = store
     app.state.runtime = runtime
     app.state.camera = camera
+    app.state.recorded_demo = recorded_demo
     app.state.mutate = mutate
 
     @app.middleware("http")
@@ -711,6 +722,50 @@ def create_app(data_dir=None, passwords=None):
                 "A verified live camera session is required to start live pose verification.",
             )
         return command(request, p, lambda s, db: e.studio_start(s))
+
+    @app.post("/api/studio/recorded/start")
+    async def recorded_start(body: RecordedInput, request: Request, p=Depends(owner)):
+        """Stream a pinned RECORDED DEMO fixture through MediaPipe and the REALITY-LOCK reducer."""
+        if not demo:
+            raise ApiError(
+                409, "LIVE_DEPLOYMENT", "Recorded demo sources are only available in demo deployments."
+            )
+        if p["household"] in recorded_demo.sessions:
+            raise ApiError(409, "RECORDED_DEMO_ALREADY_OPEN", "Stop the current recorded demo first.")
+        camera_id = "recorded_" + uuid.uuid4().hex
+        model_sha = recorded_source.pose_model_location()[1] or ""
+
+        def bind(s, db):
+            recorded_source.open_studio(s, camera_id, body.fixture, model_sha)
+            e.emit(
+                s,
+                "studio.recorded_demo_opened",
+                {"camera_id": camera_id, "fixture": body.fixture, "label": recorded_source.LABEL},
+            )
+
+        command(request, p, bind)
+        try:
+            return await recorded_demo.start(p["household"], body.fixture, session_id=camera_id)
+        except BaseException:
+            await asyncio.to_thread(camera_ended, store, p["household"], camera_id, "RECORDED_DEMO_FAILED")
+            raise
+
+    @app.get("/api/studio/recorded/status")
+    def recorded_status(p=Depends(principal)):
+        return recorded_demo.status(p["household"])
+
+    @app.post("/api/studio/recorded/stop")
+    async def recorded_stop(p=Depends(owner)):
+        await recorded_demo.stop(p["household"])
+        return recorded_demo.status(p["household"])
+
+    @app.get("/api/studio/recorded/frame")
+    def recorded_frame(p=Depends(principal)):
+        s = initial(p["household"])
+        jpeg = recorded_demo.frame(p["household"])
+        if not s["consent"] or not jpeg:
+            raise ApiError(503, "RECORDED_FRAME_UNAVAILABLE", "No recorded demo frame has been decoded yet.")
+        return Response(jpeg, media_type="image/jpeg", headers={"Cache-Control": "private, no-store"})
 
     @app.post("/api/admin/studio/rep")
     def demo_rep(request: Request, p=Depends(admin)):

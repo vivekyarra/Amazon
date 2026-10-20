@@ -1,0 +1,332 @@
+{
+  "schema_version": "1.0",
+  "label": "RECORDED DEMO \u2014 SYNTHETIC GENERATED HUMANOID VIDEO \u2014 NOT LIVE RING, NOT A REAL PERSON",
+  "provenance": "SYNTHETIC",
+  "source": "RECORDED_DEMO_VIDEO",
+  "source_mode": "SIMULATED_VERIFIED",
+  "generator": "scripts/generate-synthetic-squats.py (seed 20261020)",
+  "pipeline": "done_irl.recorded.decode -> camera.PoseDetector (MediaPipe PoseLandmarker VIDEO mode) -> camera_reducers.frame_received -> engine.pose_frame/vision.pose_update",
+  "model": {
+    "url": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+    "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a"
+  },
+  "mediapipe_version": "0.10.35",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "fixtures": {
+    "squats-15": {
+      "path": "packages/testing-fixtures/pose/squats-15-synthetic.mp4",
+      "sha256": "2a35a46dd85d419bc38fdbcf2baa7a22272fbee8b9ab74e9e7c012e101e19162"
+    },
+    "squats-half-15": {
+      "path": "packages/testing-fixtures/pose/squats-half-15-synthetic.mp4",
+      "sha256": "cdb46543128196ace704df0d7706e921cb256ff9edf8a74a1f31fd823d97c47a"
+    }
+  },
+  "annotated_clip": {
+    "path": "docs/evidence/pose-15-annotated.mp4",
+    "sha256": "b653438b355bd6d447c8def03ca27582d8f42ceff1d7541f1842d28d53299bf5",
+    "note": "Derived overlay of F17_full_15; skeleton/counter drawn after inference, never fed back."
+  },
+  "scenarios": {
+    "F17_full_15": {
+      "frames_processed": 769,
+      "frames_with_pose": 769,
+      "processing_fps": 22.1,
+      "rep_verified_events": 15,
+      "reducer_count": 15,
+      "gate": "UNLOCKED",
+      "contract_status": "VERIFIED",
+      "first_unlocked_frame": 756,
+      "unlocked_before_15": false,
+      "evidence_provenance": [
+        "RECORDED_DEMO"
+      ],
+      "reps": [
+        {
+          "rep": 1,
+          "frame_index": 50,
+          "timestamp_ms": 3333,
+          "min_knee_angle_deg": 67.3,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 2,
+          "frame_index": 104,
+          "timestamp_ms": 6933,
+          "min_knee_angle_deg": 78.9,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 3,
+          "frame_index": 154,
+          "timestamp_ms": 10266,
+          "min_knee_angle_deg": 62.1,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 4,
+          "frame_index": 202,
+          "timestamp_ms": 13466,
+          "min_knee_angle_deg": 80.5,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 5,
+          "frame_index": 253,
+          "timestamp_ms": 16866,
+          "min_knee_angle_deg": 69.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 6,
+          "frame_index": 305,
+          "timestamp_ms": 20333,
+          "min_knee_angle_deg": 77.2,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 7,
+          "frame_index": 358,
+          "timestamp_ms": 23866,
+          "min_knee_angle_deg": 81.4,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 8,
+          "frame_index": 411,
+          "timestamp_ms": 27400,
+          "min_knee_angle_deg": 72.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 9,
+          "frame_index": 462,
+          "timestamp_ms": 30800,
+          "min_knee_angle_deg": 77.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 10,
+          "frame_index": 514,
+          "timestamp_ms": 34266,
+          "min_knee_angle_deg": 85.5,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 11,
+          "frame_index": 558,
+          "timestamp_ms": 37200,
+          "min_knee_angle_deg": 75.3,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 12,
+          "frame_index": 608,
+          "timestamp_ms": 40533,
+          "min_knee_angle_deg": 79.0,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 13,
+          "frame_index": 659,
+          "timestamp_ms": 43933,
+          "min_knee_angle_deg": 72.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 14,
+          "frame_index": 708,
+          "timestamp_ms": 47200,
+          "min_knee_angle_deg": 76.2,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 15,
+          "frame_index": 756,
+          "timestamp_ms": 50400,
+          "min_knee_angle_deg": 60.1,
+          "gate_after": "UNLOCKED"
+        }
+      ],
+      "input": "squats-15",
+      "expected_rep_events": 15,
+      "matches_expectation": true
+    },
+    "F17_truncated_14": {
+      "frames_processed": 723,
+      "frames_with_pose": 723,
+      "processing_fps": 21.5,
+      "rep_verified_events": 14,
+      "reducer_count": 14,
+      "gate": "LOCKED",
+      "contract_status": "ACTIVE",
+      "first_unlocked_frame": null,
+      "unlocked_before_15": false,
+      "evidence_provenance": [],
+      "reps": [
+        {
+          "rep": 1,
+          "frame_index": 50,
+          "timestamp_ms": 3333,
+          "min_knee_angle_deg": 67.3,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 2,
+          "frame_index": 104,
+          "timestamp_ms": 6933,
+          "min_knee_angle_deg": 78.9,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 3,
+          "frame_index": 154,
+          "timestamp_ms": 10266,
+          "min_knee_angle_deg": 62.1,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 4,
+          "frame_index": 202,
+          "timestamp_ms": 13466,
+          "min_knee_angle_deg": 80.5,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 5,
+          "frame_index": 253,
+          "timestamp_ms": 16866,
+          "min_knee_angle_deg": 69.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 6,
+          "frame_index": 305,
+          "timestamp_ms": 20333,
+          "min_knee_angle_deg": 77.2,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 7,
+          "frame_index": 358,
+          "timestamp_ms": 23866,
+          "min_knee_angle_deg": 81.4,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 8,
+          "frame_index": 411,
+          "timestamp_ms": 27400,
+          "min_knee_angle_deg": 72.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 9,
+          "frame_index": 462,
+          "timestamp_ms": 30800,
+          "min_knee_angle_deg": 77.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 10,
+          "frame_index": 514,
+          "timestamp_ms": 34266,
+          "min_knee_angle_deg": 85.5,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 11,
+          "frame_index": 558,
+          "timestamp_ms": 37200,
+          "min_knee_angle_deg": 75.3,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 12,
+          "frame_index": 608,
+          "timestamp_ms": 40533,
+          "min_knee_angle_deg": 79.0,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 13,
+          "frame_index": 659,
+          "timestamp_ms": 43933,
+          "min_knee_angle_deg": 72.7,
+          "gate_after": "LOCKED"
+        },
+        {
+          "rep": 14,
+          "frame_index": 708,
+          "timestamp_ms": 47200,
+          "min_knee_angle_deg": 76.2,
+          "gate_after": "LOCKED"
+        }
+      ],
+      "input": "squats-15 frames [0, 723)",
+      "expected_rep_events": 14,
+      "matches_expectation": true
+    },
+    "F18_half_squats_15": {
+      "frames_processed": 746,
+      "frames_with_pose": 746,
+      "processing_fps": 24.0,
+      "rep_verified_events": 0,
+      "reducer_count": 0,
+      "gate": "LOCKED",
+      "contract_status": "ACTIVE",
+      "first_unlocked_frame": null,
+      "unlocked_before_15": false,
+      "evidence_provenance": [],
+      "reps": [],
+      "input": "squats-half-15",
+      "expected_rep_events": 0,
+      "matches_expectation": true
+    },
+    "F18_frozen_static_frames": {
+      "frames_processed": 75,
+      "frames_with_pose": 74,
+      "processing_fps": 23.4,
+      "rep_verified_events": 0,
+      "reducer_count": 0,
+      "gate": "LOCKED",
+      "contract_status": "ACTIVE",
+      "first_unlocked_frame": null,
+      "unlocked_before_15": false,
+      "evidence_provenance": [],
+      "reps": [],
+      "input": "squats-15 stills (standing + rep-1 bottom) repeated",
+      "expected_rep_events": 0,
+      "matches_expectation": true
+    },
+    "F18_one_rep_looped_15x": {
+      "frames_processed": 735,
+      "frames_with_pose": 735,
+      "processing_fps": 21.5,
+      "rep_verified_events": 1,
+      "reducer_count": 1,
+      "gate": "LOCKED",
+      "contract_status": "ACTIVE",
+      "first_unlocked_frame": null,
+      "unlocked_before_15": false,
+      "evidence_provenance": [],
+      "reps": [
+        {
+          "rep": 1,
+          "frame_index": 32,
+          "timestamp_ms": 2112,
+          "min_knee_angle_deg": 68.6,
+          "gate_after": "LOCKED"
+        }
+      ],
+      "input": "squats-15 rep-1 frames looped 15 times",
+      "expected_rep_events": 1,
+      "matches_expectation": true
+    }
+  },
+  "limitations": [
+    "Generated ray-traced humanoid, not human footage; proves the pipeline counts complete movements from pixels, not real-world accuracy across bodies, clothing or cameras.",
+    "Pinned lite model; the full model was also observed locally to miss reps on this fixture (see docs/public-references.md).",
+    "processing_fps is offline throughput on the recording machine, not live Fire TV FPS."
+  ]
+}

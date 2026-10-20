@@ -210,6 +210,12 @@ function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, [authenticated, live, page]);
+  const recordedSource = state?.studio?.source === "RECORDED_DEMO_VIDEO";
+  useEffect(() => {
+    if (!authenticated || live || !recordedSource || page !== "studio") return;
+    const timer = setInterval(() => setFrameTick((t) => t + 1), 200);
+    return () => clearInterval(timer);
+  }, [authenticated, live, recordedSource, page]);
   const refresh = useCallback(async () => {
     const data = await api("/state");
     setState(data.state);
@@ -465,6 +471,15 @@ function App() {
         ),
     );
   const studio = state.studio;
+  // RECORDED DEMO: a pinned synthetic video decoded server-side through MediaPipe. Never LIVE RING.
+  const recordedDemo = !live && studio?.source === "RECORDED_DEMO_VIDEO";
+  const playRecordedDemo = () =>
+    guarded(async () => {
+      cancelReplay();
+      if (!state.contracts.length) await runStage(1);
+      await act("/studio/recorded/start", { fixture: "squats-15" });
+      navigate("studio");
+    });
   const reset = () =>
     guarded(async () => {
       cancelReplay();
@@ -1431,7 +1446,9 @@ function App() {
                       {studio?.status === "RUNNING"
                         ? live
                           ? "PROCESSING RING FRAMES"
-                          : "PROCESSING SYNTHETIC FRAMES"
+                          : recordedDemo
+                            ? "PROCESSING RECORDED DEMO FRAMES"
+                            : "PROCESSING SYNTHETIC FRAMES"
                         : "CAMERA STUDIO"}
                     </span>
                     <span className="studio-source">
@@ -1440,7 +1457,9 @@ function App() {
                           studio?.status === "RUNNING"
                           ? "LIVE RING"
                           : "AWAITING LIVE CAMERA"
-                        : "DEMO / SYNTHETIC"}
+                        : recordedDemo
+                          ? "RECORDED DEMO"
+                          : "DEMO / SYNTHETIC"}
                     </span>
                   </div>
                   {studio ? (
@@ -1449,12 +1468,16 @@ function App() {
                       src={
                         live
                           ? `/api/camera/frame?v=${frameTick}`
-                          : `/api/studio/frame?v=${studio.fixture_frame_index ?? 0}-${studio.angle}`
+                          : recordedDemo
+                            ? `/api/studio/recorded/frame?v=${frameTick}`
+                            : `/api/studio/frame?v=${studio.fixture_frame_index ?? 0}-${studio.angle}`
                       }
                       alt={
                         live
                           ? "Authorized Ring frames with MediaPipe skeleton"
-                          : "Synthetic marker pose extraction with skeleton overlay"
+                          : recordedDemo
+                            ? "Recorded demo video (synthetic humanoid) with MediaPipe skeleton"
+                            : "Synthetic marker pose extraction with skeleton overlay"
                       }
                     />
                   ) : (
@@ -1608,6 +1631,18 @@ function App() {
                       {playing
                         ? "Processing marker frames…"
                         : "Run synthetic workout"}
+                    </button>
+                  )}
+                  {!live && (
+                    <button
+                      className="button wide"
+                      disabled={
+                        playing || busy || studio?.status === "COMPLETED"
+                      }
+                      onClick={() => void playRecordedDemo()}
+                    >
+                      <Video size={15} />
+                      Play RECORDED DEMO through MediaPipe
                     </button>
                   )}
                   {playing && (

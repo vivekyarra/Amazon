@@ -22,6 +22,8 @@ jobs:
       - run: uv sync --frozen --extra ring-video --extra aws
       - run: uv run --extra ring-video --extra aws ruff check apps/mcp-orchestrator apps/vision-webrtc-engine scripts
       - run: uvx --from cfn-lint==1.57.2 cfn-lint infra/aws/template.yaml
+      # Official MediaPipe pose model, SHA-256 pinned (same source as scripts/check-public-pose.py).
+      - run: uv run --extra ring-video --extra aws python scripts/fetch-pose-model.py
       - run: uv run --extra ring-video --extra aws pytest -q --junitxml=artifacts/backend-results.xml
       - uses: actions/upload-artifact@v4
         if: always()

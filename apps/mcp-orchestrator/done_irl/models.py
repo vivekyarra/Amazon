@@ -22,6 +22,10 @@ class CameraInput(StrictModel):
     device_id: str = Field(min_length=1, max_length=200)
 
 
+class RecordedInput(StrictModel):
+    fixture: Literal["squats-15", "squats-half-15"] = "squats-15"
+
+
 class ScenarioInput(StrictModel):
     branch: Literal[
         "deposit",

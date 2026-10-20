@@ -12,6 +12,7 @@ from . import vision
 DAY = "2026-10-20"
 ZONE = "Asia/Kolkata"
 MODE = "SIMULATED_VERIFIED"
+RECORDED_DEMO_SOURCE = "RECORDED_DEMO_VIDEO"
 TERMINAL = {"VERIFIED", "CANCELLED", "REJECTED"}
 
 
@@ -490,26 +491,37 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
         )
         if session["count"] == 15 and session["gate"] != "UNLOCKED":
             c = contract(s, "squats")
+            live = session["source"] == "LIVE_RING_WHEP"
+            recorded = session["source"] == RECORDED_DEMO_SOURCE
+            body = dict(
+                count=15,
+                source=session["source"],
+                session_id=session["session_id"],
+                verified_reps=session.get("verified_reps", []),
+                model_sha256=session.get("model_sha256"),
+            )
+            if recorded:
+                body.update(label="RECORDED DEMO", fixture=session.get("fixture"))
             ev = add_evidence(
                 s,
                 db,
                 household,
                 c,
                 "POSE_15_CYCLES",
-                dict(
-                    count=15,
-                    source=session["source"],
-                    session_id=session["session_id"],
-                    verified_reps=session.get("verified_reps", []),
-                    model_sha256=session.get("model_sha256"),
-                ),
-                provenance="LIVE_SENSOR" if session["source"] == "LIVE_RING_WHEP" else "SYNTHETIC_SENSOR",
+                body,
+                provenance="LIVE_SENSOR" if live else "RECORDED_DEMO" if recorded else "SYNTHETIC_SENSOR",
                 sensor={
                     "platform": "RING_WHEP",
                     "source_mode": "LIVE_VERIFIED",
                     "model": "MediaPipe-PoseLandmarker:" + session.get("model_sha256", ""),
                 }
-                if session["source"] == "LIVE_RING_WHEP"
+                if live
+                else {
+                    "platform": RECORDED_DEMO_SOURCE,
+                    "source_mode": "SIMULATED_VERIFIED",
+                    "model": "MediaPipe-PoseLandmarker:" + session.get("model_sha256", ""),
+                }
+                if recorded
                 else None,
             )
             revise(
@@ -517,7 +529,9 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 c,
                 "VERIFIED",
                 "15 complete MediaPipe cycles from decoded Ring WHEP frames."
-                if session["source"] == "LIVE_RING_WHEP"
+                if live
+                else "15 complete MediaPipe cycles from a RECORDED DEMO video fixture, not a live Ring camera."
+                if recorded
                 else "15 complete cycles from synthetic marker pixel extraction, not live human verification.",
                 ev,
             )
