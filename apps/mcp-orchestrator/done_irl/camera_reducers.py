@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from . import engine as e
+from . import privacy
 from .models import ApiError
 
 
@@ -11,6 +12,10 @@ def frame_received(store, household, camera, frame, points, timestamp, frame_has
         state = store.read(household)
         if not state or not state["consent"]:
             raise ApiError(409, "CONSENT_REVOKED", "Camera processing has stopped.")
+        # Exclusion/disconnect is rechecked per frame inside the same transaction as any evidence.
+        if camera.get("device_id"):
+            privacy.require_camera_allowed(state, camera["device_id"])
+        privacy.require_provider(state, "ring")
         session = state["studio"]
         if not session or session.get("camera_id") != camera["id"]:
             raise ApiError(409, "CAMERA_SESSION_CHANGED", "Camera session is no longer current.")

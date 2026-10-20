@@ -16,6 +16,7 @@ import cv2
 
 from .adapters import RingAdapter
 from .models import ApiError
+from .privacy import apply_masks
 
 
 class PoseDetector:
@@ -72,8 +73,10 @@ def authorized_device(household, device, bindings_file):
 
 
 class CameraBridge:
-    def __init__(self, on_frame, on_end):
+    def __init__(self, on_frame, on_end, masks=None):
         self.on_frame, self.on_end = on_frame, on_end
+        # masks(household, device) -> normalized PRIVATE_MASKS polygons for that camera.
+        self.masks = masks
         self.sessions = {}
 
     async def start(self, household, device):
@@ -170,6 +173,10 @@ class CameraBridge:
                     raise ApiError(502, "VIDEO_DIMENSIONS_INVALID", "Camera frame exceeds decoder limits.")
                 if image.shape[1] > 1280:
                     image = cv2.resize(image, (1280, round(image.shape[0] * 1280 / image.shape[1])))
+                if self.masks:
+                    # Masked pixels are excluded from inference, frame hashes and the relay JPEG.
+                    regions = await asyncio.to_thread(self.masks, household, session["device_id"])
+                    image = apply_masks(image, regions)
                 inference = asyncio.create_task(
                     asyncio.to_thread(session["detector"].infer, image, timestamp)
                 )

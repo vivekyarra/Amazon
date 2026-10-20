@@ -87,6 +87,9 @@ class Store:
             PRIMARY KEY(household,provider));
         CREATE TABLE IF NOT EXISTS retention_tombstones (id TEXT PRIMARY KEY, household TEXT NOT NULL,
             sha256 TEXT NOT NULL, deleted REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS cloud_deletions (id INTEGER PRIMARY KEY AUTOINCREMENT, household TEXT NOT NULL,
+            schedules TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'PENDING', attempts INTEGER NOT NULL DEFAULT 0,
+            error_code TEXT, requested REAL NOT NULL, completed REAL);
         """)
         # Upgrade the former local format once. Authentication is bound to record identity.
         with self.transaction() as db:

@@ -46,6 +46,7 @@ import type {
   State,
 } from "../../../packages/physical-contract-schema";
 import "./style.css";
+import { PrivacyControls } from "./PrivacyControls";
 
 type Page =
   | "overview"
@@ -2003,7 +2004,7 @@ function App() {
                   </div>
                   <div>
                     <Clock3 size={17} />
-                    <span>7-day local evidence retention</span>
+                    <span>Owner-set evidence retention (1–30 days)</span>
                   </div>
                   <div>
                     <Users size={17} />
@@ -2016,6 +2017,7 @@ function App() {
                   in the browser.
                 </p>
               </section>
+              <PrivacyControls act={act} busy={busy} />
             </div>
           )}
           <footer className="footer">
