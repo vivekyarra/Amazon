@@ -1,0 +1,12 @@
+{
+  "name": "done-irl", "version": "0.1.0", "private": true, "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "check": "npm run build"
+  },
+  "dependencies": {"react": "^19.2.0", "react-dom": "^19.2.0", "lucide-react": "^0.468.0"},
+  "devDependencies": {"typescript": "~5.9.3", "vite": "^7.1.0", "@vitejs/plugin-react": "^5.0.0", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@playwright/test": "^1.56.0"}
+}
