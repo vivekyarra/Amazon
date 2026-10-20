@@ -1,0 +1,168 @@
+{
+  "additionalProperties": true,
+  "description": "Persisted PSC contract; verification is additionally enforced by domain evidence policy.",
+  "properties": {
+    "contract_id": {
+      "title": "Contract Id",
+      "type": "string"
+    },
+    "household_id": {
+      "title": "Household Id",
+      "type": "string"
+    },
+    "key": {
+      "title": "Key",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "actor": {
+      "additionalProperties": true,
+      "title": "Actor",
+      "type": "object"
+    },
+    "counterparty": {
+      "additionalProperties": true,
+      "title": "Counterparty",
+      "type": "object"
+    },
+    "original_utterance": {
+      "title": "Original Utterance",
+      "type": "string"
+    },
+    "privacy_scope": {
+      "const": "HOUSEHOLD",
+      "title": "Privacy Scope",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "DISCOVERED",
+        "NEEDS_CONFIRMATION",
+        "ACTIVE",
+        "ENGAGED",
+        "EVIDENCE_PENDING",
+        "DISPUTED",
+        "MISSED",
+        "VERIFIED",
+        "CANCELLED",
+        "REJECTED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "source_mode": {
+      "enum": [
+        "LIVE_VERIFIED",
+        "SIMULATED_VERIFIED",
+        "NOT_CONNECTED",
+        "BLOCKED"
+      ],
+      "title": "Source Mode",
+      "type": "string"
+    },
+    "verification_modality": {
+      "title": "Verification Modality",
+      "type": "string"
+    },
+    "required_evidence": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Required Evidence",
+      "type": "array"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "due_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Due At"
+    },
+    "timezone": {
+      "title": "Timezone",
+      "type": "string"
+    },
+    "deadline_trigger": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Deadline Trigger"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "scheduled_jobs": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Scheduled Jobs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "contract_id",
+    "household_id",
+    "key",
+    "schema_version",
+    "actor",
+    "counterparty",
+    "original_utterance",
+    "privacy_scope",
+    "status",
+    "source_mode",
+    "verification_modality",
+    "required_evidence",
+    "evidence_ids",
+    "revision",
+    "confidence",
+    "due_at",
+    "timezone",
+    "deadline_trigger",
+    "created_at",
+    "updated_at",
+    "scheduled_jobs"
+  ],
+  "title": "ContractRecord",
+  "type": "object"
+}

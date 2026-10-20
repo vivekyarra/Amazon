@@ -334,3 +334,37 @@ def test_schema_export_validates_fixture():
         BeeInput.model_validate(
             {"event_id": "x", "utterance": "promise", "occurred_at": "bad-date", "status": "VERIFIED"}
         )
+
+
+def test_timezone_and_dst_are_resolved_to_utc(post):
+    s = post(
+        "/ingest/bee-simulated",
+        dict(
+            event_id="dst",
+            utterance="I'll call my sister before 6 PM.",
+            speaker="SELF",
+            occurred_at="2026-11-01T08:15:00-05:00",
+            timezone="America/New_York",
+        ),
+    )["state"]
+    c = e.contract(s, "sister")
+    assert c["due_at"] == "2026-11-01T23:00:00+00:00"
+    assert c["timezone"] == "America/New_York"
+    assert c["scheduled_jobs"][0]["at"] == "2026-11-01T22:00:00+00:00"
+
+
+def test_timezone_offset_required_for_ingestion(post):
+    post(
+        "/ingest/bee-simulated",
+        dict(event_id="naive", utterance="I'll call my sister.", occurred_at="2026-10-20T08:15:00"),
+        status=422,
+    )
+
+
+def test_evidence_from_wrong_contract_cannot_complete_a_promise(app, post):
+    stage(post, 2)
+    store = app.state.store
+    s = store.read("demo")
+    c = e.contract(s, "squats")
+    with pytest.raises(ApiError):
+        e.revise(s, c, "VERIFIED", "An arbitrary image is not squat proof.", s["evidence"][0]["evidence_id"])

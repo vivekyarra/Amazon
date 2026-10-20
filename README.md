@@ -6,6 +6,8 @@ DONE/IRL connects the morning promise, the parcel on the porch, the meeting you 
 
 > **Current release: working synthetic development demo; original vision NOT COMPLETE.** Bee/Ring/Fire TV live verification and official hackathon submission evidence remain external gates. See [acceptance report](docs/acceptance-report.md) and [integration status](docs/integration-status.md). An Android build is not proof of a Fire TV device run.
 
+![Mission control — actual synthetic web workspace](docs/images/mission-control.png)
+
 ## Run locally
 
 Requires Linux/macOS, Python 3.12+, [uv](https://docs.astral.sh/uv/), Node.js 22.12+ (24 recommended), and npm. No personal camera, cloud account, Docker, or device token is required for the synthetic workflow.

@@ -1,0 +1,84 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "event_type": {
+      "title": "Event Type",
+      "type": "string"
+    },
+    "household_id": {
+      "title": "Household Id",
+      "type": "string"
+    },
+    "actor_id": {
+      "title": "Actor Id",
+      "type": "string"
+    },
+    "source": {
+      "title": "Source",
+      "type": "string"
+    },
+    "source_mode": {
+      "enum": [
+        "LIVE_VERIFIED",
+        "SIMULATED_VERIFIED",
+        "NOT_CONNECTED",
+        "BLOCKED"
+      ],
+      "title": "Source Mode",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "trace_id": {
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "consent_scope": {
+      "title": "Consent Scope",
+      "type": "string"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    }
+  },
+  "required": [
+    "event_id",
+    "schema_version",
+    "event_type",
+    "household_id",
+    "actor_id",
+    "source",
+    "source_mode",
+    "occurred_at",
+    "received_at",
+    "trace_id",
+    "idempotency_key",
+    "consent_scope",
+    "payload"
+  ],
+  "title": "EventEnvelope",
+  "type": "object"
+}

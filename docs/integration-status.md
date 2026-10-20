@@ -1,0 +1,22 @@
+# Integration status
+
+Checked 2026-10-20. These labels describe observed capabilities, never adapter filenames.
+
+| Surface / capability | Status | Actual proof / gap |
+|---|---|---|
+| Bee canonical ingestion | SIMULATED_VERIFIED | Protected fixtures create four persisted contracts; duplicate/ambiguity tests pass |
+| Bee live SSE | BLOCKED | Adapter/parser/backoff unit tests exist; no token, authorized device or live ingestion |
+| MCP Streamable HTTP | SIMULATED_VERIFIED | Official SDK; external TCP client initializes, discovers five tools, compiles and reads shared state |
+| Alexa+ account/device | NOT_CONNECTED | No actual Alexa+ connection/voice delivery verified |
+| Ring camera/API account | BLOCKED | No linked camera, token or runtime API proof; live relay/decoder not implemented |
+| Ring-like porch/threshold replay | SIMULATED_VERIFIED | Actual generated marker pixels segmented/tracked by OpenCV; not an official Ring simulator |
+| Vision human pose | BLOCKED | Optional MediaPipe worker supplied; model fetched from official host; native runtime dependency/real human fixture validation outstanding |
+| Fire OS client build | SIMULATED_VERIFIED | Native debug APK compiled; CI build evidence tracked separately |
+| Actual Fire TV runtime | BLOCKED | No install/launch/device recording; web preview is not a Fire OS/Vega runtime |
+| Web TV/companion | SIMULATED_VERIFIED | Shared authenticated ledger, inbox, D-pad web preview and mobile browser tests |
+| Official incident filing | BLOCKED | No authorized official receiver; export and isolated labeled demo receiver only |
+| Bee haptics / earbud whisper | BLOCKED | No supported, authorized delivery API verified; no fake-success adapter |
+| Cross-app entertainment lock | BLOCKED | Only voluntary DONE/IRL in-app gate; no third-party app control |
+| AWS runtime | NOT_CONNECTED | No credentials or infrastructure deployed; SQLite is the local durable equivalent |
+
+A logical WATCHING subagent is persisted event-driven work. It never promises uninterrupted camera observation. Live source failures do not silently become live-looking replay. Last successful live probe is **none** for the blocked connections.

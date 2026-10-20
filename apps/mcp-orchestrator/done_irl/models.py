@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, AwareDatetime
 
 SourceMode = Literal["LIVE_VERIFIED", "SIMULATED_VERIFIED", "NOT_CONNECTED", "BLOCKED"]
 
@@ -14,7 +14,7 @@ class BeeInput(StrictModel):
     utterance: str = Field(min_length=1, max_length=4000)
     speaker: Literal["SELF", "FAMILY_MEMBER", "UNKNOWN"] = "SELF"
     counterparty: str = Field(default="Household", max_length=100)
-    occurred_at: datetime
+    occurred_at: AwareDatetime
     timezone: str = "Asia/Kolkata"
 
 
@@ -63,3 +63,57 @@ class PoseInput(StrictModel):
 class ApiError(Exception):
     def __init__(self, status: int, code: str, message: str):
         self.status, self.code, self.message = status, code, message
+
+
+class ContractRecord(BaseModel):
+    """Persisted PSC contract; verification is additionally enforced by domain evidence policy."""
+
+    model_config = ConfigDict(extra="allow")
+    contract_id: str
+    household_id: str
+    key: str
+    schema_version: Literal["1.0"]
+    actor: dict
+    counterparty: dict
+    original_utterance: str
+    privacy_scope: Literal["HOUSEHOLD"]
+    status: Literal[
+        "DISCOVERED",
+        "NEEDS_CONFIRMATION",
+        "ACTIVE",
+        "ENGAGED",
+        "EVIDENCE_PENDING",
+        "DISPUTED",
+        "MISSED",
+        "VERIFIED",
+        "CANCELLED",
+        "REJECTED",
+    ]
+    source_mode: SourceMode
+    verification_modality: str
+    required_evidence: list[str] = Field(min_length=1)
+    evidence_ids: list[str]
+    revision: int = Field(ge=1)
+    confidence: float = Field(ge=0, le=1)
+    due_at: datetime | None
+    timezone: str
+    deadline_trigger: str | None
+    created_at: datetime
+    updated_at: datetime
+    scheduled_jobs: list[dict]
+
+
+class EventEnvelope(StrictModel):
+    event_id: str
+    schema_version: Literal["1.0"]
+    event_type: str
+    household_id: str
+    actor_id: str
+    source: str
+    source_mode: SourceMode
+    occurred_at: AwareDatetime
+    received_at: datetime
+    trace_id: str
+    idempotency_key: str
+    consent_scope: str
+    payload: dict

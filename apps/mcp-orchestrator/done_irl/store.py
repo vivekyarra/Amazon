@@ -5,6 +5,7 @@ import sqlite3
 import threading
 from contextlib import contextmanager
 from pathlib import Path
+from .models import ContractRecord, EventEnvelope
 
 
 class Store:
@@ -42,6 +43,10 @@ class Store:
             return json.loads(row["state"]) if row else None
 
     def save(self, db, household, state):
+        for contract in state["contracts"]:
+            ContractRecord.model_validate(contract)
+        for event in state["events"]:
+            EventEnvelope.model_validate(event)
         db.execute(
             "INSERT INTO households VALUES (?,?) ON CONFLICT(id) DO UPDATE SET state=excluded.state",
             (household, json.dumps(state, separators=(",", ":"), allow_nan=False)),

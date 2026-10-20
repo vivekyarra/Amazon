@@ -1,0 +1,50 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Event Id",
+      "type": "string"
+    },
+    "utterance": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Utterance",
+      "type": "string"
+    },
+    "speaker": {
+      "default": "SELF",
+      "enum": [
+        "SELF",
+        "FAMILY_MEMBER",
+        "UNKNOWN"
+      ],
+      "title": "Speaker",
+      "type": "string"
+    },
+    "counterparty": {
+      "default": "Household",
+      "maxLength": 100,
+      "title": "Counterparty",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "timezone": {
+      "default": "Asia/Kolkata",
+      "title": "Timezone",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "utterance",
+    "occurred_at"
+  ],
+  "title": "BeeInput",
+  "type": "object"
+}

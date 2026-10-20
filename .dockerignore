@@ -1,0 +1,9 @@
+.git
+.env*
+.venv
+.local
+node_modules
+artifacts
+dist
+**/build
+**/.gradle

@@ -1,0 +1,14 @@
+# Judge runbook
+
+1. Follow the README installation steps; start the single backend/frontend service. No personal Amazon device token is needed for the synthetic replay. Use the private installation-generated judge password, never a shared Amazon account credential.
+2. Start in **Mission control**. The source is visibly **SYNTHETIC DEMO**. Click **Run the full day** and allow about 30 seconds. Actual API calls mutate the persisted household; this is not a sequence of canned screens.
+3. Morning: inspect four contracts and original utterances. Their status begins ACTIVE, with separate required evidence. The compiler has a deliberately limited English grammar; it is not an unbounded LLM interpretation claim.
+4. Delivery: inspect the source frame. Generated pixels are segmented and tracked. Deposit starts a logical watchdog, not final custody closure. Change Courier to **fake-out** after a reset to exercise a disputed delivery.
+5. Deadlines: inspect exact 15:00/15:35 teacher jobs. The sister has separate 17:00/17:35 jobs. A clock jump past a deadline records missed/unverified status; it never verifies. Choose engaged preparation to suppress a needless high-priority alert.
+6. Removal: open **Evidence & incidents**. Review actual synthetic snapshots, person marker crop, hashes, zero-second clip limitation and unknown intent. Choose authorized pickup or prepare a report; preparing alone sends nothing. Simulated approval binds to a manifest and an explicit phrase. The demo receiver contacts no police and produces no official case ID.
+7. Arrival: choose not-visible, visible or occluded drinks. Each leaves uncertainty truthful. Owner pickup is accepted only on the parcel-remains branch.
+8. Studio: generated marker frames pass through OpenCV landmark extraction and the pose reducer. At fourteen full cycles the in-app gate stays locked; the fifteenth unlocks. No other entertainment app is controlled. An accessible override leaves the physical commitment unverified.
+9. Use the event inspector, contract detail and companion bell to inspect shared state. The MCP inspector describes actual external-client testing; scenario REST calls are not mislabeled as MCP traces. Camera/token failure injection pauses processing. Revoke consent to stop collection. Export validates actual artifact hashes.
+10. Open TV preview to test keyboard focus, or build/install the Fire OS APK using its README. Web preview and APK compilation are separate from the required Fire TV device recording. Device, live Ring, Bee and Alexa+ connection proof remain blocked until supplied.
+
+CLI alternative: while the backend runs, execute `./scripts/seed-demo-data.sh`. Run the tests and read `docs/acceptance-report.md` before evaluating completion claims.

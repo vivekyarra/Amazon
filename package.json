@@ -1,12 +1,29 @@
 {
-  "name": "done-irl", "version": "0.1.0", "private": true, "type": "module",
+  "name": "done-irl",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "check": "npm run build"
+    "check": "npm run build",
+    "format": "prettier --write \"apps/judge-godmode-console/**/*.{ts,tsx,css,html}\" \"packages/physical-contract-schema/**/*.ts\" \"tests/e2e/*.ts\" *.ts *.json .github/workflows/*.yml",
+    "format:check": "prettier --check \"apps/judge-godmode-console/**/*.{ts,tsx,css,html}\" \"packages/physical-contract-schema/**/*.ts\" \"tests/e2e/*.ts\" *.ts *.json .github/workflows/*.yml"
   },
-  "dependencies": {"react": "^19.2.0", "react-dom": "^19.2.0", "lucide-react": "^0.468.0"},
-  "devDependencies": {"typescript": "~5.9.3", "vite": "^7.1.0", "@vitejs/plugin-react": "^5.0.0", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@playwright/test": "^1.56.0"}
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "prettier": "^3.9.10",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.0"
+  }
 }

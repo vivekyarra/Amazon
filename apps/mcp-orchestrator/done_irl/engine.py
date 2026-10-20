@@ -116,6 +116,8 @@ def revise(s, c, status, reason, evidence_id=None):
 
 
 def add_evidence(s, db, household, c, kind, body, mime="application/json", provenance="SYNTHETIC_SENSOR"):
+    if not s["consent"]:
+        raise ApiError(409, "CONSENT_REVOKED", "Evidence collection is paused.")
     evidence_id = "ev_" + uuid.uuid4().hex
     data = body if isinstance(body, bytes) else json.dumps(body, sort_keys=True).encode()
     sha = hashlib.sha256(data).hexdigest()
@@ -305,6 +307,8 @@ def compile_bee(s, bee: BeeInput):
                         "contract_id"
                     ]
                 )
+    for cid in created:
+        next(c for c in s["contracts"] if c["contract_id"] == cid)["timezone"] = bee.timezone
     return created
 
 
