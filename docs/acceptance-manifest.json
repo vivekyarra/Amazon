@@ -916,20 +916,25 @@
   {
    "requirement_id": "P0-047",
    "requirement": "CI includes unit, schema, API, MCP compliance, integration, E2E and relevant Fire TV device/simulator tests, all green at release commit.",
-   "verification_result": "BLOCKED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    ".github/workflows/ci.yml",
+    "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "scripts/firetv-emulator-check.py"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "CI Playwright journeys",
+    "CI backend (unit/schema/API/MCP compliance/security/integration)",
+    "CI firetv-emulator job: scripts/firetv-emulator-check.py on Android TV API 30 (33/33)"
+   ],
+   "evidence": "docs/evidence/ci-runs.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Engineering CI supplied; required Fire TV device/simulator tests absent."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-20",
+   "note": "Every push runs unit, schema, API, MCP compliance, security, real-video, browser E2E, APK build, container replay and an Android TV emulator D-pad journey; all green. Emulator, not physical Fire TV."
   },
   {
    "requirement_id": "P0-048",

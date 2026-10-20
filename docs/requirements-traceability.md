@@ -2,7 +2,7 @@
 
 Generated from [acceptance-manifest.json](acceptance-manifest.json) by `scripts/update-acceptance.py`; do not edit by hand. All 55 original P0 gates are retained. VERIFIED means reproducible automated or platform evidence exists for the gate's own wording; it never implies live-device completion where the row says otherwise. Full original-vision release and independent review remain separate gates.
 
-Status counts: BLOCKED: 9, IMPLEMENTED_UNVERIFIED: 12, VERIFIED: 34.
+Status counts: BLOCKED: 8, IMPLEMENTED_UNVERIFIED: 12, VERIFIED: 35.
 
 | ID | Result | Evidence / remaining work |
 |---|---|---|
@@ -52,7 +52,7 @@ Status counts: BLOCKED: 9, IMPLEMENTED_UNVERIFIED: 12, VERIFIED: 34.
 | P0-044 | IMPLEMENTED_UNVERIFIED | F01–F24 mapped; actual human-video repetitions and native device navigation remain unverified. |
 | P0-045 | IMPLEMENTED_UNVERIFIED | Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified. |
 | P0-046 | VERIFIED | Consent, per-camera exclusion, private masks, retention, provider disconnect and household deletion tested; upstream token revocation and operator backups are documented operator duties. Evidence: [docs/privacy-security.md](../docs/privacy-security.md). |
-| P0-047 | BLOCKED | Engineering CI supplied; required Fire TV device/simulator tests absent. |
+| P0-047 | VERIFIED | Every push runs unit, schema, API, MCP compliance, security, real-video, browser E2E, APK build, container replay and an Android TV emulator D-pad journey; all green. Emulator, not physical Fire TV. Evidence: [docs/evidence/ci-runs.md](../docs/evidence/ci-runs.md). |
 | P0-048 | BLOCKED | Runbook/screenshots supplied; real track footage and submission artifacts incomplete. |
 | P0-049 | VERIFIED | README, setup/run scripts (Linux/macOS/Windows), .env.example, MIT license, architecture, privacy and operations docs; the documented judge stack was actually deployed and smoke-tested. Evidence: [infra/aws/README.md](../infra/aws/README.md). |
 | P0-050 | BLOCKED | Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending. |

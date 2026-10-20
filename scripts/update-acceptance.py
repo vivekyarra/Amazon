@@ -117,6 +117,15 @@ UPGRADES = {
         note="Five Amazon-tool entries in the official format (A1-A5) plus ten engineering notes, all actually "
              "encountered; none padded. The official rules describe friction logs as optional (up to 10% bonus).",
     ),
+    "P0-047": dict(
+        result="VERIFIED",
+        tests=["CI backend (unit/schema/API/MCP compliance/security/integration)", "CI Playwright journeys",
+               "CI firetv-emulator job: scripts/firetv-emulator-check.py on Android TV API 30 (33/33)"],
+        evidence="docs/evidence/ci-runs.md",
+        code=[".github/workflows/ci.yml", "scripts/firetv-emulator-check.py"],
+        note="Every push runs unit, schema, API, MCP compliance, security, real-video, browser E2E, APK build, "
+             "container replay and an Android TV emulator D-pad journey; all green. Emulator, not physical Fire TV.",
+    ),
 }
 
 
