@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-10-20T16:25:52.609312+00:00",
+  "contract": {
+    "title": "Call Mom",
+    "status": "ACTIVE",
+    "due_at": "2026-10-20T14:32:03.392676+00:00"
+  },
+  "jobs": [
+    {
+      "kind": "T60",
+      "at": "2026-10-20T13:32:03.392676+00:00",
+      "status": "PENDING"
+    },
+    {
+      "kind": "T25",
+      "at": "2026-10-20T14:07:03.392676+00:00",
+      "status": "PENDING"
+    },
+    {
+      "kind": "DEADLINE",
+      "at": "2026-10-20T14:32:03.392676+00:00",
+      "status": "PENDING"
+    }
+  ],
+  "alerts": [],
+  "remaining_dirl_schedules": 0
+}

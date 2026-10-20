@@ -274,6 +274,15 @@ def create_app(data_dir=None, passwords=None):
             with store.transaction() as db:
                 for row in db.execute("SELECT id FROM households").fetchall():
                     s = store.read(row["id"])
+                    if row["id"] != "demo" and s.get("clock_mode") != "WALL":
+                        # Households created before real households moved to wall-clock time would
+                        # otherwise never be reconciled; overdue jobs then resolve as stale/missed.
+                        from datetime import datetime, timezone
+
+                        previous_now = s["now"]
+                        s.update(clock_mode="WALL", now=datetime.now(timezone.utc).isoformat())
+                        e.emit(s, "household.clock_migrated", {"from": "VIRTUAL", "previous_now": previous_now})
+                        store.save(db, row["id"], s)
                     if s.get("camera_request", {}).get("status") in {"OPEN", "PENDING", "CONNECTING"}:
                         s["camera_request"]["status"] = "CLOSED"
                         if s["studio"] and s["studio"]["status"] not in {"COMPLETED", "OVERRIDDEN"}:

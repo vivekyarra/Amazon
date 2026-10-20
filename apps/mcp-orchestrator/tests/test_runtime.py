@@ -291,3 +291,35 @@ def test_tv_session_registration_is_owner_scoped_bounded_and_not_device_proof(cl
     )
     other = client.get("/api/state").json()["state"]
     assert other.get("tv_sessions", []) == []
+
+
+def test_legacy_virtual_owner_household_migrates_to_wall_clock_and_reconciles(tmp_path):
+    """Regression: an owner household created on the virtual clock was never ticked by the wall-clock worker."""
+    from datetime import datetime, timedelta, timezone
+    from fastapi.testclient import TestClient
+
+    from done_irl import engine as e
+    from done_irl.api import create_app
+    from done_irl.models import BeeInput
+
+    passwords = {"demo-admin": "migration-admin-pass", "owner": "migration-owner-pass"}
+    app = create_app(tmp_path, passwords)
+    store = app.state.store
+    legacy = e.fresh()
+    legacy["household_id"] = "house_owner"
+    past = datetime.now(timezone.utc) - timedelta(hours=3)
+    e.compile_bee(legacy, BeeInput(event_id="m", utterance="I will call Mom in 2 hours.", occurred_at=past.isoformat()))
+    with store.transaction() as db:
+        store.save(db, "house_owner", legacy)
+    restarted = create_app(tmp_path, passwords)
+    with TestClient(restarted):
+        s = restarted.state.store.read("house_owner")
+        assert s["clock_mode"] == "WALL"
+        assert any(ev["event_type"] == "household.clock_migrated" for ev in s["events"])
+        restarted.state.runtime.step()
+        s = restarted.state.store.read("house_owner")
+        [c] = [c for c in s["contracts"] if c["key"].startswith("gen_")]
+        assert c["status"] == "MISSED"
+        assert {j["kind"]: j["status"] for j in c["scheduled_jobs"]} == {
+            "T60": "EXECUTED", "T25": "EXECUTED", "DEADLINE": "EXECUTED"}
+        assert not [a for a in s["alerts"] if a["contract_id"] == c["contract_id"]]  # stale: no late nudges
