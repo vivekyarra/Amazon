@@ -76,6 +76,60 @@ jobs:
         with:
           name: fire-os-debug-apk
           path: apps/firetv-command-hud/app/build/outputs/apk/debug/*.apk
+  firetv-emulator:
+    name: Fire OS APK on Android TV emulator (D-pad journey)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: gradle -p apps/firetv-command-hud assembleDebug --no-daemon --max-workers=2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.0"
+      - run: sudo apt-get update && sudo apt-get install -y libgl1
+      - run: uv sync --frozen
+      - run: npm ci --no-audit --no-fund && npm run build
+      - name: Start demo backend
+        run: |
+          nohup uv run --frozen uvicorn --app-dir apps/mcp-orchestrator done_irl.api:app --host 127.0.0.1 --port 8080 > backend.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/health/ready && break; sleep 2; done
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: android-tv
+          arch: x86
+          profile: tv_1080p
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: uv run --frozen python scripts/firetv-emulator-check.py --serial emulator-5554 --out artifacts/firetv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: firetv-emulator-evidence
+          path: |
+            artifacts/firetv/
+            backend.log
   container:
     name: Container build and durable replay
     runs-on: ubuntu-24.04
