@@ -18,7 +18,7 @@ jobs:
         with:
           version: "0.11.0"
           enable-cache: true
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg libgl1 libgles2
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg libgl1 libgles2 libegl1
       - run: uv sync --frozen --extra ring-video --extra aws
       - run: uv run --extra ring-video --extra aws ruff check apps/mcp-orchestrator apps/vision-webrtc-engine scripts
       - run: uvx --from cfn-lint==1.57.2 cfn-lint infra/aws/template.yaml
