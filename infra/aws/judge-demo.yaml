@@ -246,6 +246,11 @@ Resources:
           curl --fail -sS --proto '=https' --tlsv1.2 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task' -o /srv/done-irl/config/pose.task
           echo '59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a  /srv/done-irl/config/pose.task' | sha256sum -c -
           chown 10001:10001 /srv/done-irl/config/pose.task
+          curl --fail -sS --proto '=https' --tlsv1.2 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite' -o /srv/done-irl/config/detector.tflite
+          echo '40338edf5ec70d43e318b0a716a84d4564cd1802759a7a07170c7e43796dbf58  /srv/done-irl/config/detector.tflite' | sha256sum -c -
+          chown 10001:10001 /srv/done-irl/config/detector.tflite
+          echo DONE_IRL_DETECTOR_MODEL=/config/detector.tflite >> /srv/done-irl/runtime.env
+          echo DONE_IRL_DETECTOR_DOWNLOAD=0 >> /srv/done-irl/runtime.env
           rm -rf /srv/done-irl/src && git clone -q '${RepoUrl}' /srv/done-irl/src
           git -C /srv/done-irl/src checkout -q '${GitCommit}'
           docker build -q --build-arg ENABLE_LIVE_RUNTIME=true -f /srv/done-irl/src/infra/local/Dockerfile -t 'done-irl:${GitCommit}' /srv/done-irl/src

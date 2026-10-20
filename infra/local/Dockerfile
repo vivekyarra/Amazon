@@ -23,6 +23,7 @@ RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy-ca.pem,mode=0444,r
     if [ -f /run/secrets/proxy-ca.pem ]; then export SSL_CERT_FILE=/run/secrets/proxy-ca.pem; fi; \
     if [ "$ENABLE_LIVE_RUNTIME" = "true" ]; then uv sync --frozen --no-dev --extra aws --extra ring-video; else uv sync --frozen --no-dev; fi && useradd --create-home --uid 10001 app && mkdir /data && chown app:app /data
 COPY --chown=app:app apps/mcp-orchestrator apps/mcp-orchestrator
+COPY --chown=app:app packages/testing-fixtures packages/testing-fixtures
 COPY --from=web --chown=app:app /app/dist dist
 USER app
 EXPOSE 8080

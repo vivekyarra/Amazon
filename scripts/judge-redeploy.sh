@@ -18,6 +18,12 @@ git fetch -q origin
 git checkout -q $commit
 docker build -q --build-arg ENABLE_LIVE_RUNTIME=true -f infra/local/Dockerfile -t done-irl:$commit .
 grep -q '^PUBLIC_HOSTS=' /srv/done-irl/runtime.env || echo 'PUBLIC_HOSTS=$host' >> /srv/done-irl/runtime.env
+if [ ! -f /srv/done-irl/config/detector.tflite ]; then
+  curl --fail -sS --proto '=https' --tlsv1.2 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite' -o /srv/done-irl/config/detector.tflite
+  echo '40338edf5ec70d43e318b0a716a84d4564cd1802759a7a07170c7e43796dbf58  /srv/done-irl/config/detector.tflite' | sha256sum -c -
+  chown 10001:10001 /srv/done-irl/config/detector.tflite; chmod 0600 /srv/done-irl/config/detector.tflite
+fi
+grep -q '^DONE_IRL_DETECTOR_MODEL=' /srv/done-irl/runtime.env || { echo DONE_IRL_DETECTOR_MODEL=/config/detector.tflite; echo DONE_IRL_DETECTOR_DOWNLOAD=0; } >> /srv/done-irl/runtime.env
 sed -i -E 's#done-irl:[a-f0-9]{40}#done-irl:$commit#' /etc/systemd/system/done-irl.service
 systemctl daemon-reload
 systemctl restart done-irl
