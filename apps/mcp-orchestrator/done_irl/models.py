@@ -124,3 +124,17 @@ class EventEnvelope(StrictModel):
     idempotency_key: str
     consent_scope: str
     payload: dict
+
+
+class PushKeys(StrictModel):
+    p256dh: str = Field(min_length=16, max_length=200)
+    auth: str = Field(min_length=8, max_length=100)
+
+
+class PushSubscribeInput(StrictModel):
+    endpoint: str = Field(min_length=12, max_length=1000)
+    keys: PushKeys
+
+
+class PushUnsubscribeInput(StrictModel):
+    endpoint: str = Field(min_length=12, max_length=1000)

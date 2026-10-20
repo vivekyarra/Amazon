@@ -33,6 +33,8 @@ from .camera_reducers import frame_received, camera_ended
 from .models import CameraInput
 from . import engine as e
 from . import privacy
+from .push import PushNotifier
+from .models import PushSubscribeInput, PushUnsubscribeInput
 
 
 def create_app(data_dir=None, passwords=None):
@@ -71,6 +73,7 @@ def create_app(data_dir=None, passwords=None):
         name: hashlib.scrypt(p.encode(), salt=salts[name], n=16384, r=8, p=1) for name, p in passwords.items()
     }
     store = Store(str(data / "ledger.db"), key_file=key_file)
+    pusher = PushNotifier(data)
     runtime = Runtime(store)
     bee = BeeAdapter()
     camera = CameraBridge(
@@ -235,6 +238,16 @@ def create_app(data_dir=None, passwords=None):
                     logging.getLogger(__name__).error("Ledger worker failed: %s", type(error).__name__)
                 await asyncio.sleep(1)
 
+        async def push_worker():
+            while True:
+                try:
+                    await asyncio.to_thread(pusher.deliver, store)
+                    app.state.push_status = "RUNNING"
+                except Exception as error:
+                    app.state.push_status = "DEGRADED"
+                    logging.getLogger(__name__).error("Push delivery failed: %s", type(error).__name__)
+                await asyncio.sleep(3)
+
         async def receive_bee(payload, event_id):
             household = os.getenv("BEE_HOUSEHOLD", "house_owner")
             # The adapter already mapped documented Bee shapes onto BeeInput; unknown shapes
@@ -276,7 +289,7 @@ def create_app(data_dir=None, passwords=None):
                             )
                         e.emit(s, "watchdog.monitoring_gap", {"reason": "PROCESS_RESTART_GAP"})
                         store.save(db, row["id"], s)
-            tasks = [asyncio.create_task(reconcile())]
+            tasks = [asyncio.create_task(reconcile()), asyncio.create_task(push_worker())]
             if os.getenv("AWS_LEDGER_TABLE"):
                 app.state.cloud_status = "STARTING"
                 tasks.append(asyncio.create_task(cloud_sync()))
@@ -526,6 +539,27 @@ def create_app(data_dir=None, passwords=None):
                 raise ApiError(409, "PROOF_REQUIRED", "This action cannot bypass contract evidence policy.")
 
         return command(request, p, op)
+
+    @app.get("/api/push/config")
+    def push_config(p=Depends(principal)):
+        return {
+            "schema_version": "1.0",
+            "trace_id": uuid.uuid4().hex,
+            "public_key": pusher.public_key(),
+            "delivery_claim": "ACCEPTED_BY_PUSH_SERVICE is not proof the device displayed the alert.",
+        }
+
+    @app.post("/api/push/subscribe")
+    def push_subscribe(body: PushSubscribeInput, request: Request, p=Depends(owner)):
+        return command(
+            request,
+            p,
+            lambda s, db: PushNotifier.subscribe(s, body.endpoint, body.keys.p256dh, body.keys.auth, s["now"]),
+        )
+
+    @app.post("/api/push/unsubscribe")
+    def push_unsubscribe(body: PushUnsubscribeInput, request: Request, p=Depends(owner)):
+        return command(request, p, lambda s, db: PushNotifier.unsubscribe(s, body.endpoint))
 
     @app.get("/api/subagents")
     def subagents(p=Depends(principal)):
@@ -1206,6 +1240,9 @@ def create_app(data_dir=None, passwords=None):
         def frontend(path: str):
             if path.startswith(("api/", "health/")):
                 raise ApiError(404, "NOT_FOUND", "Endpoint not found.")
+            static = (dist / path).resolve()
+            if path and static.is_file() and dist.resolve() in static.parents:
+                return FileResponse(static)
             return FileResponse(dist / "index.html")
 
     return app

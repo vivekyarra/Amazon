@@ -1,0 +1,32 @@
+{
+  "checked_at": "2026-10-20T11:32:45.051818+00:00",
+  "url": "https://100-49-183-59.sslip.io/mcp/",
+  "mcp_initialize_protocolVersion": "2025-11-25",
+  "tool": "compile_ambient_commitment",
+  "utterance": "I will call Mom in 3 hours.",
+  "contract_id": "psc_gen_8bc1043131e7",
+  "eventbridge_schedules": [
+    {
+      "name": "dirl-1967bc70337b9092e74835657de6763776b877aca757d2bc",
+      "expression": "at(2026-10-20T14:07:03)",
+      "action_after_completion": "DELETE",
+      "target_is_wake_queue": true,
+      "payload_kind": "T25"
+    },
+    {
+      "name": "dirl-6ddb2702c8e0c9b7b39ac2a381014cb1dc91153e6f1e65f9",
+      "expression": "at(2026-10-20T14:32:03)",
+      "action_after_completion": "DELETE",
+      "target_is_wake_queue": true,
+      "payload_kind": "DEADLINE"
+    },
+    {
+      "name": "dirl-7c69ec3296376c161d8998e178a9f18b66840689346c5e18",
+      "expression": "at(2026-10-20T13:32:03)",
+      "action_after_completion": "DELETE",
+      "target_is_wake_queue": true,
+      "payload_kind": "T60"
+    }
+  ],
+  "note": "Owner household (wall clock). Schedules only wake the reconciler via SQS; they cannot supply evidence."
+}
