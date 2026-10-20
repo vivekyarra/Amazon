@@ -9,6 +9,7 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request, Depends
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response, StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from mcp.server.fastmcp import FastMCP
@@ -209,6 +210,12 @@ def create_app(data_dir=None, passwords=None):
     @app.exception_handler(ApiError)
     async def api_error(request, error):
         return error_response(error)
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request, error):
+        return error_response(
+            ApiError(422, "VALIDATION_FAILED", "Request fields are invalid or unsupported.")
+        )
 
     @app.get("/health/live")
     def live():
@@ -448,7 +455,11 @@ def create_app(data_dir=None, passwords=None):
             row = store.db.execute(
                 "SELECT * FROM artifacts WHERE id=? AND household=?", (eid, p["household"])
             ).fetchone()
-        if not row or hashlib.sha256(row["data"]).hexdigest() != row["sha256"]:
+        if (
+            not row
+            or hashlib.sha256(row["data"]).hexdigest() != row["sha256"]
+            or hashlib.sha256(row["data"]).hexdigest() != metadata["sha256_original"]
+        ):
             raise ApiError(409, "EVIDENCE_TAMPERED", "The artifact failed its integrity check.")
         return Response(row["data"], media_type=row["mime"], headers={"Cache-Control": "private, no-store"})
 
@@ -489,7 +500,7 @@ def create_app(data_dir=None, passwords=None):
             if session["status"] != "RUNNING":
                 return
             index = session.get("fixture_frame_index", 0)
-            frames = vision.cycle_frames()
+            frames = vision.cycle_frames(offset=(index // 9) * 3)
             frame = frames[index % len(frames)]
             session["fixture_frame_index"] = index + 1
             ts = max(0, session["last_timestamp_ms"]) + 160

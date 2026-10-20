@@ -57,7 +57,7 @@ test("canonical full day updates shared ledger, keeps uncertainty and verifies 1
     page.getByRole("heading", { name: "A package moved. Was it authorized?" }),
   ).toBeVisible();
   await expect(
-    page.getByText("0s clip available.", { exact: false }),
+    page.getByText("15s clip available.", { exact: false }),
   ).toBeVisible();
   await page.screenshot({
     path: "artifacts/screenshots/03-incident-review.png",

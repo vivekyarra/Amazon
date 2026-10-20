@@ -14,6 +14,8 @@
 
 **Repository:** https://github.com/vivekyarra/Amazon
 
+**Local browser recording:** [40-second actual synthetic workflow](demo/browser-demo.mp4). It is not native Fire TV footage and is not an uploaded public submission.
+
 **Public video:** PENDING. An actual under-three-minute public YouTube/Vimeo recording is still required. A generated browser recording is not native Fire TV proof. Follow the storyboard below and include the actual chosen track runtime. Do not upload private passwords, tokens, addresses, household data or third-party footage without rights.
 
 | Time | Shot |

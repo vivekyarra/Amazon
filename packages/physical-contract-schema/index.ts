@@ -59,6 +59,8 @@ export interface Incident {
   quality: string;
   packet: {
     removal_evidence_id: string;
+    source_clip_evidence_id?: string;
+    annotated_clip_evidence_id?: string;
     person_crop_evidence_id: string;
     capture_gaps: string[];
   };

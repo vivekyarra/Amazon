@@ -109,10 +109,18 @@ def pose_update(session, frame_id, timestamp_ms, landmarks):
     if any(len(p) != 4 or not all(math.isfinite(v) for v in p) for p in landmarks):
         raise ValueError("Expected finite x, y, z, visibility landmarks")
     signature = hashlib.sha256(str(landmarks).encode()).hexdigest()
-    # Consecutive unchanged frames cannot cause phase transitions.
-    if frame_id == session.get("last_frame_id") or signature == session.get("last_signature"):
-        session["last_timestamp_ms"] = timestamp_ms
+    # Reject previously observed frames even when a client changes the timestamp/ID.
+    # This also prevents looping one prerecorded repetition into fifteen proofs.
+    seen_ids = session.setdefault("seen_frame_ids", [])
+    seen_hashes = session.setdefault("seen_signatures", [])
+    if frame_id in seen_ids or signature in seen_hashes:
+        session.update(last_timestamp_ms=timestamp_ms, phase="STANDING", stable=0, quality="DUPLICATE_FRAME")
         return False
+    seen_ids.append(frame_id)
+    seen_hashes.append(signature)
+    if len(seen_ids) > 900:
+        del seen_ids[:-900]
+        del seen_hashes[:-900]
     session.update(last_frame_id=frame_id, last_signature=signature, last_timestamp_ms=timestamp_ms)
     points = [landmarks[i] for i in (23, 25, 27, 24, 26, 28)]
     if min(p[3] for p in points) < 0.7:
@@ -169,6 +177,95 @@ def extract_marker_pose(frame):
     return landmarks
 
 
-def cycle_frames(half=False):
+def cycle_frames(half=False, offset=0):
     angles = [178, 145, 115, 88, 85, 120, 150, 173, 178] if not half else [178, 145, 120, 125, 150, 173, 178]
-    return [synthetic_pose_frame(a, i % 2) for i, a in enumerate(angles)]
+    return [synthetic_pose_frame(a, offset + i % 3) for i, a in enumerate(angles)]
+
+
+def synthetic_removal_video():
+    """Generate and preserve a real 15s synthetic video plus a derived annotated clip.
+
+    This uses our own geometric content only. It is never a Ring recording.
+    """
+    return _cached_removal_video()
+
+
+from functools import lru_cache  # noqa: E402
+
+
+@lru_cache(maxsize=1)
+def _cached_removal_video():
+    import shutil
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    if not shutil.which("ffmpeg"):
+        return None
+    source = []
+    annotated = []
+    for index in range(150):
+        progress = index / 149
+        if progress < 0.35:
+            parcel_x = 280
+            person_x = 450 - (progress / 0.35) * 170
+        else:
+            parcel_x = 280 - ((progress - 0.35) / 0.65) * 210
+            person_x = parcel_x
+        frame = scene(parcel_x, person_x)
+        source.append(frame.tobytes())
+        derived = frame.copy()
+        for name, (x, y, w, h) in detect(frame).items():
+            cv2.rectangle(derived, (x, y), (x + w, y + h), (160, 245, 185), 2)
+            cv2.putText(derived, name, (x, max(40, y - 7)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (180, 240, 200), 1)
+        cv2.putText(
+            derived,
+            f"T+{index / 10:04.1f}s / synthetic trajectory",
+            (15, 345),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (200, 225, 210),
+            1,
+        )
+        annotated.append(derived.tobytes())
+    results = []
+    with tempfile.TemporaryDirectory(prefix="done-irl-video-") as temp:
+        for label, frames in [("original", source), ("annotated", annotated)]:
+            path = Path(temp) / (label + ".webm")
+            result = subprocess.run(
+                [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-y",
+                    "-f",
+                    "rawvideo",
+                    "-pixel_format",
+                    "bgr24",
+                    "-video_size",
+                    "640x360",
+                    "-framerate",
+                    "10",
+                    "-i",
+                    "pipe:0",
+                    "-an",
+                    "-c:v",
+                    "libvpx",
+                    "-deadline",
+                    "realtime",
+                    "-cpu-used",
+                    "5",
+                    "-b:v",
+                    "400k",
+                    str(path),
+                ],
+                input=b"".join(frames),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=45,
+            )
+            if result.returncode:
+                raise RuntimeError("Synthetic video encoding failed; evidence was not committed.")
+            results.append(path.read_bytes())
+    return tuple(results)

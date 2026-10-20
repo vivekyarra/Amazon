@@ -26,7 +26,7 @@ All 55 original P0 gates are retained. VERIFIED rows refer only to reproducible 
 | [P0-020](product-spec.md) | BLOCKED | Generated marker pixels processed; real-world video deposit detection not implemented. |
 | [P0-021](product-spec.md) | VERIFIED | `test_F02_deposit_starts_one_watchdog_without_completion` — Synthetic local development workflow; no live/device inference |
 | [P0-022](product-spec.md) | IMPLEMENTED_UNVERIFIED | Logical job persists; no real Ring event consumer/history recovery yet. |
-| [P0-023](product-spec.md) | BLOCKED | Real synthetic snapshots/crop/trajectory exist; no removal clip or live detection. |
+| [P0-023](product-spec.md) | BLOCKED | 15-second generated source/annotated videos and snapshots/crop/trajectory exist; live Ring detection remains blocked. |
 | [P0-024](product-spec.md) | IMPLEMENTED_UNVERIFIED | Local blob hashes/chain tested; no original/derived encrypted cloud media pipeline. |
 | [P0-025](product-spec.md) | VERIFIED | `test_F16_retained_parcel_owner_pickup` — Synthetic local development workflow; no live/device inference |
 | [P0-026](product-spec.md) | VERIFIED | `test_pixel_detector_negative_cases` — Synthetic local development workflow; no live/device inference |
@@ -47,12 +47,12 @@ All 55 original P0 gates are retained. VERIFIED rows refer only to reproducible 
 | [P0-041](product-spec.md) | VERIFIED | `test_accessible_override_does_not_falsely_verify` — Synthetic local development workflow; no live/device inference |
 | [P0-042](product-spec.md) | VERIFIED | `canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles` — Synthetic local development workflow; no live/device inference |
 | [P0-043](product-spec.md) | VERIFIED | `test_three_replays_semantically_deterministic` — Synthetic local development workflow; no live/device inference |
-| [P0-044](product-spec.md) | IMPLEMENTED_UNVERIFIED | F01–F24 mapped; F09 clip, F17 human-video and F24 native runtime remain incomplete. |
+| [P0-044](product-spec.md) | IMPLEMENTED_UNVERIFIED | F01–F24 mapped; F17 human-video and F24 native runtime remain incomplete. |
 | [P0-045](product-spec.md) | IMPLEMENTED_UNVERIFIED | Many negative unit/API tests pass; no real worker/queue/camera/storage recovery system. |
 | [P0-046](product-spec.md) | IMPLEMENTED_UNVERIFIED | Local synthetic privacy/auth controls tested; backup retention/encryption/live revocation incomplete. |
 | [P0-047](product-spec.md) | BLOCKED | Engineering CI supplied; required Fire TV device/simulator tests absent. |
 | [P0-048](product-spec.md) | BLOCKED | Runbook/screenshots supplied; real track footage and submission artifacts incomplete. |
-| [P0-049](product-spec.md) | IMPLEMENTED_UNVERIFIED | Local README/env/license/ops supplied; Docker and AWS deployment not validated. |
+| [P0-049](product-spec.md) | IMPLEMENTED_UNVERIFIED | Local README/env/license/ops and container replay/restart validated; AWS deployment remains unverified. |
 | [P0-050](product-spec.md) | BLOCKED | Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending. |
 | [P0-051](product-spec.md) | BLOCKED | No public under-three-minute video URL or required device footage. |
 | [P0-052](product-spec.md) | IMPLEMENTED_UNVERIFIED | Actual tools have feedback; Amazon live tool feedback and mini-challenge links pending. |

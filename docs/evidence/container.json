@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "image": "sha256:d424f39c42ec5f1e92adec8a2870aff60b7c246aabcfed528d04907de9a36eb9",
+  "contracts": {
+    "drinks": "ACTIVE",
+    "sister": "MISSED",
+    "teacher": "VERIFIED",
+    "squats": "VERIFIED",
+    "parcel": "DISPUTED"
+  },
+  "rep_count": 15,
+  "restart_durable": true,
+  "source": "SYNTHETIC",
+  "official_dispatches": 0
+}

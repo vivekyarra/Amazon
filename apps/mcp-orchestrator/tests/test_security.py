@@ -153,3 +153,14 @@ def test_production_mode_fails_closed(tmp_path, monkeypatch):
     monkeypatch.setenv("DEMO_MODE", "false")
     with pytest.raises(RuntimeError, match="not certified"):
         create_app(tmp_path, {"owner": "test"})
+
+
+def test_validation_errors_have_trace_and_do_not_echo_inputs(client):
+    r = client.post(
+        "/api/auth/login",
+        json={"username": "x", "password": "private-password", "secret_extra": "do-not-echo"},
+    )
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "VALIDATION_FAILED"
+    assert r.json()["trace_id"]
+    assert "private-password" not in r.text and "do-not-echo" not in r.text

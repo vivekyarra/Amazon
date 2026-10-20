@@ -11,15 +11,16 @@ concurrency:
 jobs:
   backend:
     name: Domain, security and MCP
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.11.0"
           enable-cache: true
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg libgl1
       - run: uv sync --frozen
-      - run: uv run ruff check apps/mcp-orchestrator
+      - run: uv run ruff check apps/mcp-orchestrator apps/vision-webrtc-engine scripts
       - run: uv run pytest -q --junitxml=artifacts/backend-results.xml
       - uses: actions/upload-artifact@v4
         if: always()
@@ -28,7 +29,7 @@ jobs:
           path: artifacts/backend-results.xml
   browser:
     name: Build and browser journeys
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,6 +39,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.11.0"
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg libgl1
       - run: uv sync --frozen
       - run: npm ci --no-audit --no-fund
       - run: npm run build
@@ -52,7 +54,7 @@ jobs:
             artifacts/screenshots/
   native-build:
     name: Fire OS APK build (device validation separate)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -71,3 +73,19 @@ jobs:
         with:
           name: fire-os-debug-apk
           path: apps/firetv-command-hud/app/build/outputs/apk/debug/*.apk
+  container:
+    name: Container build and durable replay
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.0"
+      - run: uv sync --frozen
+      - run: docker build -f infra/local/Dockerfile -t done-irl:validation .
+      - run: uv run python scripts/smoke-container.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-evidence
+          path: artifacts/container/

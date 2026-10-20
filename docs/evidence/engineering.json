@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-20",
+  "source_scope": "SYNTHETIC_DEVELOPMENT_DEMO",
+  "tests": {
+    "backend": {
+      "tests": 65,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "browser": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "native_apk_build": "PASS",
+  "native_apk_sha256": "da46ed683209b8ecbf04620be2718736eb87e2230e3e163935343057eb10ad16",
+  "fire_tv_runtime": "BLOCKED_NOT_TESTED",
+  "browser_demo": {
+    "path": "docs/demo/browser-demo.mp4",
+    "duration_seconds": 40.2,
+    "sha256": "bef9d9662e9c1fc44d3e4b43d4e21e4521c1766a9f8868115088b1db4cc400eb",
+    "native_runtime_proof": false
+  },
+  "release": "NOT_COMPLETE"
+}

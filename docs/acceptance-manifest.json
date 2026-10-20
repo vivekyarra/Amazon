@@ -413,7 +413,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Real synthetic snapshots/crop/trajectory exist; no removal clip or live detection."
+        "15-second generated source/annotated clips, snapshots/crop/trajectory implemented; no live Ring detection or recording."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -793,7 +793,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "F01\u2013F24 mapped; F09 clip, F17 human-video and F24 native runtime remain incomplete."
+        "F01\u2013F24 mapped; actual human-video repetitions and native device navigation remain unverified."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null
@@ -883,7 +883,7 @@
       "evidence": null,
       "scope": "Synthetic local development workflow; no live/device inference",
       "blockers": [
-        "Local README/env/license/ops supplied; Docker and AWS deployment not validated."
+        "Local README/env/license/ops and container replay/restart validated; AWS production deployment remains unverified."
       ],
       "reviewer": "implementation automated checks; independent review pending",
       "verified_at": null

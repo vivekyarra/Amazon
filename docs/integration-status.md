@@ -10,7 +10,7 @@ Checked 2026-10-20. These labels describe observed capabilities, never adapter f
 | Alexa+ account/device | NOT_CONNECTED | No actual Alexa+ connection/voice delivery verified |
 | Ring camera/API account | BLOCKED | No linked camera, token or runtime API proof; live relay/decoder not implemented |
 | Ring-like porch/threshold replay | SIMULATED_VERIFIED | Actual generated marker pixels segmented/tracked by OpenCV; not an official Ring simulator |
-| Vision human pose | BLOCKED | Optional MediaPipe worker supplied; model fetched from official host; native runtime dependency/real human fixture validation outstanding |
+| Vision human pose | BLOCKED | Optional MediaPipe worker supplied; model fetched from official host; native runtime libraries resolved through authenticated Debian package metadata; actual CPU inference on 20 nonhuman frames counted zero reps; a real human 15-rep fixture is still outstanding |
 | Fire OS client build | SIMULATED_VERIFIED | Native debug APK compiled; CI build evidence tracked separately |
 | Actual Fire TV runtime | BLOCKED | No install/launch/device recording; web preview is not a Fire OS/Vega runtime |
 | Web TV/companion | SIMULATED_VERIFIED | Shared authenticated ledger, inbox, D-pad web preview and mobile browser tests |

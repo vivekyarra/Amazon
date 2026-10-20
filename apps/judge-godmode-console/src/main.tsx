@@ -1573,6 +1573,23 @@ function App() {
                         DEMO / SYNTHETIC · {fmt(incident.detected_at)} IST
                       </span>
                     </div>
+                    {incident.packet.source_clip_evidence_id && (
+                      <div className="incident-video">
+                        <video
+                          controls
+                          preload="metadata"
+                          aria-label="15-second synthetic removal clip"
+                          src={
+                            "/api/evidence/" +
+                            incident.packet.source_clip_evidence_id
+                          }
+                        />
+                        <p>
+                          15-second generated source clip · DEMO / SYNTHETIC ·
+                          no live Ring recording
+                        </p>
+                      </div>
+                    )}
                     <div className="incident-copy">
                       <h3>Observation, without accusation.</h3>
                       <p>
@@ -1584,11 +1601,15 @@ function App() {
                       <div className="quality-notice">
                         <Video size={19} />
                         <div>
-                          <strong>Evidence incomplete</strong>
+                          <strong>
+                            {incident.clip_actual_duration_seconds
+                              ? "Synthetic video preserved"
+                              : "Evidence incomplete"}
+                          </strong>
                           <p>
                             {incident.clip_actual_duration_seconds}s clip
-                            available. Synthetic snapshots only; no live Ring
-                            recording or 15-second clip is claimed.
+                            available. Synthetic source and annotated artifacts
+                            are preserved. No live Ring recording is claimed.
                           </p>
                         </div>
                       </div>
@@ -1678,7 +1699,10 @@ function App() {
                         <dt>Source</dt>
                         <dd>Calibrated generated pixels</dd>
                         <dt>Coverage</dt>
-                        <dd>Snapshots only · 0-second clip</dd>
+                        <dd>
+                          {incident.clip_actual_duration_seconds}-second
+                          synthetic clip
+                        </dd>
                         <dt>Receiver</dt>
                         <dd>DEMO_RECEIVER_ONLY</dd>
                         <dt>Official dispatches</dt>
@@ -1904,7 +1928,10 @@ function App() {
               and generates no official case number.
             </p>
             <code className="hash">{incident?.manifest_hash}</code>
-            <p>Coverage: 0-second clip. Synthetic snapshots only.</p>
+            <p>
+              Coverage: {incident?.clip_actual_duration_seconds}-second
+              synthetic clip. No live Ring footage.
+            </p>
             <label>
               Type APPROVE SIMULATED REPORT
               <input

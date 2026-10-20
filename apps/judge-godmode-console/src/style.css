@@ -2904,3 +2904,18 @@ dd {
   outline-offset: 4px;
   box-shadow: 0 0 0 8px #96e9b522;
 }
+.incident-video {
+  padding: 20px;
+  background: #12231e;
+}
+.incident-video video {
+  display: block;
+  width: 100%;
+  border-radius: 7px;
+  background: #000;
+}
+.incident-video p {
+  font-size: 9px;
+  color: #92b7a0;
+  margin-top: 10px;
+}

@@ -115,7 +115,18 @@ def revise(s, c, status, reason, evidence_id=None):
     )
 
 
-def add_evidence(s, db, household, c, kind, body, mime="application/json", provenance="SYNTHETIC_SENSOR"):
+def add_evidence(
+    s,
+    db,
+    household,
+    c,
+    kind,
+    body,
+    mime="application/json",
+    provenance="SYNTHETIC_SENSOR",
+    duration_ms=0,
+    parent_evidence_id=None,
+):
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Evidence collection is paused.")
     evidence_id = "ev_" + uuid.uuid4().hex
@@ -134,7 +145,8 @@ def add_evidence(s, db, household, c, kind, body, mime="application/json", prove
         sha256_original=sha,
         previous_hash=previous,
         mime=mime,
-        media_duration_ms=0,
+        media_duration_ms=duration_ms,
+        parent_evidence_id=parent_evidence_id,
         consent_grant_id="demo-explicit-consent",
         retention_expires_at=(datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
         decision="VALIDATED",
@@ -229,14 +241,25 @@ def compile_bee(s, bee: BeeInput):
         "bee.utterance.received",
         dict(source_event_id=bee.event_id, utterance=bee.utterance, speaker=bee.speaker),
     )
-    text = bee.utterance.lower()
+    text = bee.utterance.lower().replace("’", "'")
     if not re.search(
         r"\b(i(?:'ll| will| promise)|i promised|i need to|i should|can you|please|bring)\b", text
     ):
         return []
     if re.search(r"\b(called|already|finished|ignore .*instructions|mark .*verified)\b", text):
         return []
-    uncertain = bee.speaker != "SELF" or not re.search(r"\bi(?:'ll| will| promise| promised)\b", text)
+    if re.search(r"\b(i will not|i won't|i cannot|i can't|do not|don't)\b", text):
+        emit(
+            s,
+            "commitment.negation_observed",
+            {"source_event_id": bee.event_id, "decision": "NO_NEW_OBLIGATION"},
+        )
+        return []
+    uncertain = (
+        bee.speaker != "SELF"
+        or not re.search(r"^i(?:'ll| will| promise| promised)\b", text)
+        or bool(re.search(r"\b(if|maybe|might)\b", text))
+    )
     specs = [
         (
             "drinks",
@@ -322,7 +345,8 @@ def alert(s, c, kind, message, action=None):
         at=s["now"],
         source_mode=MODE,
         provider="AUTHENTICATED_COMPANION",
-        delivered=True,
+        delivery_status="STORED_FOR_COMPANION",
+        device_delivery_verified=False,
     )
     s["alerts"].append(item)
     emit(s, "commitment.escalation_dispatched", item)
@@ -459,7 +483,9 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
 
 def one_rep(s, db, household, half=False):
     studio_start(s)
-    for i, frame in enumerate(vision.cycle_frames(half)):
+    cycle_index = s["studio"].get("fixture_cycle_index", 0)
+    s["studio"]["fixture_cycle_index"] = cycle_index + 1
+    for i, frame in enumerate(vision.cycle_frames(half, offset=cycle_index * 3)):
         ts = s["studio"]["last_timestamp_ms"] + 160
         pose_frame(s, db, household, f"frame_{ts}_{i}", ts, vision.extract_marker_pose(frame))
 
@@ -573,13 +599,37 @@ def run_scenario(s, db, household, stage, branch):
         ev = add_evidence(s, db, household, c, "REMOVAL_FRAME", vision.png(frames[-1]), "image/png")
         crop = frames[-1][80:270, 45:110]
         crop_ev = add_evidence(s, db, household, c, "PERSON_CROP", vision.png(crop), "image/png")
+        video = vision.synthetic_removal_video()
+        source_clip = None
+        annotated_clip = None
+        if video:
+            source_clip = add_evidence(
+                s, db, household, c, "REMOVAL_CLIP_ORIGINAL", video[0], "video/webm", duration_ms=15000
+            )
+            annotated_clip = add_evidence(
+                s,
+                db,
+                household,
+                c,
+                "REMOVAL_CLIP_DERIVED",
+                video[1],
+                "video/webm",
+                duration_ms=15000,
+                parent_evidence_id=source_clip,
+            )
         packet = {
             "deposit_evidence_ids": c["evidence_ids"][:],
             "removal_evidence_id": ev,
+            "source_clip_evidence_id": source_clip,
+            "annotated_clip_evidence_id": annotated_clip,
             "person_crop_evidence_id": crop_ev,
             "trajectory": [[280, 265], [160, 265], [70, 265]],
             "coordinate_system": "SYNTHETIC_PIXELS",
-            "capture_gaps": ["No live Ring footage. Synthetic snapshots only; 15-second clip unavailable."],
+            "capture_gaps": [
+                "No live Ring footage. Generated 15-second synthetic clip."
+                if video
+                else "No live Ring footage; encoder unavailable, snapshots only."
+            ],
         }
         incident = dict(
             incident_id="inc_parcel",
@@ -592,8 +642,8 @@ def run_scenario(s, db, household, stage, branch):
             revision=1,
             receipt=None,
             approval=None,
-            clip_actual_duration_seconds=0,
-            quality="EVIDENCE_INCOMPLETE",
+            clip_actual_duration_seconds=15 if video else 0,
+            quality="SYNTHETIC_CLIP_AVAILABLE" if video else "EVIDENCE_INCOMPLETE",
             destination="DEMO_RECEIVER_ONLY",
         )
         s["incidents"].append(incident)

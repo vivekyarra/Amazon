@@ -15,12 +15,12 @@ try {
  await page.getByRole('button',{name:'Open mission control'}).click();
  await page.getByRole('heading',{name:'Mission control.'}).waitFor();
  await Promise.all([page.waitForResponse(r=>r.url().endsWith('/api/admin/reset')),page.getByRole('button',{name:'Reset day'}).click()]);
- const capture=(async()=>{while(capturing){const path=`${directory}/frames/frame-${String(frames.length).padStart(5,'0')}.jpg`;await page.screenshot({path,type:'jpeg',quality:82});frames.push({path,at:Date.now()});await page.waitForTimeout(240);}})();
+ const capture=(async()=>{try { while(capturing){const path=`${directory}/frames/frame-${String(frames.length).padStart(5,'0')}.jpg`;await page.screenshot({path,type:'jpeg',quality:82});frames.push({path,at:Date.now()});await new Promise(r=>setTimeout(r,240));}} catch(error) { if(capturing) throw error; } })();
  await page.waitForTimeout(1800);
  await page.getByRole('button',{name:'Run the full day',exact:true}).click();
- await page.getByText('Promise kept. Evidence saved.',{exact:true}).waitFor({timeout:90000});
+ await page.getByText('Promise kept. Evidence saved.',{exact:true}).waitFor({timeout:90000}); console.log('Recorded canonical day / pose completion');
  await page.waitForTimeout(1800);
- await page.getByRole('button',{name:'Evidence & incidents',exact:true}).click();
+ await page.getByRole('button',{name:/^Evidence & incidents/}).click();
  await page.waitForTimeout(2200);
  await page.getByRole('button',{name:'Review evidence / Prepare report'}).click();
  await page.waitForTimeout(1500);
@@ -40,4 +40,4 @@ try {
  const result=spawnSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',directory+'/frames.ffconcat','-vf','scale=1440:1000','-c:v','libx264','-pix_fmt','yuv420p','-movflags','+faststart',directory+'/done-irl-browser-demo.mp4'],{stdio:'inherit'});
  if(result.status!==0)throw new Error('Video encoding failed');
  console.log(`Captured ${frames.length} real browser frames. This is synthetic-mode web footage, not Fire TV runtime proof.`);
-} finally {capturing=false;await browser.close();}
+} catch(error) { console.error("Browser capture failed:", error.message); process.exitCode=1; } finally {capturing=false;await new Promise(r=>setTimeout(r,350));await browser.close();}

@@ -1,11 +1,12 @@
 # Implementation progress
 
-2026-10-20. Release target: **FULL_ORIGINAL_VISION_COMPLETE**. Current verdict: **NOT COMPLETE**.
+20 October 2026. Release target: **FULL_ORIGINAL_VISION_COMPLETE**. Verdict: **NOT COMPLETE**.
 
-- IMPLEMENTED_UNVERIFIED: common durable ledger, compiler, schedules, evidence policies, incidents, threshold, synthetic pixel/pose workflow, authenticated web/companion/TV preview.
-- VERIFIED: initial 48 domain/API/security tests passed; external SDK MCP handshake, discovery, compilation and shared-state read passed after correcting subprocess import configuration.
-- IN_PROGRESS: expanded test suite, browser journeys, native Fire OS APK build, operational docs and release manifest.
-- BLOCKED: no Bee/Ring/AWS bindings or connected TV runtime; platform documentation and GitHub API access currently denied by network proxy; original device behaviors and hosted CI cannot yet be certified.
-- No official report dispatcher, native Bee haptics, earbud whisper, or cross-app lock is claimed.
+- VERIFIED (synthetic/local scope): shared transactional household ledger; strict persisted schemas; commitment compiler with ambiguity/negation/DST tests; deduplicated teacher and sister schedules; deposit-versus-mismatch geometry; durable logical PorchWatchdog; owner-reviewed incident/export flow; original/derived 15-second generated video and hash chain; uncertain threshold; 14-versus-15 full unique pose cycles; repeat-frame replay rejection; authenticated companion; four browser journeys; external MCP SDK transport/client; native APK compilation and repeat build.
+- Current test evidence: **65 Python tests passed**; **4 browser journeys passed**; production TypeScript/Vite build passed; Fire OS Gradle build passed. Local release result and CI artifacts are generated under ignored artifacts/.
+- VERIFIED (limited optional model check): official MediaPipe lite model performed actual CPU inference on twenty generated nonhuman frames, with zero reps. Positive human exercise verification remains unproven.
+- VERIFIED: container build, full replay, private export, process restart durability and isolated teardown; forty-second real browser capture retained under docs/demo.
+- IN_PROGRESS: promotion of the exact green development commit to main. See hosted CI for the latest commit checks.
+- BLOCKED / IMPLEMENTED_UNVERIFIED: actual Bee/Ring/Alexa+ device connections; Ring secure video relay/general scene model; actual Fire OS install/launch/playback; human 15-rep footage; AWS production implementation/deployment; required public video and independent submission/release review. Credentials/device testing were deferred by the owner.
 
-Next: finish browser and APK checks, capture evidence, push development branch, verify hosted checks before any main promotion.
+All 55 P0 items remain in docs/requirements-traceability.md and docs/acceptance-manifest.json. Twenty-four narrow local/synthetic requirements have test references; this does not certify the remaining original-device capabilities. No official police filing, native Bee haptic/earbud delivery, or cross-app TV control is claimed.

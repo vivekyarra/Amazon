@@ -2,13 +2,13 @@
 
 The shared vision engine is `apps/mcp-orchestrator/done_irl/vision.py`; placing policy-critical processing in the same Python package keeps replay and API state transitions consistent. OpenCV really segments generated frame pixels, follows parcel positions across frames, extracts marker coordinates and evaluates knee angles. It is a deterministic geometric fixture engine, not a trained real-world person/parcel model.
 
-`process-video.py` is a separate optional MediaPipe worker for consented human footage. It requires an official Pose Landmarker model, extra dependency installation, and a real validation recording. It outputs 33-landmark observations and counted cycles; it does not bypass the service's authorization/evidence policy or claim a Ring connection.
+`process-video.py` is a separate optional MediaPipe worker for consented human footage. It requires an official Pose Landmarker model, extra dependency installation, system `libgles2`/`libegl1`, and a real validation recording. The worker was also exercised against a generated 20-frame no-human negative fixture using the official lite model; it decoded 20 frames and counted zero reps. This does not validate 15 actual human repetitions. It outputs 33-landmark observations and counted cycles; it does not bypass the service's authorization/evidence policy or claim a Ring connection.
 
 ```bash
 uv sync --frozen --extra human-pose
 uv run --extra human-pose python apps/vision-webrtc-engine/process-video.py \
   --model /private/pose_landmarker.task --input /private/consented-squats.mp4 \
-  --output artifacts/human-pose.json
+  --output artifacts/human-pose.json --provenance CONSENTED_RECORDED
 ```
 
 Keep private footage and generated outputs outside Git. Obtain the model from the official [MediaPipe Pose Landmarker documentation](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker/python), verify its published integrity metadata where provided, and record the local model SHA-256 with the test results. Do not use third-party videos without permission. No reference video or live camera was available during the initial synthetic implementation.

@@ -8,9 +8,11 @@ DONE/IRL connects the morning promise, the parcel on the porch, the meeting you 
 
 ![Mission control — actual synthetic web workspace](docs/images/mission-control.png)
 
+[Watch the actual 40-second synthetic browser demo](docs/demo/browser-demo.mp4) · [Validation evidence](docs/evidence/engineering.json)
+
 ## Run locally
 
-Requires Linux/macOS, Python 3.12+, [uv](https://docs.astral.sh/uv/), Node.js 22.12+ (24 recommended), and npm. No personal camera, cloud account, Docker, or device token is required for the synthetic workflow.
+Requires Linux/macOS, Python 3.12+, [uv](https://docs.astral.sh/uv/), Node.js 22.12+ (24 recommended), and npm. Linux OpenCV requires the standard GL/glib runtime (`libgl1`, `libglib2.0-0` on Debian/Ubuntu); the optional MediaPipe worker also needs `libgles2`. No personal camera, cloud account, Docker, or device token is required for the synthetic workflow.
 
 ```bash
 ./scripts/setup-local.sh

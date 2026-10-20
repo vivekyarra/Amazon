@@ -3,17 +3,20 @@
 import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
 import cv2
-import mediapipe as mp
+
+os.environ.setdefault("MPLCONFIGDIR", str(Path(__file__).resolve().parents[2] / ".local" / "matplotlib"))
+import mediapipe as mp  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mcp-orchestrator"))
 from done_irl.vision import pose_update  # noqa: E402
 
 
-def process(model_path, input_path, output_path):
+def process(model_path, input_path, output_path, provenance):
     model = Path(model_path)
     source = Path(input_path)
     if not model.is_file() or not source.is_file():
@@ -67,7 +70,7 @@ def process(model_path, input_path, output_path):
     capture.release()
     output = {
         "schema_version": "1.0",
-        "source": "CONSENTED_RECORDED_VIDEO",
+        "source": provenance,
         "source_mode": "NOT_CONNECTED",
         "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
         "video_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
@@ -89,5 +92,6 @@ if __name__ == "__main__":
     parser.add_argument("--model", required=True)
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--provenance", choices=["CONSENTED_RECORDED", "SYNTHETIC"], required=True)
     args = parser.parse_args()
-    process(args.model, args.input, args.output)
+    process(args.model, args.input, args.output, args.provenance)

@@ -6,7 +6,7 @@ Run `scripts/setup-local.sh`, then `scripts/start-local.sh` from the repository.
 
 Each cloud task is already isolated: use the existing checkout; no extra Git worktree is required. Live processes do not survive environment publication/restoration, so restart the service in each task. Dependency caches and the built frontend may survive; validate them before reuse.
 
-## Container pathway (configuration supplied; execution not yet verified)
+## Container pathway (build, full replay and restart verified)
 
 ```bash
 docker compose -f infra/local/compose.yml up --build -d
@@ -16,7 +16,7 @@ docker compose -f infra/local/compose.yml down
 # Add --volumes only when deliberately deleting ALL local demo data.
 ```
 
-Docker is not required and was not available for the initial validation. Treat these files as deployment configuration requiring a real container build check. The image exposes only the synthetic mode; it is not an AWS deployment. Put an owner-controlled TLS reverse proxy in front of any remote demo, restrict access, set ALLOWED_ORIGINS to the actual origin, and protect passwords. Do not expose the judge workspace anonymously.
+Docker is optional. The image was built and tested with all six scenarios, fifteen distinct pose cycles, evidence export, service restart, persisted contracts and teardown. See `docs/evidence/container.json`. In the supplied cloud proxy environment, use `python scripts/build-container-cloud.py` to preserve the proxy route and public CA trust; then `.venv/bin/python scripts/smoke-container.py` validates an isolated container and removes only its own container/volume. Standard Compose can be used on a normal network. The image exposes only the synthetic mode; it is not an AWS deployment. Put an owner-controlled TLS reverse proxy in front of any remote demo, restrict access, set ALLOWED_ORIGINS to the actual origin, and protect passwords. Do not expose the judge workspace anonymously.
 
 ## Fire OS client
 

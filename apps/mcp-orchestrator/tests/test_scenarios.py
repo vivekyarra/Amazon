@@ -120,8 +120,8 @@ def test_F09_F21_removal_packet_hashes_and_dedupe(client, post):
     s = stage(post, 4, "unknown")
     assert len(s["incidents"]) == 1
     assert s["incidents"][0]["status"] == "AWAITING_HUMAN_DECISION"
-    assert s["incidents"][0]["clip_actual_duration_seconds"] == 0
-    assert s["incidents"][0]["quality"] == "EVIDENCE_INCOMPLETE"
+    assert s["incidents"][0]["clip_actual_duration_seconds"] == 15
+    assert s["incidents"][0]["quality"] == "SYNTHETIC_CLIP_AVAILABLE"
     post("/admin/scenarios/4/run", {"branch": "unknown"}, status=409)
     assert len(state(client)["incidents"]) == 1
     for item in s["evidence"]:
@@ -368,3 +368,70 @@ def test_evidence_from_wrong_contract_cannot_complete_a_promise(app, post):
     c = e.contract(s, "squats")
     with pytest.raises(ApiError):
         e.revise(s, c, "VERIFIED", "An arbitrary image is not squat proof.", s["evidence"][0]["evidence_id"])
+
+
+def test_generated_video_duration_and_original_derived_provenance(tmp_path, post, client):
+    import cv2
+
+    stage(post, 2)
+    s = stage(post, 4, "unknown")
+    inc = s["incidents"][0]
+    assert inc["clip_actual_duration_seconds"] == 15
+    source_id = inc["packet"]["source_clip_evidence_id"]
+    derived_id = inc["packet"]["annotated_clip_evidence_id"]
+    source = next(v for v in s["evidence"] if v["evidence_id"] == source_id)
+    derived = next(v for v in s["evidence"] if v["evidence_id"] == derived_id)
+    assert derived["parent_evidence_id"] == source_id
+    assert source["sha256_original"] != derived["sha256_original"]
+    video = client.get("/api/evidence/" + source_id)
+    assert video.headers["content-type"] == "video/webm"
+    path = tmp_path / "source.webm"
+    path.write_bytes(video.content)
+    capture = cv2.VideoCapture(str(path))
+    assert capture.isOpened()
+    fps = capture.get(cv2.CAP_PROP_FPS)
+    decoded = 0
+    while capture.read()[0]:
+        decoded += 1
+    capture.release()
+    assert decoded == 150 and fps == 10
+    assert decoded / fps == 15
+
+
+@pytest.mark.parametrize("utterance", ["I will not call my sister.", "I won't bring drinks."])
+def test_negated_speech_does_not_create_obligation(post, utterance):
+    s = post(
+        "/ingest/bee-simulated",
+        dict(event_id="negated", utterance=utterance, speaker="SELF", occurred_at=e.at("08:15")),
+    )["state"]
+    assert not s["contracts"]
+
+
+def test_conditional_promise_requires_confirmation(post):
+    s = post(
+        "/ingest/bee-simulated",
+        dict(
+            event_id="conditional",
+            utterance="I'll bring drinks if I have time.",
+            speaker="SELF",
+            occurred_at=e.at("08:15"),
+        ),
+    )["state"]
+    assert e.contract(s, "drinks")["status"] == "NEEDS_CONFIRMATION"
+
+
+def test_looping_one_recorded_rep_cannot_unlock_with_new_ids(app, post):
+    stage(post, 6)
+    with app.state.store.transaction() as db:
+        s = app.state.store.read("demo")
+        ts = 0
+        frames = vision.cycle_frames()
+        for replay in range(15):
+            for index, frame in enumerate(frames):
+                ts += 160
+                e.pose_frame(
+                    s, db, "demo", f"renamed-{replay}-{index}", ts, vision.extract_marker_pose(frame)
+                )
+        assert s["studio"]["count"] == 1
+        assert s["studio"]["gate"] == "LOCKED"
+        assert e.contract(s, "squats")["status"] == "ACTIVE"
