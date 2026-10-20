@@ -47,6 +47,7 @@ import type {
 } from "../../../packages/physical-contract-schema";
 import "./style.css";
 import { PrivacyControls } from "./PrivacyControls";
+import { PushOptIn } from "./PushOptIn";
 import AlexaSimulator from "./AlexaSimulator";
 
 type Page =
@@ -2019,6 +2020,7 @@ function App() {
                   in the browser.
                 </p>
               </section>
+              <PushOptIn act={act} busy={busy} />
               <PrivacyControls act={act} busy={busy} />
             </div>
           )}
