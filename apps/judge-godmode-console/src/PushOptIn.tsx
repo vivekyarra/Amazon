@@ -33,13 +33,18 @@ export function PushOptIn({ act, busy }: { act: Act; busy: boolean }) {
       if (permission !== "granted") return setStatus("denied");
       const reg = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
-      const config = await (await fetch("/api/push/config", { credentials: "same-origin" })).json();
+      const config = await (
+        await fetch("/api/push/config", { credentials: "same-origin" })
+      ).json();
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: keyBytes(config.public_key),
       });
       const json = sub.toJSON();
-      await act("/push/subscribe", { endpoint: json.endpoint, keys: json.keys });
+      await act("/push/subscribe", {
+        endpoint: json.endpoint,
+        keys: json.keys,
+      });
       setStatus("enabled");
     } catch {
       setStatus("failed");
@@ -58,9 +63,11 @@ export function PushOptIn({ act, busy }: { act: Act; busy: boolean }) {
 
   const label: Record<string, string> = {
     checking: "Checking…",
-    unsupported: "This browser does not support Web Push (on iPhone, add to Home Screen first).",
+    unsupported:
+      "This browser does not support Web Push (on iPhone, add to Home Screen first).",
     off: "Off — alerts stay in this app only.",
-    enabled: "On — T-60/T-25, delivery, porch and arrival alerts reach this device.",
+    enabled:
+      "On — T-60/T-25, delivery, porch and arrival alerts reach this device.",
     denied: "Notifications were blocked in browser settings.",
     failed: "Could not enable push here. Alerts remain available in the app.",
   };
@@ -72,15 +79,20 @@ export function PushOptIn({ act, busy }: { act: Act; busy: boolean }) {
       </h2>
       <p>{label[status]}</p>
       <p className="muted">
-        Lock-screen text is generic for porch and delivery incidents; evidence opens only after sign-in.
-        &ldquo;Accepted by push service&rdquo; is recorded, never &ldquo;seen on device&rdquo;.
+        Lock-screen text is generic for porch and delivery incidents; evidence
+        opens only after sign-in. &ldquo;Accepted by push service&rdquo; is
+        recorded, never &ldquo;seen on device&rdquo;.
       </p>
       {status === "enabled" ? (
         <button type="button" disabled={busy} onClick={disable}>
           Turn off on this device
         </button>
       ) : (
-        <button type="button" disabled={busy || !supported || status === "checking"} onClick={enable}>
+        <button
+          type="button"
+          disabled={busy || !supported || status === "checking"}
+          onClick={enable}
+        >
           Enable phone notifications
         </button>
       )}
