@@ -1,8 +1,8 @@
 {
-  "checked_at": "2026-10-20T16:47:11.148293+00:00",
+  "checked_at": "2026-10-20T17:46:20.749287+00:00",
   "contract": {
     "title": "Call my brother",
-    "status": "ACTIVE",
+    "status": "MISSED",
     "due_at": "2026-10-20T17:44:53.717242+00:00"
   },
   "jobs": [
@@ -15,12 +15,14 @@
     {
       "kind": "T25",
       "at": "2026-10-20T17:19:53.717242+00:00",
-      "status": "PENDING"
+      "status": "EXECUTED",
+      "executed_at": "2026-10-20T17:19:54.145713+00:00"
     },
     {
       "kind": "DEADLINE",
       "at": "2026-10-20T17:44:53.717242+00:00",
-      "status": "PENDING"
+      "status": "EXECUTED",
+      "executed_at": "2026-10-20T17:44:54.042839+00:00"
     }
   ],
   "alerts": [
@@ -29,7 +31,13 @@
       "at": "2026-10-20T16:44:54.492196+00:00",
       "message": "Call my brother is due in 60 minutes. Prepare quietly.",
       "delivery_status": "STORED_FOR_COMPANION"
+    },
+    {
+      "kind": "ACTIVE_ESCALATION",
+      "at": "2026-10-20T17:19:54.145713+00:00",
+      "message": "Call my brother is due in 25 minutes. Preparation is unconfirmed. Open details to act.",
+      "delivery_status": "STORED_FOR_COMPANION"
     }
   ],
-  "remaining_dirl_schedules": 2
+  "remaining_dirl_schedules": 0
 }
