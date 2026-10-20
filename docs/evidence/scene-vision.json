@@ -1,0 +1,2871 @@
+{
+  "generated_at": "2026-10-20T12:18:25+00:00",
+  "provenance": "REAL_RECORDED_STOCK",
+  "statement": "Actual pipeline output on public licensed recordings. Not Ring footage, not the user's home, not live capture. Verifies the real-frame pipeline behavior only; live-Ring requirements remain open.",
+  "pipeline_version": "scene-tracker-v1",
+  "model": {
+    "name": "mediapipe-efficientdet-lite0-float32-v1",
+    "url": "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite",
+    "sha256": "40338edf5ec70d43e318b0a716a84d4564cd1802759a7a07170c7e43796dbf58"
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "opencv": "4.14.0",
+    "mediapipe": "0.10.35",
+    "machine": "AMD64",
+    "system": "Windows"
+  },
+  "summary": {
+    "clips": 10,
+    "matching_expected": 10
+  },
+  "clips": [
+    {
+      "clip_id": "RS01_DEPOSIT_DOORSTEP_STACK",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_deposit",
+      "expected": "DEPOSIT_CONFIRMED",
+      "observed": "DEPOSIT_CONFIRMED",
+      "matches_expected": true,
+      "confidence": 0.9,
+      "reason": "PERSISTENT_OBJECT_IN_ROI_AFTER_DEPARTURE",
+      "frames_decoded": 130,
+      "frames_analyzed": 65,
+      "analysis_fps": 5,
+      "processing_seconds": 5.04,
+      "processing_fps": 12.9,
+      "fixture_sha256": "f35684161ca3d80b3072763eed1cbe0d5c1a86723ee20d389d11b049cb075785",
+      "source": {
+        "platform": "Pexels",
+        "title": "Putting the Boxes On a Doorstep",
+        "page_url": "https://www.pexels.com/video/putting-the-boxes-on-a-doorstep-8926524/",
+        "download_url": "https://videos.pexels.com/video-files/8926524/8926524-sd_640_360_25fps.mp4",
+        "author": "Kampus Production",
+        "author_url": "https://www.pexels.com/@kampus/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "9d1b2760b739b4d969aa785b9c7be173010889c6843a930ff3908e63e1d1bf87"
+      },
+      "evidence_frame_index": 64,
+      "original_frame_sha256": "e5ee95a74f345702f1096db2a6a9754cb22980e9a0c5369605bf2658c38ad6a4",
+      "annotated_frame": "scene/RS01_DEPOSIT_DOORSTEP_STACK.jpg",
+      "details": {
+        "actor_track_id": "trk_1",
+        "roi_contact_frames": 48,
+        "exit_mode": "STREET",
+        "roi_change_final": 0.2407,
+        "end_frames": 4,
+        "detector_support": [],
+        "static_tracks_ignored": [],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          1.2,
+          557,
+          358
+        ],
+        [
+          1.4,
+          533,
+          359
+        ],
+        [
+          1.6,
+          511,
+          359
+        ],
+        [
+          1.8,
+          508,
+          357
+        ],
+        [
+          2.0,
+          487,
+          356
+        ],
+        [
+          2.2,
+          466,
+          358
+        ],
+        [
+          2.4,
+          456,
+          360
+        ],
+        [
+          2.6,
+          459,
+          358
+        ],
+        [
+          2.8,
+          441,
+          360
+        ],
+        [
+          3.0,
+          452,
+          359
+        ],
+        [
+          3.2,
+          451,
+          360
+        ],
+        [
+          3.4,
+          454,
+          361
+        ],
+        [
+          3.6,
+          456,
+          363
+        ],
+        [
+          3.8,
+          451,
+          362
+        ],
+        [
+          4.0,
+          448,
+          362
+        ],
+        [
+          4.2,
+          466,
+          360
+        ],
+        [
+          4.4,
+          439,
+          360
+        ],
+        [
+          4.6,
+          446,
+          360
+        ],
+        [
+          4.8,
+          438,
+          360
+        ],
+        [
+          5.0,
+          447,
+          360
+        ],
+        [
+          5.2,
+          452,
+          360
+        ],
+        [
+          5.4,
+          452,
+          360
+        ],
+        [
+          5.6,
+          455,
+          361
+        ],
+        [
+          5.8,
+          457,
+          361
+        ],
+        [
+          6.0,
+          458,
+          361
+        ],
+        [
+          6.2,
+          458,
+          361
+        ],
+        [
+          6.4,
+          455,
+          361
+        ],
+        [
+          6.6,
+          457,
+          361
+        ],
+        [
+          6.8,
+          459,
+          359
+        ],
+        [
+          7.0,
+          458,
+          358
+        ],
+        [
+          7.2,
+          459,
+          355
+        ],
+        [
+          7.4,
+          459,
+          357
+        ],
+        [
+          7.6,
+          456,
+          361
+        ],
+        [
+          7.8,
+          458,
+          360
+        ],
+        [
+          8.0,
+          455,
+          360
+        ],
+        [
+          8.2,
+          450,
+          359
+        ],
+        [
+          8.4,
+          437,
+          360
+        ],
+        [
+          8.6,
+          441,
+          361
+        ],
+        [
+          8.8,
+          440,
+          360
+        ],
+        [
+          9.0,
+          448,
+          361
+        ],
+        [
+          9.2,
+          454,
+          360
+        ],
+        [
+          9.4,
+          447,
+          359
+        ],
+        [
+          9.6,
+          452,
+          360
+        ],
+        [
+          9.8,
+          468,
+          360
+        ],
+        [
+          10.0,
+          479,
+          358
+        ],
+        [
+          10.2,
+          511,
+          357
+        ],
+        [
+          10.4,
+          534,
+          356
+        ],
+        [
+          10.6,
+          561,
+          355
+        ],
+        [
+          11.0,
+          592,
+          253
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS02_DEPOSIT_MAILER_DOORMAT",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_deposit",
+      "expected": "DEPOSIT_CONFIRMED",
+      "observed": "DEPOSIT_CONFIRMED",
+      "matches_expected": true,
+      "confidence": 0.95,
+      "reason": "PERSISTENT_OBJECT_IN_ROI_AFTER_DEPARTURE",
+      "frames_decoded": 117,
+      "frames_analyzed": 59,
+      "analysis_fps": 5,
+      "processing_seconds": 5.02,
+      "processing_fps": 11.75,
+      "fixture_sha256": "9ace09661d6ac35329633356fc11972f53a88859198f2c8ab50f752050bb9177",
+      "source": {
+        "platform": "Pexels",
+        "title": "A Person Leaving a Parcel at the Door",
+        "page_url": "https://www.pexels.com/video/a-person-leaving-a-parcel-at-the-door-6667230/",
+        "download_url": "https://videos.pexels.com/video-files/6667230/6667230-sd_640_360_25fps.mp4",
+        "author": "Kampus Production",
+        "author_url": "https://www.pexels.com/@kampus/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "64453a78a3be90c606cfbf3cb63bb14aae1d04de00cad8cd7dba9cf40ee3f6e5"
+      },
+      "evidence_frame_index": 58,
+      "original_frame_sha256": "fd8f7ef00d003e57c7d94d90da66fa485b4c98b40b5f25c2b3c4bac5a82bdb04",
+      "annotated_frame": "scene/RS02_DEPOSIT_MAILER_DOORMAT.jpg",
+      "details": {
+        "actor_track_id": "trk_1",
+        "roi_contact_frames": 37,
+        "exit_mode": "STREET",
+        "roi_change_final": 0.6667,
+        "end_frames": 4,
+        "detector_support": [
+          "suitcase"
+        ],
+        "static_tracks_ignored": [],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          1.0,
+          537,
+          360
+        ],
+        [
+          1.2,
+          534,
+          332
+        ],
+        [
+          1.4,
+          523,
+          330
+        ],
+        [
+          1.6,
+          497,
+          357
+        ],
+        [
+          1.8,
+          492,
+          360
+        ],
+        [
+          2.0,
+          485,
+          357
+        ],
+        [
+          2.2,
+          466,
+          352
+        ],
+        [
+          2.4,
+          443,
+          353
+        ],
+        [
+          2.6,
+          425,
+          352
+        ],
+        [
+          2.8,
+          415,
+          326
+        ],
+        [
+          3.0,
+          326,
+          328
+        ],
+        [
+          3.2,
+          385,
+          340
+        ],
+        [
+          3.4,
+          384,
+          336
+        ],
+        [
+          3.6,
+          390,
+          345
+        ],
+        [
+          3.8,
+          394,
+          347
+        ],
+        [
+          4.0,
+          393,
+          343
+        ],
+        [
+          4.2,
+          391,
+          353
+        ],
+        [
+          4.4,
+          385,
+          352
+        ],
+        [
+          4.6,
+          383,
+          352
+        ],
+        [
+          4.8,
+          387,
+          352
+        ],
+        [
+          5.0,
+          385,
+          358
+        ],
+        [
+          5.2,
+          379,
+          359
+        ],
+        [
+          5.4,
+          385,
+          357
+        ],
+        [
+          5.6,
+          427,
+          350
+        ],
+        [
+          5.8,
+          438,
+          352
+        ],
+        [
+          6.0,
+          438,
+          354
+        ],
+        [
+          6.2,
+          431,
+          356
+        ],
+        [
+          6.4,
+          455,
+          360
+        ],
+        [
+          6.6,
+          413,
+          360
+        ],
+        [
+          6.8,
+          390,
+          360
+        ],
+        [
+          7.0,
+          359,
+          359
+        ],
+        [
+          7.2,
+          318,
+          360
+        ],
+        [
+          7.4,
+          300,
+          360
+        ],
+        [
+          7.6,
+          266,
+          360
+        ],
+        [
+          7.8,
+          251,
+          357
+        ],
+        [
+          8.0,
+          84,
+          346
+        ],
+        [
+          8.2,
+          78,
+          328
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS03_COURIER_NO_DEPOSIT",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_deposit",
+      "expected": "MISMATCH",
+      "observed": "MISMATCH",
+      "matches_expected": true,
+      "confidence": 0.95,
+      "reason": "COURIER_DEPARTED_NO_RESTING_OBJECT_IN_ROI",
+      "frames_decoded": 360,
+      "frames_analyzed": 180,
+      "analysis_fps": 2.5,
+      "processing_seconds": 14.07,
+      "processing_fps": 12.8,
+      "fixture_sha256": "409c2c8133050ec8505e2bed96ec716b16c159117bdef757dc22a57f6cb513a2",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:FedEx fails delivery without knocking.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:FedEx_fails_delivery_without_knocking.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/40/FedEx_fails_delivery_without_knocking.ogv",
+        "author": "Mac Manson (YouTube: stabaho1)",
+        "author_url": "https://www.youtube.com/user/stabaho1",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "0d80bb4f8bb1d6585f7b143bab21901694ad9bf347f96a7b276223ff28916427"
+      },
+      "evidence_frame_index": 162,
+      "original_frame_sha256": "a21c7f721b173c40f2a37f058d2a56c097389ae9eb6f1e0b652c80459e2d53c0",
+      "annotated_frame": "scene/RS03_COURIER_NO_DEPOSIT.jpg",
+      "details": {
+        "actor_track_id": "trk_4",
+        "roi_contact_frames": 136,
+        "exit_mode": "UNRESOLVED",
+        "roi_change_final": 0.0,
+        "end_frames": 4,
+        "detector_support": [],
+        "static_tracks_ignored": [
+          "trk_1",
+          "trk_3",
+          "trk_6"
+        ],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          10.8,
+          377,
+          236
+        ],
+        [
+          11.2,
+          345,
+          227
+        ],
+        [
+          11.6,
+          340,
+          222
+        ],
+        [
+          12.0,
+          336,
+          224
+        ],
+        [
+          12.4,
+          331,
+          224
+        ],
+        [
+          12.8,
+          332,
+          224
+        ],
+        [
+          13.2,
+          331,
+          225
+        ],
+        [
+          13.6,
+          331,
+          224
+        ],
+        [
+          14.0,
+          332,
+          223
+        ],
+        [
+          14.4,
+          333,
+          223
+        ],
+        [
+          14.8,
+          332,
+          224
+        ],
+        [
+          15.2,
+          331,
+          223
+        ],
+        [
+          15.6,
+          332,
+          227
+        ],
+        [
+          16.0,
+          332,
+          226
+        ],
+        [
+          16.4,
+          331,
+          227
+        ],
+        [
+          16.8,
+          331,
+          226
+        ],
+        [
+          17.2,
+          332,
+          226
+        ],
+        [
+          17.6,
+          333,
+          225
+        ],
+        [
+          18.0,
+          332,
+          224
+        ],
+        [
+          18.4,
+          331,
+          225
+        ],
+        [
+          18.8,
+          332,
+          224
+        ],
+        [
+          19.2,
+          332,
+          224
+        ],
+        [
+          19.6,
+          330,
+          223
+        ],
+        [
+          20.0,
+          329,
+          225
+        ],
+        [
+          20.4,
+          331,
+          225
+        ],
+        [
+          20.8,
+          330,
+          224
+        ],
+        [
+          21.2,
+          337,
+          224
+        ],
+        [
+          21.6,
+          333,
+          226
+        ],
+        [
+          22.0,
+          335,
+          226
+        ],
+        [
+          22.4,
+          337,
+          226
+        ],
+        [
+          22.8,
+          339,
+          225
+        ],
+        [
+          23.2,
+          338,
+          226
+        ],
+        [
+          23.6,
+          335,
+          226
+        ],
+        [
+          24.0,
+          334,
+          226
+        ],
+        [
+          24.4,
+          334,
+          225
+        ],
+        [
+          24.8,
+          336,
+          226
+        ],
+        [
+          25.2,
+          335,
+          227
+        ],
+        [
+          25.6,
+          335,
+          227
+        ],
+        [
+          26.0,
+          334,
+          226
+        ],
+        [
+          26.4,
+          334,
+          226
+        ],
+        [
+          26.8,
+          333,
+          225
+        ],
+        [
+          27.2,
+          332,
+          225
+        ],
+        [
+          27.6,
+          331,
+          225
+        ],
+        [
+          28.0,
+          333,
+          226
+        ],
+        [
+          28.4,
+          333,
+          225
+        ],
+        [
+          28.8,
+          333,
+          221
+        ],
+        [
+          29.2,
+          332,
+          224
+        ],
+        [
+          29.6,
+          336,
+          229
+        ],
+        [
+          30.0,
+          342,
+          229
+        ],
+        [
+          30.4,
+          342,
+          231
+        ],
+        [
+          30.8,
+          341,
+          231
+        ],
+        [
+          31.2,
+          341,
+          231
+        ],
+        [
+          31.6,
+          340,
+          229
+        ],
+        [
+          32.0,
+          339,
+          225
+        ],
+        [
+          32.4,
+          336,
+          209
+        ],
+        [
+          32.8,
+          331,
+          208
+        ],
+        [
+          33.2,
+          332,
+          210
+        ],
+        [
+          33.6,
+          332,
+          208
+        ],
+        [
+          34.0,
+          331,
+          205
+        ],
+        [
+          34.4,
+          331,
+          205
+        ],
+        [
+          34.8,
+          333,
+          207
+        ],
+        [
+          35.2,
+          334,
+          207
+        ],
+        [
+          35.6,
+          334,
+          206
+        ],
+        [
+          36.0,
+          335,
+          206
+        ],
+        [
+          36.4,
+          335,
+          205
+        ],
+        [
+          36.8,
+          335,
+          206
+        ],
+        [
+          37.2,
+          336,
+          207
+        ],
+        [
+          37.6,
+          334,
+          207
+        ],
+        [
+          38.0,
+          334,
+          206
+        ],
+        [
+          38.4,
+          334,
+          206
+        ],
+        [
+          38.8,
+          335,
+          206
+        ],
+        [
+          39.2,
+          335,
+          207
+        ],
+        [
+          39.6,
+          335,
+          208
+        ],
+        [
+          40.0,
+          335,
+          207
+        ],
+        [
+          40.4,
+          335,
+          207
+        ],
+        [
+          40.8,
+          336,
+          207
+        ],
+        [
+          41.2,
+          335,
+          206
+        ],
+        [
+          41.6,
+          335,
+          206
+        ],
+        [
+          42.0,
+          335,
+          207
+        ],
+        [
+          42.4,
+          335,
+          207
+        ],
+        [
+          42.8,
+          335,
+          207
+        ],
+        [
+          43.2,
+          337,
+          207
+        ],
+        [
+          43.6,
+          337,
+          207
+        ],
+        [
+          44.0,
+          337,
+          207
+        ],
+        [
+          44.4,
+          335,
+          208
+        ],
+        [
+          44.8,
+          335,
+          209
+        ],
+        [
+          45.2,
+          336,
+          207
+        ],
+        [
+          45.6,
+          336,
+          207
+        ],
+        [
+          46.0,
+          335,
+          208
+        ],
+        [
+          46.4,
+          335,
+          206
+        ],
+        [
+          46.8,
+          335,
+          207
+        ],
+        [
+          47.2,
+          335,
+          208
+        ],
+        [
+          47.6,
+          335,
+          208
+        ],
+        [
+          48.0,
+          335,
+          208
+        ],
+        [
+          48.4,
+          336,
+          207
+        ],
+        [
+          48.8,
+          336,
+          208
+        ],
+        [
+          49.2,
+          337,
+          206
+        ],
+        [
+          49.6,
+          336,
+          206
+        ],
+        [
+          50.0,
+          335,
+          208
+        ],
+        [
+          50.4,
+          334,
+          208
+        ],
+        [
+          50.8,
+          335,
+          208
+        ],
+        [
+          51.2,
+          335,
+          208
+        ],
+        [
+          51.6,
+          334,
+          208
+        ],
+        [
+          52.0,
+          335,
+          209
+        ],
+        [
+          52.4,
+          336,
+          208
+        ],
+        [
+          52.8,
+          336,
+          207
+        ],
+        [
+          53.2,
+          336,
+          208
+        ],
+        [
+          53.6,
+          335,
+          207
+        ],
+        [
+          54.0,
+          335,
+          207
+        ],
+        [
+          54.4,
+          335,
+          209
+        ],
+        [
+          54.8,
+          334,
+          209
+        ],
+        [
+          55.2,
+          335,
+          208
+        ],
+        [
+          55.6,
+          334,
+          209
+        ],
+        [
+          56.0,
+          334,
+          208
+        ],
+        [
+          56.4,
+          335,
+          208
+        ],
+        [
+          56.8,
+          336,
+          206
+        ],
+        [
+          57.2,
+          336,
+          206
+        ],
+        [
+          57.6,
+          335,
+          209
+        ],
+        [
+          58.0,
+          334,
+          208
+        ],
+        [
+          58.4,
+          335,
+          208
+        ],
+        [
+          58.8,
+          335,
+          207
+        ],
+        [
+          59.2,
+          336,
+          208
+        ],
+        [
+          59.6,
+          336,
+          207
+        ],
+        [
+          60.0,
+          337,
+          207
+        ],
+        [
+          60.4,
+          336,
+          213
+        ],
+        [
+          60.8,
+          332,
+          213
+        ],
+        [
+          61.2,
+          319,
+          212
+        ],
+        [
+          61.6,
+          312,
+          215
+        ],
+        [
+          62.0,
+          306,
+          214
+        ],
+        [
+          62.4,
+          300,
+          213
+        ],
+        [
+          62.8,
+          296,
+          212
+        ],
+        [
+          63.2,
+          317,
+          217
+        ],
+        [
+          63.6,
+          327,
+          209
+        ],
+        [
+          64.0,
+          324,
+          214
+        ],
+        [
+          64.4,
+          341,
+          229
+        ],
+        [
+          64.8,
+          365,
+          230
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS04_PORCH_REMOVAL_CCTV",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_watchdog",
+      "expected": "REMOVAL_UNDER_REVIEW",
+      "observed": "REMOVAL_UNDER_REVIEW",
+      "matches_expected": true,
+      "confidence": 0.85,
+      "reason": "ROI_EMPTIED_ACTOR_EXITED_STREETWARD",
+      "frames_decoded": 139,
+      "frames_analyzed": 70,
+      "analysis_fps": 5,
+      "processing_seconds": 7.32,
+      "processing_fps": 9.56,
+      "fixture_sha256": "ef7a0993402058b3dc58b7497c72baca975f2710cad067680665ae162a041769",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:Front Porch Theft 2012 11 17 101117.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:Front_Porch_Theft_2012_11_17_101117.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/4/41/Front_Porch_Theft_2012_11_17_101117.ogv",
+        "author": "Trevor Fiatal (YouTube: tafiatal)",
+        "author_url": "https://www.youtube.com/user/tafiatal",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "2c095254dbe094013d7b93a54e46968d46d51803381d831e666f3a6ba057ffec"
+      },
+      "evidence_frame_index": 35,
+      "original_frame_sha256": "145a363dd3c211609813d7f1bc39f5f20c8a383345ee479f03f33a5bc7468068",
+      "annotated_frame": "scene/RS04_PORCH_REMOVAL_CCTV.jpg",
+      "details": {
+        "actor_track_id": "trk_2",
+        "roi_contact_frames": 27,
+        "exit_mode": "STREET",
+        "roi_change_final": 0.13,
+        "end_frames": 4,
+        "detector_support": [],
+        "static_tracks_ignored": [],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          2.6,
+          106,
+          172
+        ],
+        [
+          2.8,
+          116,
+          176
+        ],
+        [
+          3.0,
+          127,
+          175
+        ],
+        [
+          3.2,
+          139,
+          172
+        ],
+        [
+          3.4,
+          158,
+          169
+        ],
+        [
+          3.6,
+          172,
+          166
+        ],
+        [
+          3.8,
+          190,
+          165
+        ],
+        [
+          4.0,
+          190,
+          166
+        ],
+        [
+          4.2,
+          196,
+          165
+        ],
+        [
+          4.4,
+          196,
+          165
+        ],
+        [
+          4.6,
+          194,
+          168
+        ],
+        [
+          4.8,
+          193,
+          168
+        ],
+        [
+          5.0,
+          193,
+          169
+        ],
+        [
+          5.2,
+          192,
+          166
+        ],
+        [
+          5.4,
+          185,
+          167
+        ],
+        [
+          5.6,
+          184,
+          166
+        ],
+        [
+          5.8,
+          175,
+          166
+        ],
+        [
+          6.0,
+          168,
+          168
+        ],
+        [
+          6.2,
+          167,
+          164
+        ],
+        [
+          6.4,
+          165,
+          165
+        ],
+        [
+          6.6,
+          160,
+          166
+        ],
+        [
+          6.8,
+          156,
+          164
+        ],
+        [
+          7.0,
+          149,
+          164
+        ],
+        [
+          7.2,
+          144,
+          166
+        ],
+        [
+          7.4,
+          129,
+          173
+        ],
+        [
+          7.6,
+          121,
+          170
+        ],
+        [
+          7.8,
+          108,
+          167
+        ],
+        [
+          8.0,
+          94,
+          139
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS05_PORCH_REMOVAL_DOORBELL",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_watchdog",
+      "expected": "REMOVAL_UNDER_REVIEW",
+      "observed": "REMOVAL_UNDER_REVIEW",
+      "matches_expected": true,
+      "confidence": 0.95,
+      "reason": "ROI_EMPTIED_ACTOR_EXITED_STREETWARD",
+      "frames_decoded": 248,
+      "frames_analyzed": 124,
+      "analysis_fps": 5,
+      "processing_seconds": 12.2,
+      "processing_fps": 10.17,
+      "fixture_sha256": "c63063656b97ff718abb924c9e74013eea111e130d9ffbd9e99941f7a209bc96",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:Don't Tempt a Thief with Unattended Parcels.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:Don%27t_Tempt_a_Thief_with_Unattended_Parcels.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Don%27t_Tempt_a_Thief_with_Unattended_Parcels.ogv",
+        "author": "Vancouver Police Department (YouTube: vpdonline)",
+        "author_url": "https://www.youtube.com/user/vpdonline",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "74a2d03b2be828a1bb09aa086cad9174ff4add6d82edcb132122a3e940365bc6"
+      },
+      "evidence_frame_index": 101,
+      "original_frame_sha256": "b3c968d70f32c80ec488098095706addb1054b3d1a711c681de4c73842566c24",
+      "annotated_frame": "scene/RS05_PORCH_REMOVAL_DOORBELL.jpg",
+      "details": {
+        "actor_track_id": "trk_2",
+        "roi_contact_frames": 22,
+        "exit_mode": "STREET",
+        "roi_change_final": 0.2107,
+        "end_frames": 4,
+        "detector_support": [],
+        "static_tracks_ignored": [],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          15.6,
+          327,
+          356
+        ],
+        [
+          15.8,
+          335,
+          356
+        ],
+        [
+          16.2,
+          324,
+          356
+        ],
+        [
+          16.4,
+          333,
+          358
+        ],
+        [
+          17.0,
+          331,
+          356
+        ],
+        [
+          17.2,
+          336,
+          355
+        ],
+        [
+          17.4,
+          344,
+          355
+        ],
+        [
+          17.6,
+          347,
+          354
+        ],
+        [
+          17.8,
+          355,
+          354
+        ],
+        [
+          18.0,
+          352,
+          350
+        ],
+        [
+          18.2,
+          354,
+          329
+        ],
+        [
+          18.4,
+          358,
+          332
+        ],
+        [
+          18.6,
+          360,
+          329
+        ],
+        [
+          18.8,
+          354,
+          349
+        ],
+        [
+          19.0,
+          356,
+          349
+        ],
+        [
+          19.2,
+          358,
+          344
+        ],
+        [
+          19.4,
+          356,
+          357
+        ],
+        [
+          19.6,
+          355,
+          354
+        ],
+        [
+          19.8,
+          354,
+          351
+        ],
+        [
+          20.0,
+          350,
+          357
+        ],
+        [
+          20.2,
+          364,
+          360
+        ],
+        [
+          20.4,
+          400,
+          358
+        ],
+        [
+          20.6,
+          430,
+          337
+        ],
+        [
+          20.8,
+          460,
+          343
+        ],
+        [
+          21.0,
+          491,
+          356
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS06_PICKUP_INWARD",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_watchdog",
+      "expected": "TRANSFER_OBSERVED",
+      "observed": "TRANSFER_OBSERVED",
+      "matches_expected": true,
+      "confidence": 0.95,
+      "reason": "ROI_EMPTIED_ACTOR_EXITED_THROUGH_DOOR",
+      "frames_decoded": 174,
+      "frames_analyzed": 87,
+      "analysis_fps": 5,
+      "processing_seconds": 7.07,
+      "processing_fps": 12.31,
+      "fixture_sha256": "af8d915f60a3163b1626d48c9c292fc8b72bb4677ad93c0f91b3c39083f978de",
+      "source": {
+        "platform": "Pexels",
+        "title": "A Woman Taking Her Packages Inside",
+        "page_url": "https://www.pexels.com/video/a-woman-taking-her-packages-inside-8927178/",
+        "download_url": "https://videos.pexels.com/video-files/8927178/8927178-sd_640_360_25fps.mp4",
+        "author": "Kampus Production",
+        "author_url": "https://www.pexels.com/@kampus/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "794df13a46fd07fee4e6700c8afebf42fcd77b1343d75b1367cbc990541ed6d6"
+      },
+      "evidence_frame_index": 49,
+      "original_frame_sha256": "9123dc920f706ee961d5745084b640548356409f1d3274f5da4841ea1e80d32f",
+      "annotated_frame": "scene/RS06_PICKUP_INWARD.jpg",
+      "details": {
+        "actor_track_id": "trk_1",
+        "roi_contact_frames": 33,
+        "exit_mode": "DOOR",
+        "roi_change_final": 0.274,
+        "end_frames": 4,
+        "detector_support": [],
+        "static_tracks_ignored": [],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          4.4,
+          147,
+          286
+        ],
+        [
+          4.6,
+          141,
+          290
+        ],
+        [
+          4.8,
+          147,
+          302
+        ],
+        [
+          5.0,
+          167,
+          301
+        ],
+        [
+          5.2,
+          170,
+          288
+        ],
+        [
+          5.4,
+          177,
+          258
+        ],
+        [
+          5.8,
+          181,
+          282
+        ],
+        [
+          6.0,
+          181,
+          282
+        ],
+        [
+          6.2,
+          179,
+          280
+        ],
+        [
+          6.4,
+          179,
+          281
+        ],
+        [
+          6.6,
+          176,
+          287
+        ],
+        [
+          6.8,
+          175,
+          277
+        ],
+        [
+          7.0,
+          175,
+          278
+        ],
+        [
+          7.2,
+          176,
+          283
+        ],
+        [
+          7.4,
+          178,
+          283
+        ],
+        [
+          7.6,
+          178,
+          288
+        ],
+        [
+          7.8,
+          185,
+          298
+        ],
+        [
+          8.0,
+          186,
+          279
+        ],
+        [
+          8.2,
+          187,
+          287
+        ],
+        [
+          8.4,
+          187,
+          291
+        ],
+        [
+          8.6,
+          188,
+          319
+        ],
+        [
+          8.8,
+          188,
+          313
+        ],
+        [
+          9.0,
+          187,
+          307
+        ],
+        [
+          9.2,
+          187,
+          311
+        ],
+        [
+          9.4,
+          187,
+          300
+        ],
+        [
+          9.6,
+          192,
+          294
+        ],
+        [
+          9.8,
+          192,
+          300
+        ],
+        [
+          10.0,
+          188,
+          298
+        ],
+        [
+          10.2,
+          185,
+          291
+        ],
+        [
+          10.4,
+          187,
+          289
+        ],
+        [
+          10.8,
+          189,
+          292
+        ],
+        [
+          11.0,
+          193,
+          288
+        ],
+        [
+          11.4,
+          189,
+          278
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS07_PASSERBY_DRIVEWAY",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "porch_watchdog",
+      "expected": "NO_REMOVAL",
+      "observed": "NO_REMOVAL",
+      "matches_expected": true,
+      "confidence": 0.8,
+      "reason": "NO_PORCH_INTERACTION",
+      "frames_decoded": 205,
+      "frames_analyzed": 103,
+      "analysis_fps": 5,
+      "processing_seconds": 10.77,
+      "processing_fps": 9.56,
+      "fixture_sha256": "8791284c5a12c76c867724eb7cafa51b8ee9021b167e810a10e6db929aff5df9",
+      "source": {
+        "platform": "Wikimedia Commons",
+        "title": "File:Package Theft from home.ogv",
+        "page_url": "https://commons.wikimedia.org/wiki/File:Package_Theft_from_home.ogv",
+        "download_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Package_Theft_from_home.ogv",
+        "author": "DonGar37 (YouTube)",
+        "author_url": "https://www.youtube.com/user/DonGar37",
+        "license": "CC BY 3.0",
+        "license_url": "https://creativecommons.org/licenses/by/3.0/",
+        "source_sha256": "567cb7e75ea312823a52f1f2c05593b4d18da87668045f541469529254f89451"
+      },
+      "evidence_frame_index": 102,
+      "original_frame_sha256": "c781fde826aec6e2016dfb12afc7899bcf9af6b0b3d57f964d6a4cb1c3d43613",
+      "annotated_frame": "scene/RS07_PASSERBY_DRIVEWAY.jpg",
+      "details": {
+        "actor_track_id": null,
+        "roi_contact_frames": 0,
+        "exit_mode": null,
+        "roi_change_final": 0.0,
+        "end_frames": 4,
+        "detector_support": [],
+        "static_tracks_ignored": [],
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": []
+    },
+    {
+      "clip_id": "RS08_ARRIVAL_BOTTLE_VISIBLE",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "threshold",
+      "expected": "VISIBLE_MATCH",
+      "observed": "VISIBLE_MATCH",
+      "matches_expected": true,
+      "confidence": 0.881,
+      "reason": "DRINK_CLASS_ON_SUBJECT",
+      "frames_decoded": 140,
+      "frames_analyzed": 70,
+      "analysis_fps": 5,
+      "processing_seconds": 10.33,
+      "processing_fps": 6.78,
+      "fixture_sha256": "82833bb9806712ff5d60cfa6f430e3e225f4f314ef43fbd3ec8410a735097603",
+      "source": {
+        "platform": "Pexels",
+        "title": "A Woman Drinking on a Bottled Water While Walking",
+        "page_url": "https://www.pexels.com/video/a-woman-drinking-on-a-bottled-water-while-walking-8865610/",
+        "download_url": "https://videos.pexels.com/video-files/8865610/8865610-sd_640_338_25fps.mp4",
+        "author": "MART PRODUCTION",
+        "author_url": "https://www.pexels.com/@mart-production/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "b2747409d502464472da89394df65b6d124b43ebf3dcb3911478f392aa732380"
+      },
+      "evidence_frame_index": 6,
+      "original_frame_sha256": "9196bafcb08e317c4c875ef901c443e7aee01a748eca8602b660449a6d768965",
+      "annotated_frame": "scene/RS08_ARRIVAL_BOTTLE_VISIBLE.jpg",
+      "details": {
+        "subject_track_id": "trk_1",
+        "subject_frames": 70,
+        "subject_mean_score": 0.83,
+        "drink_frames": 29,
+        "drink_max_score": 0.693,
+        "carrier_frames": 27,
+        "carriers_seen": [
+          "backpack",
+          "handbag",
+          "suitcase"
+        ],
+        "threshold_reached": true,
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          0.0,
+          410,
+          334
+        ],
+        [
+          0.2,
+          408,
+          334
+        ],
+        [
+          0.4,
+          414,
+          334
+        ],
+        [
+          0.6,
+          426,
+          333
+        ],
+        [
+          0.8,
+          436,
+          334
+        ],
+        [
+          1.0,
+          444,
+          334
+        ],
+        [
+          1.2,
+          426,
+          333
+        ],
+        [
+          1.4,
+          419,
+          341
+        ],
+        [
+          1.6,
+          413,
+          335
+        ],
+        [
+          1.8,
+          415,
+          336
+        ],
+        [
+          2.0,
+          437,
+          332
+        ],
+        [
+          2.2,
+          440,
+          334
+        ],
+        [
+          2.4,
+          454,
+          334
+        ],
+        [
+          2.6,
+          457,
+          334
+        ],
+        [
+          2.8,
+          445,
+          333
+        ],
+        [
+          3.0,
+          434,
+          332
+        ],
+        [
+          3.2,
+          433,
+          332
+        ],
+        [
+          3.4,
+          428,
+          334
+        ],
+        [
+          3.6,
+          421,
+          341
+        ],
+        [
+          3.8,
+          411,
+          338
+        ],
+        [
+          4.0,
+          410,
+          337
+        ],
+        [
+          4.2,
+          404,
+          332
+        ],
+        [
+          4.4,
+          391,
+          333
+        ],
+        [
+          4.6,
+          384,
+          337
+        ],
+        [
+          4.8,
+          381,
+          334
+        ],
+        [
+          5.0,
+          374,
+          333
+        ],
+        [
+          5.2,
+          365,
+          335
+        ],
+        [
+          5.4,
+          364,
+          333
+        ],
+        [
+          5.6,
+          351,
+          333
+        ],
+        [
+          5.8,
+          349,
+          332
+        ],
+        [
+          6.0,
+          353,
+          337
+        ],
+        [
+          6.2,
+          358,
+          333
+        ],
+        [
+          6.4,
+          364,
+          333
+        ],
+        [
+          6.6,
+          369,
+          333
+        ],
+        [
+          6.8,
+          363,
+          327
+        ],
+        [
+          7.0,
+          360,
+          327
+        ],
+        [
+          7.2,
+          356,
+          330
+        ],
+        [
+          7.4,
+          355,
+          334
+        ],
+        [
+          7.6,
+          352,
+          334
+        ],
+        [
+          7.8,
+          341,
+          336
+        ],
+        [
+          8.0,
+          339,
+          336
+        ],
+        [
+          8.2,
+          333,
+          334
+        ],
+        [
+          8.4,
+          328,
+          334
+        ],
+        [
+          8.6,
+          332,
+          328
+        ],
+        [
+          8.8,
+          340,
+          334
+        ],
+        [
+          9.0,
+          346,
+          334
+        ],
+        [
+          9.2,
+          347,
+          333
+        ],
+        [
+          9.4,
+          348,
+          335
+        ],
+        [
+          9.6,
+          348,
+          333
+        ],
+        [
+          9.8,
+          347,
+          332
+        ],
+        [
+          10.0,
+          360,
+          331
+        ],
+        [
+          10.2,
+          367,
+          334
+        ],
+        [
+          10.4,
+          374,
+          340
+        ],
+        [
+          10.6,
+          390,
+          335
+        ],
+        [
+          10.8,
+          379,
+          340
+        ],
+        [
+          11.0,
+          374,
+          331
+        ],
+        [
+          11.2,
+          354,
+          335
+        ],
+        [
+          11.4,
+          362,
+          331
+        ],
+        [
+          11.6,
+          342,
+          331
+        ],
+        [
+          11.8,
+          336,
+          331
+        ],
+        [
+          12.0,
+          334,
+          330
+        ],
+        [
+          12.2,
+          327,
+          330
+        ],
+        [
+          12.4,
+          331,
+          318
+        ],
+        [
+          12.6,
+          325,
+          327
+        ],
+        [
+          12.8,
+          323,
+          320
+        ],
+        [
+          13.0,
+          326,
+          323
+        ],
+        [
+          13.2,
+          326,
+          326
+        ],
+        [
+          13.4,
+          322,
+          328
+        ],
+        [
+          13.6,
+          325,
+          323
+        ],
+        [
+          13.8,
+          325,
+          326
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS09_ARRIVAL_HANDS_EMPTY",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "threshold",
+      "expected": "NOT_VISIBLE",
+      "observed": "NOT_VISIBLE",
+      "matches_expected": true,
+      "confidence": 0.9,
+      "reason": "SUBJECT_TRACKED_NO_ITEM_SEEN",
+      "frames_decoded": 129,
+      "frames_analyzed": 65,
+      "analysis_fps": 5,
+      "processing_seconds": 7.21,
+      "processing_fps": 9.02,
+      "fixture_sha256": "5af18cd58032e88c766c12ddbeeeeaf98a0866fa2d0d701d8661ccebe29a669f",
+      "source": {
+        "platform": "Pexels",
+        "title": "Man Knocking Door",
+        "page_url": "https://www.pexels.com/video/man-knocking-door-11680516/",
+        "download_url": "https://videos.pexels.com/video-files/11680516/11680516-sd_640_360_30fps.mp4",
+        "author": "Andrew Kota",
+        "author_url": "https://www.pexels.com/@andrew-kota-1968573/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "8a88545a17d5ffc7bbb172c1f75cf8742fe25f680f7e63ea0d3cade1336d37e2"
+      },
+      "evidence_frame_index": 60,
+      "original_frame_sha256": "dee64792ca788a40709988dc76a83b55aae37f3bb4207256f3031631e75fbb0c",
+      "annotated_frame": "scene/RS09_ARRIVAL_HANDS_EMPTY.jpg",
+      "details": {
+        "subject_track_id": "trk_1",
+        "subject_frames": 52,
+        "subject_mean_score": 0.587,
+        "drink_frames": 0,
+        "drink_max_score": 0.0,
+        "carrier_frames": 1,
+        "carriers_seen": [
+          "suitcase"
+        ],
+        "threshold_reached": true,
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          2.0,
+          586,
+          358
+        ],
+        [
+          2.2,
+          561,
+          360
+        ],
+        [
+          2.4,
+          536,
+          360
+        ],
+        [
+          2.6,
+          510,
+          360
+        ],
+        [
+          2.8,
+          465,
+          366
+        ],
+        [
+          3.0,
+          434,
+          361
+        ],
+        [
+          3.2,
+          413,
+          369
+        ],
+        [
+          3.4,
+          393,
+          364
+        ],
+        [
+          3.6,
+          372,
+          360
+        ],
+        [
+          3.8,
+          368,
+          354
+        ],
+        [
+          4.0,
+          353,
+          355
+        ],
+        [
+          4.2,
+          338,
+          317
+        ],
+        [
+          4.4,
+          333,
+          307
+        ],
+        [
+          4.6,
+          328,
+          298
+        ],
+        [
+          4.8,
+          326,
+          299
+        ],
+        [
+          5.0,
+          322,
+          284
+        ],
+        [
+          5.2,
+          314,
+          280
+        ],
+        [
+          5.4,
+          310,
+          284
+        ],
+        [
+          5.6,
+          308,
+          282
+        ],
+        [
+          5.8,
+          307,
+          280
+        ],
+        [
+          6.0,
+          311,
+          285
+        ],
+        [
+          6.2,
+          312,
+          285
+        ],
+        [
+          6.4,
+          313,
+          286
+        ],
+        [
+          6.6,
+          316,
+          282
+        ],
+        [
+          6.8,
+          315,
+          284
+        ],
+        [
+          7.0,
+          313,
+          285
+        ],
+        [
+          7.2,
+          314,
+          284
+        ],
+        [
+          7.4,
+          313,
+          285
+        ],
+        [
+          7.6,
+          311,
+          284
+        ],
+        [
+          7.8,
+          312,
+          285
+        ],
+        [
+          8.0,
+          313,
+          286
+        ],
+        [
+          8.2,
+          313,
+          285
+        ],
+        [
+          8.4,
+          313,
+          286
+        ],
+        [
+          8.6,
+          315,
+          289
+        ],
+        [
+          8.8,
+          308,
+          291
+        ],
+        [
+          9.0,
+          307,
+          291
+        ],
+        [
+          9.2,
+          310,
+          288
+        ],
+        [
+          9.4,
+          332,
+          290
+        ],
+        [
+          9.6,
+          340,
+          293
+        ],
+        [
+          9.8,
+          342,
+          293
+        ],
+        [
+          10.0,
+          338,
+          296
+        ],
+        [
+          10.2,
+          344,
+          295
+        ],
+        [
+          10.4,
+          355,
+          313
+        ],
+        [
+          10.6,
+          366,
+          312
+        ],
+        [
+          10.8,
+          381,
+          343
+        ],
+        [
+          11.0,
+          394,
+          350
+        ],
+        [
+          11.2,
+          427,
+          361
+        ],
+        [
+          11.4,
+          457,
+          356
+        ],
+        [
+          11.6,
+          481,
+          372
+        ],
+        [
+          11.8,
+          511,
+          358
+        ],
+        [
+          12.0,
+          543,
+          360
+        ],
+        [
+          12.2,
+          586,
+          360
+        ]
+      ]
+    },
+    {
+      "clip_id": "RS10_ARRIVAL_PAPER_BAGS",
+      "provenance": "REAL_RECORDED_STOCK",
+      "mode": "threshold",
+      "expected": "AMBIGUOUS",
+      "observed": "AMBIGUOUS",
+      "matches_expected": true,
+      "confidence": 0.5,
+      "reason": "CARRIER_VISIBLE_CONTENTS_UNKNOWN",
+      "frames_decoded": 100,
+      "frames_analyzed": 50,
+      "analysis_fps": 5,
+      "processing_seconds": 6.48,
+      "processing_fps": 7.72,
+      "fixture_sha256": "80742e82ad81ad3f5633b35e90750194fba577068bbc23b9f9ffe81d99c674d8",
+      "source": {
+        "platform": "Pexels",
+        "title": "Woman Walking on the Sidewalk Carrying Paper Bags",
+        "page_url": "https://www.pexels.com/video/woman-walking-on-the-sidewalk-carrying-paper-bags-7234080/",
+        "download_url": "https://videos.pexels.com/video-files/7234080/7234080-uhd_2160_3840_24fps.mp4",
+        "author": "Blue Bird",
+        "author_url": "https://www.pexels.com/@blue-bird/",
+        "license": "Pexels License",
+        "license_url": "https://www.pexels.com/license/",
+        "source_sha256": "0dab25bcf1f81ff87b107aa0ebf50acb102bb4564892db7a19e50bbc4ae49bdd"
+      },
+      "evidence_frame_index": 26,
+      "original_frame_sha256": "e733413826db5a4a74798217cc3d22871cf9409dd8966f9b7e3124a3de6d7719",
+      "annotated_frame": "scene/RS10_ARRIVAL_PAPER_BAGS.jpg",
+      "details": {
+        "subject_track_id": "trk_1",
+        "subject_frames": 50,
+        "subject_mean_score": 0.779,
+        "drink_frames": 0,
+        "drink_max_score": 0.0,
+        "carrier_frames": 18,
+        "carriers_seen": [
+          "handbag",
+          "suitcase"
+        ],
+        "threshold_reached": true,
+        "coordinate_system": "IMAGE_PIXELS",
+        "world_trajectory": "world-space trajectory unavailable"
+      },
+      "trajectory_px": [
+        [
+          0.0,
+          119,
+          330
+        ],
+        [
+          0.2,
+          118,
+          331
+        ],
+        [
+          0.4,
+          119,
+          331
+        ],
+        [
+          0.6,
+          120,
+          331
+        ],
+        [
+          0.8,
+          120,
+          331
+        ],
+        [
+          1.0,
+          121,
+          332
+        ],
+        [
+          1.2,
+          121,
+          334
+        ],
+        [
+          1.4,
+          122,
+          337
+        ],
+        [
+          1.6,
+          123,
+          336
+        ],
+        [
+          1.8,
+          123,
+          336
+        ],
+        [
+          2.0,
+          123,
+          340
+        ],
+        [
+          2.2,
+          123,
+          340
+        ],
+        [
+          2.4,
+          122,
+          341
+        ],
+        [
+          2.6,
+          122,
+          343
+        ],
+        [
+          2.8,
+          122,
+          343
+        ],
+        [
+          3.0,
+          119,
+          343
+        ],
+        [
+          3.2,
+          122,
+          344
+        ],
+        [
+          3.4,
+          117,
+          346
+        ],
+        [
+          3.6,
+          116,
+          349
+        ],
+        [
+          3.8,
+          119,
+          352
+        ],
+        [
+          4.0,
+          117,
+          354
+        ],
+        [
+          4.2,
+          116,
+          355
+        ],
+        [
+          4.4,
+          117,
+          362
+        ],
+        [
+          4.6,
+          115,
+          363
+        ],
+        [
+          4.8,
+          115,
+          364
+        ],
+        [
+          5.0,
+          115,
+          363
+        ],
+        [
+          5.2,
+          114,
+          364
+        ],
+        [
+          5.4,
+          111,
+          367
+        ],
+        [
+          5.6,
+          111,
+          371
+        ],
+        [
+          5.8,
+          112,
+          375
+        ],
+        [
+          6.0,
+          111,
+          378
+        ],
+        [
+          6.2,
+          111,
+          381
+        ],
+        [
+          6.4,
+          109,
+          383
+        ],
+        [
+          6.6,
+          109,
+          390
+        ],
+        [
+          6.8,
+          110,
+          390
+        ],
+        [
+          7.0,
+          110,
+          391
+        ],
+        [
+          7.2,
+          106,
+          397
+        ],
+        [
+          7.4,
+          105,
+          400
+        ],
+        [
+          7.6,
+          103,
+          401
+        ],
+        [
+          7.8,
+          105,
+          406
+        ],
+        [
+          8.0,
+          103,
+          410
+        ],
+        [
+          8.2,
+          112,
+          407
+        ],
+        [
+          8.4,
+          112,
+          411
+        ],
+        [
+          8.6,
+          109,
+          419
+        ],
+        [
+          8.8,
+          103,
+          433
+        ],
+        [
+          9.0,
+          105,
+          442
+        ],
+        [
+          9.2,
+          110,
+          449
+        ],
+        [
+          9.4,
+          110,
+          459
+        ],
+        [
+          9.6,
+          105,
+          472
+        ],
+        [
+          9.8,
+          105,
+          473
+        ]
+      ]
+    }
+  ]
+}

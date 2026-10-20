@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from .models import ApiError, BeeInput
 from . import vision
+from . import scene
 from . import commitments as nl
 
 DAY = "2026-10-20"
@@ -147,6 +148,7 @@ def add_evidence(
     duration_ms=0,
     parent_evidence_id=None,
     sensor=None,
+    confidence=1.0,
 ):
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Evidence collection is paused.")
@@ -178,7 +180,7 @@ def add_evidence(
         retention_expires_at=(datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
         decision="VALIDATED",
         capture_gaps=[],
-        confidence=1.0,
+        confidence=confidence,
         model_name_version=sensor.get(
             "model",
             "owner-statement-v1" if provenance == "USER_CONFIRMED" else "synthetic-calibrated-markers-v1",
@@ -709,6 +711,8 @@ def run_scenario(s, db, household, stage, branch):
         )
         if c.get("deposit_status"):
             return
+        if branch.startswith("real_"):
+            return scene.real_deposit_stage(s, db, household, c, branch)
         verdict = vision.deposit_verdict(vision.fixture_frames("fake" if branch == "fake" else "deposit"))
         frame = vision.fixture_frames("fake" if branch == "fake" else "deposit")[-1]
         ev = add_evidence(s, db, household, c, "DEPOSIT_OBSERVATION", vision.png(frame), "image/png")
@@ -758,6 +762,8 @@ def run_scenario(s, db, household, stage, branch):
                 s, "watchdog.observation_updated", dict(contract_id=c["contract_id"], result="PARCEL_REMAINS")
             )
             return
+        if branch.startswith("real_"):
+            return scene.real_watchdog_stage(s, db, household, c, branch)
         frames = vision.fixture_frames("removal")
         if vision.removal_verdict(frames) != "REMOVAL_UNDER_REVIEW":
             return
@@ -822,6 +828,8 @@ def run_scenario(s, db, household, stage, branch):
             incident_action(s, db, household, "inc_parcel", "authorize-pickup", {})
     elif stage == 5:
         c = contract(s, "drinks")
+        if branch.startswith("real_"):
+            return scene.real_threshold_stage(s, db, household, c, branch)
         frame = vision.scene(
             280 if not s["incidents"] else None,
             310,
