@@ -14,7 +14,7 @@ WORKDIR /app
 RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy-ca.pem,mode=0444,required=false \
     if [ -f /run/secrets/proxy-ca.pem ]; then echo 'Acquire::https::CaInfo "/run/secrets/proxy-ca.pem";' > /etc/apt/apt.conf.d/90-build-ca; fi; \
     sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources && \
-    apt-get update -o APT::Update::Error-Mode=any && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgles2 ffmpeg && \
+    apt-get update -o APT::Update::Error-Mode=any && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgles2 libegl1 ffmpeg && \
     rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/90-build-ca
 ENV UV_COMPILE_BYTECODE=1 PYTHONPATH=/app/apps/mcp-orchestrator DATA_DIR=/data DEMO_MODE=true
 ARG ENABLE_LIVE_RUNTIME=false

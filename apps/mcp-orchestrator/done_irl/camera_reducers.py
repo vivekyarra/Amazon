@@ -20,15 +20,21 @@ def frame_received(store, household, camera, frame, points, timestamp, frame_has
         if not session or session.get("camera_id") != camera["id"]:
             raise ApiError(409, "CAMERA_SESSION_CHANGED", "Camera session is no longer current.")
         if session["status"] in {"COMPLETED", "OVERRIDDEN"}:
-            return
+            return summary(session)
+        # The server-side bridge, never a client field, decides the source label.
+        recorded = camera.get("source") == e.RECORDED_DEMO_SOURCE
+        source_mode = "SIMULATED_VERIFIED" if recorded else "LIVE_VERIFIED"
         session.update(
-            source="LIVE_RING_WHEP", source_mode="LIVE_VERIFIED", model_sha256=camera["model_sha256"]
+            source=e.RECORDED_DEMO_SOURCE if recorded else "LIVE_RING_WHEP",
+            source_mode=source_mode,
+            model_sha256=camera["model_sha256"],
         )
         timestamp += session["timestamp_base"]
-        state["now"] = datetime.now(timezone.utc).isoformat()
+        if state.get("clock_mode") == "WALL":
+            state["now"] = datetime.now(timezone.utc).isoformat()
         state["_event_source"] = {
-            "source": "RING_WHEP",
-            "source_mode": "LIVE_VERIFIED",
+            "source": e.RECORDED_DEMO_SOURCE if recorded else "RING_WHEP",
+            "source_mode": source_mode,
             "consent_scope": "household",
         }
         if points:
@@ -63,6 +69,12 @@ def frame_received(store, household, camera, frame, points, timestamp, frame_has
             )
         state.pop("_event_source", None)
         store.save(db, household, state)
+        return summary(session)
+
+
+def summary(session):
+    """Read-only counter snapshot for overlays; the reducer above is the only writer."""
+    return {k: session.get(k) for k in ("count", "gate", "phase", "angle", "quality", "status")}
 
 
 def camera_ended(store, household, camera_id, reason):
@@ -73,7 +85,7 @@ def camera_ended(store, household, camera_id, reason):
         session = state["studio"]
         if session["status"] not in {"COMPLETED", "OVERRIDDEN"}:
             session.update(status="PAUSED", phase="STANDING", stable=0, quality=reason)
-        state["camera_request"]["status"] = "CLOSED"
+        state.setdefault("camera_request", {})["status"] = "CLOSED"
         e.emit(
             state,
             "watchdog.monitoring_gap",
