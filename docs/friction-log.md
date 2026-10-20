@@ -1,5 +1,22 @@
 # Engineering friction log
 
+## Amazon developer tools (official friction-log format)
+
+Each entry below was actually encountered on 20 October 2026 while building DONE/IRL. Format: task · steps · expected vs actual · severity · workaround · request.
+
+A1. **Bee API stream event shapes are undocumented.** *Task:* ingest live Bee utterances and todos. *Steps:* read https://docs.bee.computer/docs/api; it lists `GET /v1/stream` event types (`new-utterance`, `todo-created`, ...) but no payload schema. *Expected:* a JSON schema/sample per event type. *Actual:* the original adapter guessed a flat `{"utterance": "..."}` shape and would have rejected every real event; the real shape (`{utterance:{id,text,speaker,spoken_at}, conversation_uuid}`, `{todo:{id,text,completed,alarmAt}}`) had to be read from the official `bee-cli` source (`sources/commands/stream/index.ts`). *Severity:* High for integrators. *Workaround:* normalizer mirroring bee-cli plus tests; unknown shapes are ignored, never guessed. *Request:* publish per-event JSON schemas, sample payloads and timestamp units.
+
+A2. **No wearer attribution on Bee utterances.** *Task:* only treat promises spoken by the wearer as commitments. *Expected:* a documented field identifying the device owner. *Actual:* only a free-form `speaker` label. *Severity:* Medium (privacy/safety: someone else's sentence can look like the wearer's promise). *Workaround:* unattributed speech becomes `NEEDS_CONFIRMATION`; an optional `BEE_SELF_SPEAKERS` mapping. *Request:* an explicit `is_wearer`/speaker-identity field.
+
+A3. **Amazon Bedrock Converse returns an unexplained "Operation not allowed".** *Task:* use Nova for ambiguous-utterance parsing. *Steps:* `aws bedrock-runtime converse` with `us.amazon.nova-2-lite-v1:0`, `amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0` in us-east-1, us-west-2 and ap-south-1 as an IAM user with AdministratorAccess; `list-foundation-models` succeeds. *Expected:* a response, or an actionable access error. *Actual:* `ValidationException: Operation not allowed` with no reason or remedy. *Severity:* High (blocked the planned Nova integration). *Workaround:* deterministic, tested commitment compiler; no LLM dependency. *Request:* say which account state, quota or model-access step is missing.
+
+A4. **CloudFront account verification surfaces only mid-deployment.** *Task:* HTTPS for the judge deployment via a CloudFront distribution. *Actual:* `AWS::CloudFront::Distribution` failed with "Your account must be verified before you can add new CloudFront resources" after other resources were created; the rollback left retained KMS key, DynamoDB table and S3 bucket to clean up manually. *Severity:* Medium. *Workaround:* Elastic IP + Caddy with automatic Let's Encrypt on `<ip>.sslip.io`. *Request:* CloudFormation pre-flight validation (or console banner) for account-level service blocks.
+
+A5. **MCP Python SDK rejects public deployments by default (Alexa+ MCP route).** *Task:* expose the Streamable HTTP MCP server on the public judge URL. *Actual:* `initialize` returned `421 Invalid Host header` because FastMCP's DNS-rebinding protection defaults to localhost hosts only. *Severity:* Medium (silent until tested from outside). *Workaround:* explicit allowed hosts/origins from deployment config, with a regression test. *Request:* Alexa+ MCP onboarding docs should include a public-deployment checklist (Host/Origin, auth, protocol version).
+
+## Other engineering notes (cloud workspace and CI)
+
+
 These are actual observations, not ten fabricated entries. The source spec’s ten-entry goal is internal. The official bonus/rule claim still needs owner verification against the current competition site.
 
 1. **Cloud package cache location:** `uv sync` first failed because `/home/agent/.cache/uv` was read-only. Set UV_CACHE_DIR to a writable workspace cache. Request: expose writable cache defaults in cloud setup.
