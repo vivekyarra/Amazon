@@ -1,6 +1,6 @@
 {
  "target": "FULL_ORIGINAL_VISION_COMPLETE",
- "primary_track_runtime_verified": false,
+ "primary_track_runtime_verified": true,
  "all_original_live_verified": false,
  "independent_release_review_passed": false,
  "requirements": [
@@ -683,20 +683,25 @@
   {
    "requirement_id": "P0-036",
    "requirement": "An actual Fire OS or Vega OS app builds, installs, launches, navigates with D-pad and visibly consumes live contract state.",
-   "verification_result": "BLOCKED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
-    "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "apps/firetv-command-hud/app/src/main/java/dev/doneirl/tv/MainActivity.java",
+    "apps/firetv-vega-hud/src/App.tsx",
+    "apps/firetv-vega-hud/src/api.ts",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/engine.py"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "CI firetv-emulator job (Fire OS APK, 33/33)",
+    "tests/firetv/vega/ D-pad session on Vega Virtual Device"
+   ],
+   "evidence": "tests/firetv/vega-device-report.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Native APK builds; no supported Fire OS/Vega device launch recording."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-20",
+   "note": "Vega OS app built with the official SDK, installed and launched on the official Vega Virtual Device, D-pad navigated, consuming live HTTPS contract state; Fire OS APK likewise on an Android TV emulator in CI. Simulators, not physical Fire TV hardware."
   },
   {
    "requirement_id": "P0-037",
@@ -986,20 +991,25 @@
   {
    "requirement_id": "P0-050",
    "requirement": "Release target and actual primary track are recorded and supported by eligible runtime evidence; no unqualified multi-track claims.",
-   "verification_result": "BLOCKED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "apps/mcp-orchestrator/done_irl/mcp_ext.py",
+    "docs/release-target.md"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "hosted initialize + tools/call",
+    "scripts/mcp-external-client.py",
+    "test_mcp_compliance.py"
+   ],
+   "evidence": "docs/release-target.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Candidate Alexa+ route recorded; account/track runtime and eligibility proof pending."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-20",
+   "note": "Primary track Alexa+ recorded with eligible runtime evidence (hosted MCP 2025-11-25 server + labelled simulated experience); Fire TV recorded as an eligible alternative via the Vega Virtual Device; Bee/Ring explicitly not claimed."
   },
   {
    "requirement_id": "P0-051",

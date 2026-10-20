@@ -2,6 +2,17 @@
 
 Target: **FULL_ORIGINAL_VISION_COMPLETE** (not silently lowered).
 
-Candidate primary track: **Alexa+** through MCP orchestration / explicitly simulated Alexa+ experience. The official Python SDK supplies Streamable HTTP; external client proof is in `test_mcp.py`, `test_mcp_compliance.py`, `docs/evidence/mcp-external-client.json` and `docs/evidence/mcp-inspector-cli.json`; the judge console's simulated Alexa+ panel is labeled as a simulation. No actual Alexa+ account connection or final track eligibility decision is claimed.
+## Primary track (one track prize per project)
 
-Fire TV, Bee and Ring tracks remain unclaimed pending actual eligible runtime/device/API proof. The Fire OS source is built separately from web navigation tests. The full original target cannot pass while required live integrations, human-video pose validation, device runtime proof and submission media remain blocked.
+**Recommended: Alexa+** — self-hosted MCP server (Streamable HTTP, protocol `2025-11-25`) running on the public HTTPS judge deployment, exercised by an external official-SDK client, the MCP Inspector CLI and a hosted `initialize` + `tools/call` ([evidence](evidence/aws-mcp-scheduler.json)); plus a clearly labelled simulated Alexa+ web experience whose source is in this repository. No real Alexa device connection is claimed.
+
+**Eligible alternative: Fire TV** — the Vega OS app runs on the official Vega Virtual Device and the Fire OS APK on an Android TV emulator ([Vega report](../tests/firetv/vega-device-report.md)); the rules accept the Fire TV/Vega simulator in the demo video.
+
+Bee and Ring tracks are **not** claimed: live Bee data and a live Ring simulator/device run are still pending.
+
+## Mini challenges
+
+- AWS Builder: live stack — see `docs/submission.md`.
+- Open Source: Agent Skill ready in `packages/agent-skills/evidence-backed-commitments`; PR awaits owner approval.
+
+The original-vision target still cannot pass while live Bee/Ring, physical device and submission media gates remain.

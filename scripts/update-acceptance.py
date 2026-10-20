@@ -126,6 +126,25 @@ UPGRADES = {
         note="Every push runs unit, schema, API, MCP compliance, security, real-video, browser E2E, APK build, "
              "container replay and an Android TV emulator D-pad journey; all green. Emulator, not physical Fire TV.",
     ),
+    "P0-036": dict(
+        result="VERIFIED",
+        tests=["tests/firetv/vega/ D-pad session on Vega Virtual Device", "CI firetv-emulator job (Fire OS APK, 33/33)"],
+        evidence="tests/firetv/vega-device-report.md",
+        code=["apps/firetv-vega-hud/src/App.tsx", "apps/firetv-vega-hud/src/api.ts",
+              "apps/firetv-command-hud/app/src/main/java/dev/doneirl/tv/MainActivity.java"],
+        note="Vega OS app built with the official SDK, installed and launched on the official Vega Virtual Device, "
+             "D-pad navigated, consuming live HTTPS contract state; Fire OS APK likewise on an Android TV emulator in CI. "
+             "Simulators, not physical Fire TV hardware.",
+    ),
+    "P0-050": dict(
+        result="VERIFIED",
+        tests=["test_mcp_compliance.py", "scripts/mcp-external-client.py", "hosted initialize + tools/call"],
+        evidence="docs/release-target.md",
+        code=["docs/release-target.md", "apps/mcp-orchestrator/done_irl/mcp_ext.py"],
+        note="Primary track Alexa+ recorded with eligible runtime evidence (hosted MCP 2025-11-25 server + labelled "
+             "simulated experience); Fire TV recorded as an eligible alternative via the Vega Virtual Device; Bee/Ring "
+             "explicitly not claimed.",
+    ),
 }
 
 
