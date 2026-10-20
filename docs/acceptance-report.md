@@ -1,42 +1,45 @@
-# DONE/IRL acceptance report
+# Acceptance report
 
-Date: **20 October 2026**. Target: **FULL_ORIGINAL_VISION_COMPLETE**. Verdict: **NOT COMPLETE**.
+Dated 20 October 2026. Produced from `scripts/verify-release.py`, the [acceptance manifest](acceptance-manifest.json) and the evidence linked below. This is an engineering self-assessment; the spec's independent release review (P0-055) has **not** happened.
 
-The implemented synthetic workflow runs end-to-end through a real shared transactional ledger. It is not a complete live-device product or a submission-ready hackathon entry. The engineering checks and the full product release gate are deliberately separate.
+```text
+DONE/IRL Release Report
+-----------------------
+Target: FULL_ORIGINAL_VISION_COMPLETE (unchanged; see release-target.md)
+Verdict: NOT_COMPLETE
+Commit: feat/completion head at time of writing (see git log); CI run 39425459386 green on f7d996c
+Primary track: Alexa+ — self-hosted MCP Streamable HTTP (2025-11-25) live on hosted HTTPS + labelled simulated Alexa+ web experience
+P0 verified: 34/55 (9 BLOCKED, 12 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
+Automated tests: backend pytest 176 passed (full suite incl. real-video scene/pose, Windows 11); CI 4/4 jobs green; Playwright journeys in CI
+Fire TV device/simulator: Android TV API 30 emulator, Fire OS APK, 33/33 D-pad checks (tests/firetv/device-report.md); physical Fire TV untested; Vega Virtual Device in progress
+Bee: BLOCKED (adapter + redacted probe ready; no BEE_TOKEN run yet); canonical day uses SIMULATED_VERIFIED fixtures
+Alexa+/MCP: LIVE_VERIFIED MCP server (hosted initialize + tool call); Alexa+ device NOT_CONNECTED; simulated experience SIMULATED_VERIFIED
+Ring: BLOCKED live (adapter, webhook HMAC, WHEP decode, redacted probe ready); recorded real-scene vision verified on licensed footage
+AWS: LIVE_VERIFIED (DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager, CloudWatch, EC2/SSM)
+Incident reporting: DEMO_MOCK (SIMULATED DISPATCH — NOT SENT TO POLICE); export available
+6-scenario full replay: PASS (local, CI and hosted AWS)
+Adversarial branches: PASS (fake deposit, removal, family pickup, report review, visible/empty/occluded, real_* footage branches)
+Security/consent: PASS (household isolation, forged webhook, tampering, consent revocation, privacy controls, MCP host/origin/auth)
+Submission: NOT_READY (public video and Devpost entry need the owner's accounts)
+```
 
-## Executed evidence
+## Remaining known blockers (literal)
 
-- Python domain/API/security suite: **65 passing tests**, including the regression rejecting one looped rep with renamed frame IDs. The generated JUnit file and hosted CI retain the actual counts. Tests cover four promises, ambiguity/negation, DST, teacher/sister schedules, restart, idempotency, pixel-derived deposit/removal, human-reviewed incidents, private media, tampering, consent, and fourteen-versus-fifteen cycles.
-- External official MCP SDK client: initializes over TCP Streamable HTTP, discovers all five original tools, compiles a contract through the shared engine, reads the same REST state, and observes rejection of model-provided dispatch approval.
-- React/TypeScript production build: passed. Browser suite: **4 passed**, including full canonical replay, adverse delivery, mobile/consent/D-pad preview, and a second authenticated TV tab reading shared state.
-- Fire OS native APK: compiled successfully with Gradle 8.13/full JDK 21/Android 35; repeat build succeeded with outputs up to date. An APK build is not install/launch or device-runtime proof.
-- Native MediaPipe CPU inference: official lite model SHA-256 recorded in `docs/evidence/mediapipe-negative.json`; a twenty-frame generated no-human video decoded successfully with zero counted reps. This is a negative model check, not human exercise accuracy or fifteen real squats.
-- Real generated fifteen-second WebM removal video: 150 decoded frames at 10 FPS; original and annotated artifacts have distinct SHA-256 digests and parent-child provenance. This content is synthetic, never a live Ring recording.
-- Hosted engineering CI on development commit `d7e55395ff9cbe489889f752b27e1f9c294c9356`: backend/MCP/security, browser and native APK jobs all passed ([run](https://github.com/vivekyarra/Amazon/actions/runs/39391975642)). Later commits must pass their own checks before promotion.
+1. Live Bee data through a real device/account (P0-008) — needs the owner's `BEE_TOKEN`.
+2. Live Ring camera / simulator API run, WHEP video into the TV (P0-018, P0-019, P0-038) — needs a Playground token and an authorized device.
+3. Fire OS **device** or **Vega Virtual Device** run (P0-036, P0-047 device test in CI).
+4. Recorded-Ring threshold path (P0-032) and Ring-backed watchdog reconciliation (P0-022) beyond recorded stock footage.
+5. Public under-three-minute video and Devpost submission (P0-048, P0-050, P0-051), Open Source PR link (P0-052).
+6. Remaining engineering hardening rows (P0-004, P0-006, P0-007, P0-027, P0-029, P0-044, P0-045, P0-054) need live-provider faults or device views to be exercised.
+7. Independent release review (P0-055).
 
-Generated artifacts: `artifacts/backend-results.xml`, `artifacts/playwright/results.xml`, `artifacts/screenshots/`, `artifacts/vision/mediapipe-negative-result.json`, native `app/build/outputs/apk/debug/`, and `artifacts/release/release-result.json`. Source-controlled screenshots under `docs/images` show the actual synthetic web UI. Build artifacts, credentials and databases stay ignored.
+## Proof
 
-- Container: full image build, authenticated six-stage replay, evidence export, fifteen reps, restart durability and teardown passed; image digest is in `docs/evidence/container.json`. The cloud build preserves TLS/package signatures using the existing public CA bundle.
-- Actual browser recording: `docs/demo/browser-demo.mp4`, **40.2 seconds**, captured from a real running synthetic session after login. It is not Fire TV runtime footage or an uploaded public submission video.
+- Hosted: https://100-49-183-59.sslip.io · [AWS smoke](evidence/aws-deployment.json) · [MCP + EventBridge](evidence/aws-mcp-scheduler.json)
+- Vision: [scene-vision.json](evidence/scene-vision.json), [annotated frames](evidence/scene/)
+- Pose: [pose-15-fixture.json](evidence/pose-15-fixture.json), [annotated clip](evidence/pose-15-annotated.mp4)
+- TV: [device report](../tests/firetv/device-report.md), [walkthrough](evidence/firetv/walkthrough.mp4)
+- MCP: [external client](evidence/mcp-external-client.json), [Inspector CLI](evidence/mcp-inspector-cli.json)
+- CI: [ci-runs.md](evidence/ci-runs.md)
 
-## Requirement determination
-
-The [traceability map](requirements-traceability.md) and [machine manifest](acceptance-manifest.json) retain all 55 P0 criteria. **24 narrow local/synthetic behaviors have reproducible test references. 31 full criteria are blocked or require further proof.** Scoped test success does not establish original-device completion or independent release approval.
-
-`./scripts/verify-release.sh` intentionally returns nonzero with `NOT_COMPLETE`. It requires all 55 criteria, actual primary-track runtime evidence and independent review. No report overrides the checker to manufacture completion.
-
-## Remaining work
-
-1. Authorized Bee device/SSE ingestion and real data provenance; documented account linking, access revocation and live ingestion wiring.
-2. Ring device permissions, checked provider webhook/auth contract, actual WHEP decoder/secure video relay, bounded renewal/history reconciliation, real scene calibration and a general object detector/tracker validated on permitted footage. Calibrated colored-marker fixtures are not a general real-world vision model.
-3. Positive human exercise video through MediaPipe, camera/body calibration, real fourteen-versus-fifteen evidence and synchronized TV playback. Generated marker cycles alone do not meet the human-video gate.
-4. Actual Fire OS device/eligible simulator install, launch, four-view D-pad/lifecycle/video tests and recorded runtime proof. No Vega runtime has been tested.
-5. Full AWS durable worker/queue/scheduler/object-store implementation and deployment, encrypted media, bounded history, backup-retention deletion and production operational/security review. The supported current deployment is a local single-service SQLite demo and explicitly refuses live mode.
-6. Genuine Alexa+ account integration or independently eligible simulated-route proof, primary-track rules review, public under-three-minute video, owner submission, real tool feedback and independent release review. No official police receiver or cross-app TV locking API is available or claimed.
-
-The original release target remains unchanged. The owner deferred device credentials/testing until later; independent implementation and engineering validation proceed without inventing live results.
-
-
-## Live-runtime checkpoint, 20 October 2026
-
-The backend suite now reaches **91 passing tests**, including encrypted retention, durable inbox/lease recovery, official Ring signatures/bindings, actual WebRTC codec loopback and eight Moto AWS-runtime tests. Updated APK and web builds pass. Actual public-reference MediaPipe inference counted one accepted rep in 363 frames; no fifteen-rep or genuine device acceptance is claimed. The WHEP relay and AWS implementation listed as absent above have now been implemented and locally tested, but actual provider/cloud/TV runtime proof remains unavailable. Current remaining work and exact handoff context supersede the earlier implementation list: see [continuation.md](continuation.md), [architecture.md](architecture.md), and [AWS guide](../infra/aws/README.md). Per-camera exclusions, adjustable retention and disconnect/delete workflows remain unimplemented. The full release gate still intentionally fails.
+The product never marks a contract VERIFIED without policy-matching evidence; the golden end state deliberately leaves the sister call, drinks and parcel custody unresolved.
