@@ -1,6 +1,6 @@
 # Integration status
 
-Checked 2026-10-20. These labels describe observed capabilities, never adapter filenames.
+Checked 2026-10-20; re-audited 2026-10-22 (no new live probes). These labels describe observed capabilities, never adapter filenames.
 
 | Surface / capability | Status | Actual proof / gap |
 |---|---|---|
@@ -17,11 +17,11 @@ Checked 2026-10-20. These labels describe observed capabilities, never adapter f
 | Fire OS runtime (emulator) | SIMULATED_VERIFIED (Android TV emulator) | Fire OS-compatible APK installed and launched on an Android TV API 30 emulator; all four views D-pad navigable, live backend state, 14/15 locked vs 15/15 unlocked, offline/reconnect and restart persistence; 33/33 scripted checks ([report](../tests/firetv/device-report.md), [walkthrough](evidence/firetv/walkthrough.mp4)). Not a physical Fire TV and not Vega OS |
 | Vega OS app on Vega Virtual Device | SIMULATED_VERIFIED (official simulator) | `apps/firetv-vega-hud` (React Native for Vega, SDK 0.24.12112) built with `npm run build:app`, installed/launched with `vega run-app -d VirtualDevice` on VVD 1.0.6500.0 (OS 1.2 TV, `simulated: true`); all four views navigated by D-pad against the live HTTPS judge backend, 14/15 locked → 15/15 unlocked ([report](../tests/firetv/vega-device-report.md), [recording](evidence/vega/vvd-session-4x.mp4)) |
 | Physical Fire TV device | BLOCKED | No Fire TV hardware available; APK and Vega app are ready to sideload |
-| Web TV/companion | SIMULATED_VERIFIED | Shared authenticated ledger, inbox, D-pad web preview and mobile browser tests |
+| Web TV/companion | SIMULATED_VERIFIED | Shared authenticated ledger, inbox, D-pad web preview and mobile browser tests; `tests/e2e/tv-remote.spec.ts` reaches every control of the four TV views by arrow keys with visible focus |
 | Companion push notifications | IMPLEMENTED (standard Web Push) | VAPID Web Push to the owner's browser/phone via service worker; generic lock-screen copy for incident kinds; per-alert `ACCEPTED_BY_PUSH_SERVICE` recorded (never 'seen on device'); unit-tested with a stubbed push service, not yet observed on a real phone |
 | Official incident filing | BLOCKED | No authorized official receiver; export and isolated labeled demo receiver only |
 | Bee haptics / earbud whisper | BLOCKED | No supported, authorized delivery API verified; no fake-success adapter |
 | Cross-app entertainment lock | BLOCKED | Only voluntary Muni in-app gate; no third-party app control |
 | AWS runtime | LIVE_VERIFIED | CloudFormation stack `done-irl-judge` (us-east-1): EC2 single reducer behind Caddy/Let's Encrypt HTTPS, DynamoDB (KMS, PITR), S3 (SSE-KMS, versioned, private), EventBridge Scheduler → SQS (KMS, DLQ), CloudWatch logs/alarms. Full-day replay over HTTPS produced 69 DynamoDB items and 14 KMS-encrypted S3 objects; a wall-clock promise created 3 real schedules ([deployment](evidence/aws-deployment.json), [scheduler](evidence/aws-mcp-scheduler.json)). CloudFront was blocked by account verification; Bedrock Nova invocation returned 'Operation not allowed' (friction A3/A4) |
 
-A logical WATCHING subagent is persisted event-driven work. It never promises uninterrupted camera observation. Live source failures do not silently become live-looking replay. Last successful live probes: AWS and hosted MCP (2026-10-20), Ring Partner API Playground + live studio relay (2026-10-21), Bee (2026-10-21/22). None for an Alexa device or physical Fire TV hardware.
+A logical WATCHING subagent is persisted event-driven work. It never promises uninterrupted camera observation. Live source failures do not silently become live-looking replay. Last successful live probes: AWS and hosted MCP (2026-10-20), Ring Partner API Playground + live studio relay (2026-10-21), Bee (2026-10-21/22). None for an Alexa device or physical Fire TV hardware. Known gap in the in-app status endpoint (`/api/integrations/status`, P0-006): only Bee and Ring carry a `last_verified_at`; Ring video, Alexa+, Fire TV, MCP, Companion and Worker report status and reason without a timestamp, AWS synchronization is reported only by `/health/ready`, and Fire TV shows BLOCKED (no physical device) even though the emulator and Vega Virtual Device runs above exist.

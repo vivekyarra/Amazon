@@ -66,20 +66,29 @@
   {
    "requirement_id": "P0-004",
    "requirement": "All API writes are authenticated, authorized, idempotent, validated and auditable.",
-   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "apps/mcp-orchestrator/done_irl/models.py",
+    "apps/mcp-orchestrator/done_irl/privacy.py",
+    "apps/mcp-orchestrator/tests/test_fixtures_matrix.py"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "test_P0_004_every_post_route_is_classified",
+    "test_P0_004_exempt_routes_keep_their_replacement_contract",
+    "test_P0_004_mcp_tool_writes_are_authenticated_idempotent_and_audited",
+    "test_P0_004_write_is_authenticated_authorized_idempotent_validated_and_audited (28 routes)",
+    "test_idempotency_exact_response_and_conflict",
+    "test_no_anonymous_reads_writes_mcp"
+   ],
+   "evidence": "docs/evidence/write-and-degradation-matrix.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Authenticated live pilot writes now have guarded configuration and provenance; live provider/account runtime and independent review remain unverified."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-22",
+   "note": "Every POST route is enumerated from the app and must be classified. All 28 ledger writes: 401 without a session, 403 for non-admin on judge routes, 400 without Idempotency-Key, 422 on unknown fields, an appended traced ledger event (specific or command.audited), identical replay and 409 on key reuse. Login/logout/Ring webhook keep documented replacement contracts (credential exchange; session revocation; HMAC + device binding + event-id dedupe). MCP tool writes share the audited path."
   },
   {
    "requirement_id": "P0-005",
@@ -108,11 +117,14 @@
     "apps/mcp-orchestrator/done_irl/engine.py",
     "apps/mcp-orchestrator/done_irl/api.py"
    ],
-   "automated_tests": [],
+   "automated_tests": [
+    "test_F19_token_expiry_shows_gap_fallback_label_and_recovers_without_reset",
+    "test_provider_disconnect_cancels_work_and_never_auto_reconnects"
+   ],
    "evidence": null,
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Status endpoints expose processed provider receipts and current decoded-frame status; actual authorized device probes remain unavailable."
+    "Bee and Ring report last_verified_at from processed provider receipts and never claim LIVE without one (tested). Ring video, Alexa+, Fire TV, MCP, Companion and Worker entries give status and reason but no last-verified timestamp. AWS synchronization appears only in /health/ready, not in /api/integrations/status. Fire TV reports BLOCKED there although emulator/VVD runs exist. Not every integration exposes a truthful last-verified time yet."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -126,11 +138,16 @@
     "apps/mcp-orchestrator/done_irl/engine.py",
     "apps/mcp-orchestrator/done_irl/api.py"
    ],
-   "automated_tests": [],
+   "automated_tests": [
+    "scripts/smoke-container.py (CI container job)",
+    "test_F20_full_service_restart_mid_watchdog_and_scheduler_recovers_without_duplicates",
+    "test_P0_007_P0_045_bee_stream_failure_backs_off_then_reconnects_with_cursor",
+    "test_P0_007_startup_failure_recovery_and_teardown"
+   ],
    "evidence": null,
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Local restart verified; container/full platform lifecycle teardown still needs execution."
+    "Process and container startup, failure (readiness 503), reconnect, resume after restart and teardown are documented and tested (docs/evidence/write-and-degradation-matrix.md). AWS stack teardown (delete-stack, then retiring the retained EBS/S3/DynamoDB/KMS resources) is documented but has not been executed, because the judge stack must stay live through judging."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -354,11 +371,15 @@
     "apps/mcp-orchestrator/done_irl/engine.py",
     "apps/mcp-orchestrator/done_irl/api.py"
    ],
-   "automated_tests": [],
+   "automated_tests": [
+    "test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label",
+    "test_real_webrtc_codec_loopback_is_explicit_synthetic_transport",
+    "test_recorded_demo_is_refused_outside_demo_and_never_labelled_live"
+   ],
    "evidence": null,
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Sources labeled; actual Ring simulator and live switching not connected."
+    "Tested: expiry and failure never hide simulation. An ended Ring session drops to NOT_CONNECTED with no silent replay, RECORDED DEMO is never labelled LIVE, and synthetic markers stay SIMULATED. Switching between a real Ring camera, the Ring simulator and replay has never run against a real Ring account or simulator, so reliable source switching is unproven."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -420,11 +441,15 @@
     "apps/mcp-orchestrator/done_irl/engine.py",
     "apps/mcp-orchestrator/done_irl/api.py"
    ],
-   "automated_tests": [],
+   "automated_tests": [
+    "test_F20_full_service_restart_mid_watchdog_and_scheduler_recovers_without_duplicates",
+    "test_F20_restart_during_open_camera_session_records_gap_and_keeps_count",
+    "test_configured_live_webhook_persists_receipt_without_claiming_video"
+   ],
    "evidence": null,
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Leased durable provider worker and Ring notification handling/recovery implemented; actual Ring observation/history-based watchdog reconciliation still missing."
+    "Tested: the watchdog survives a full service restart and still yields exactly one incident, and PROCESS_RESTART_GAP and other monitoring gaps are recorded. Signed Ring motion webhooks are recorded only as a VIDEO_ANALYSIS_REQUIRED gap. They do not update PorchWatchdog custody, and there is no Ring event/history reconciliation against a real account, so 'reacts to relevant Ring events' is unproven."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -529,11 +554,14 @@
     "apps/mcp-orchestrator/done_irl/engine.py",
     "apps/mcp-orchestrator/done_irl/api.py"
    ],
-   "automated_tests": [],
+   "automated_tests": [
+    "tests/e2e/journeys.spec.ts (web incident view)",
+    "tests/firetv/vega-device-report.md (Views B/C, manual)"
+   ],
    "evidence": null,
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Working authenticated web incident view; actual TV device/runtime proof missing."
+    "Web incident view verified in CI. It shows the annotated frame, the 15 s clip, the person crop, the source label, the authorization buttons, the manifest hash and capture gaps. On the Vega Virtual Device, Views B/C show evidence hashes, provenance, source labels, confirm/approve/dispatch dialogs and the approval record. The TV does not render the images or clip (references only) and has no incident audit timeline (only contracts have one). No physical Fire TV was used."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -565,11 +593,15 @@
     "apps/mcp-orchestrator/done_irl/engine.py",
     "apps/mcp-orchestrator/done_irl/api.py"
    ],
-   "automated_tests": [],
+   "automated_tests": [
+    "test_F11_F12_report_prepare_approve_simulated_dispatch",
+    "test_generated_video_duration_and_original_derived_provenance",
+    "test_real_removal_creates_one_incident_with_truthful_clip_labels"
+   ],
    "evidence": null,
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Preview shows available synthetic evidence; live images/clip/address unavailable."
+    "The preview packet has detection time, trajectory timestamps (recorded clips), frame/crop/clip evidence with SHA-256, a manifest hash and capture-gap limitations. Location is a fixed 'Front porch' UI label; the packet records no location source (camera binding or owner-provided address), so 'location source' is unmet."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -621,12 +653,14 @@
     "apps/mcp-orchestrator/done_irl/scene.py"
    ],
    "automated_tests": [
-    "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches"
+    "apps/mcp-orchestrator/tests/test_scene.py::test_real_threshold_branches",
+    "test_F13_F14_F15_threshold_golden",
+    "test_real_threshold_branches"
    ],
    "evidence": "docs/evidence/scene-vision.json",
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [
-    "Stage 5 can consume a REAL_RECORDED_STOCK arrival clip (branches real_visible/real_empty/real_bags) and cross-reference the morning drinks contract through the same reducers. The clips are public stock scenes (two without a real doorway), not a Ring recording or live trigger."
+    "Stage 5 consumes a REAL_RECORDED_STOCK arrival clip (real_visible/real_empty/real_bags) and cross-references the morning drinks contract through the same reducers. The clips are public stock scenes, two of them without a real doorway. No Ring recording or live Ring trigger has been processed."
    ],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": null
@@ -866,38 +900,66 @@
   {
    "requirement_id": "P0-044",
    "requirement": "The scenario suite includes all positive/negative fixtures F01–F24 with machine-checked golden assertions.",
-   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    ".github/workflows/ci.yml",
+    "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "apps/mcp-orchestrator/tests/test_fixtures_matrix.py",
+    "packages/testing-fixtures/manifest.json",
+    "scripts/firetv-emulator-check.py",
+    "tests/e2e/tv-remote.spec.ts"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "scripts/firetv-emulator-check.py in CI firetv-emulator job (F24)",
+    "test_fixtures_matrix.py (F01-F23)",
+    "test_pose_recorded.py (F17, F18)",
+    "test_scenarios.py (F01-F18, F20, F21)",
+    "test_security.py (F22, F23)",
+    "tests/e2e/tv-remote.spec.ts (F24)"
+   ],
+   "evidence": "docs/evidence/fixture-matrix.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "F01–F24 mapped; actual human-video repetitions and native device navigation remain unverified."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-22",
+   "note": "All 24 fixtures map to passing machine-checked golden assertions (docs/evidence/fixture-matrix.md). Sources are SYNTHETIC, REAL_RECORDED_STOCK or mocked transport; F17/F18 use a generated humanoid video through real MediaPipe (spec 11.4); F24 runs on an Android TV emulator and Chromium, not a physical Fire TV."
   },
   {
    "requirement_id": "P0-045",
    "requirement": "Ring/Bee failures, worker crash, expired tokens, unauthorized webhook, storage failure and replay duplication degrade safely and are tested.",
-   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    "apps/mcp-orchestrator/done_irl/adapters.py",
+    "apps/mcp-orchestrator/done_irl/api.py",
+    "apps/mcp-orchestrator/done_irl/aws_runtime.py",
+    "apps/mcp-orchestrator/done_irl/camera.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "apps/mcp-orchestrator/done_irl/runtime.py",
+    "apps/mcp-orchestrator/done_irl/store.py",
+    "apps/mcp-orchestrator/done_irl/webhooks.py"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label",
+    "test_F21_duplicate_removal_and_duplicate_provider_event_produce_one_of_each",
+    "test_P0_007_P0_045_bee_stream_failure_backs_off_then_reconnects_with_cursor",
+    "test_P0_007_startup_failure_recovery_and_teardown",
+    "test_P0_045_storage_failure_mid_write_rolls_back_and_reports_retryable",
+    "test_P0_045_unauthorized_and_cross_household_webhooks_change_nothing",
+    "test_bee_401_redacted",
+    "test_forged_webhook_no_state_change",
+    "test_inbox_restart_lease_recovery_and_exactly_once_reducer",
+    "test_ring_expired_token_does_not_become_live_or_simulated",
+    "test_s3_failure_keeps_outbox_for_retry"
+   ],
+   "evidence": "docs/evidence/write-and-degradation-matrix.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Durable queue lease/crash, consent, provider duplicate, encrypted retention, AWS emulation and real codec tests pass; actual provider/cloud faults still unverified."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-22",
+   "note": "Each named fault (Ring/Bee failure, worker crash, expired tokens, unauthorized webhook, storage failure, replay duplication) has a test proving safe degradation: no fabricated LIVE state, gaps recorded, rollback/retry, exactly-once reduction. Faults are injected with mocked transports, Moto and patched storage; no real provider or AWS outage was observed."
   },
   {
    "requirement_id": "P0-046",
@@ -1086,20 +1148,27 @@
   {
    "requirement_id": "P0-054",
    "requirement": "`docs/requirements-traceability.md`, `docs/progress.md`, `docs/integration-status.md`, and `docs/acceptance-report.md` are current, evidence-backed, and disclose all unresolved limitations.",
-   "verification_result": "IMPLEMENTED_UNVERIFIED",
+   "verification_result": "VERIFIED",
    "integration_source": "BLOCKED",
    "code_paths": [
+    "apps/mcp-orchestrator/done_irl/api.py",
     "apps/mcp-orchestrator/done_irl/engine.py",
-    "apps/mcp-orchestrator/done_irl/api.py"
+    "docs/acceptance-report.md",
+    "docs/integration-status.md",
+    "docs/progress.md",
+    "docs/requirements-traceability.md",
+    "scripts/update-acceptance.py"
    ],
-   "automated_tests": [],
-   "evidence": null,
+   "automated_tests": [
+    "python scripts/update-acceptance.py --check",
+    "test_P0_054_traceability_and_reports_match_manifest"
+   ],
+   "evidence": "docs/acceptance-report.md",
    "scope": "Synthetic local development workflow; no live/device inference",
-   "blockers": [
-    "Traceability/progress/report maintained; independent dated release review still needed."
-   ],
+   "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
-   "verified_at": null
+   "verified_at": "2026-10-22",
+   "note": "Traceability is generated from the manifest and checked in CI; the acceptance report and progress counts are asserted against the manifest; all four documents were audited on 2026-10-22 and list every remaining limitation. 23 rows cite the CI backend JUnit artifact (artifacts/backend-results.xml, uploaded per run) rather than a committed file. This is a self-audit: the independent release review is P0-055 (BLOCKED)."
   },
   {
    "requirement_id": "P0-055",

@@ -201,11 +201,41 @@ def create_app(data_dir=None, passwords=None):
             raise ApiError(403, "OWNER_REQUIRED", "Owner approval is required.")
         return p
 
+    def audited(fn, channel, operation, p, key):
+        """Every accepted write leaves an append-only ledger event (P0-004).
+
+        Domain reducers emit their own specific events; a write whose reducer emitted nothing
+        (for example a paused studio, a clock advance with no due job or a push subscription)
+        gets a generic, content-free audit record instead. Keys are stored only as digests.
+        """
+
+        def op(s, db):
+            marker = s["events"][-1] if s["events"] else None
+            result = fn(s, db)
+            if (s["events"][-1] if s["events"] else None) is marker:
+                e.emit(
+                    s,
+                    "command.audited",
+                    {
+                        "channel": channel,
+                        "operation": operation,
+                        "principal": p["username"],
+                        "role": p["role"],
+                        "idempotency_key_sha256": hashlib.sha256(key.encode()).hexdigest(),
+                    },
+                )
+            return result
+
+        return op
+
     def command(request, p, fn):
         key = request.headers.get("idempotency-key")
         if not key or len(key) > 200:
             raise ApiError(400, "IDEMPOTENCY_KEY_REQUIRED", "Supply an Idempotency-Key of 1–200 characters.")
-        return mutate(p["household"], key, request.state.fingerprint, fn)
+        via_http = hasattr(request, "url")
+        operation = "POST " + request.url.path if via_http else "bridge_ring_camera_to_firetv"
+        channel = "HTTP" if via_http else "MCP"
+        return mutate(p["household"], key, request.state.fingerprint, audited(fn, channel, operation, p, key))
 
     @asynccontextmanager
     async def lifespan(app):
@@ -891,7 +921,17 @@ def create_app(data_dir=None, passwords=None):
         return recorded_demo.status(p["household"])
 
     @app.post("/api/studio/recorded/stop")
-    async def recorded_stop(p=Depends(owner)):
+    async def recorded_stop(request: Request, p=Depends(owner)):
+        # Same idempotent, audited command path as every other write; the close is recorded first.
+        command(
+            request,
+            p,
+            lambda s, db: e.emit(
+                s,
+                "studio.recorded_demo_close_requested",
+                {"camera_id": recorded_demo.status(p["household"]).get("id")},
+            ),
+        )
         await recorded_demo.stop(p["household"])
         return recorded_demo.status(p["household"])
 
@@ -1192,7 +1232,8 @@ def create_app(data_dir=None, passwords=None):
         if require_admin and p["role"] != "admin":
             raise ApiError(403, "ADMIN_REQUIRED", "Synthetic ingestion requires judge role.")
         key = "mcp:" + name + ":" + e.digest(args)
-        return mutate(p["household"], key, e.digest([name, args]), lambda s, db: fn(s, db, p))["result"]
+        op = audited(lambda s, db: fn(s, db, p), "MCP", name, p, key)
+        return mutate(p["household"], key, e.digest([name, args]), op)["result"]
 
     @mcp.tool()
     def list_active_contracts() -> dict:

@@ -88,12 +88,12 @@
     },
     {
       "id": "F19",
-      "test": "test_ring_session_budget_and_cleanup",
+      "test": "test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label; test_F19_token_expiry_shows_gap_fallback_label_and_recovers_without_reset; test_ring_session_budget_and_cleanup",
       "limitation": "Mock transport, live session not verified"
     },
     {
       "id": "F20",
-      "test": "test_F20_restart_recovers_watchdog_and_jobs"
+      "test": "test_F20_full_service_restart_mid_watchdog_and_scheduler_recovers_without_duplicates; test_F20_restart_recovers_watchdog_and_jobs"
     },
     {
       "id": "F21",
@@ -109,8 +109,8 @@
     },
     {
       "id": "F24",
-      "test": "mobile layout, consent pause, and TV keyboard navigation",
-      "limitation": "Web preview only; native device test BLOCKED"
+      "test": "scripts/firetv-emulator-check.py (CI firetv-emulator job); tests/e2e/tv-remote.spec.ts",
+      "limitation": "Android TV emulator and Chromium; no physical Fire TV"
     },
     {
       "id": "F17",

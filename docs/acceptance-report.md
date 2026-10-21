@@ -1,16 +1,16 @@
 # Acceptance report
 
-Dated 20 October 2026. Produced from `scripts/verify-release.py`, the [acceptance manifest](acceptance-manifest.json) and the evidence linked below. This is an engineering self-assessment; the spec's independent release review (P0-055) has **not** happened.
+Dated 20 October 2026; release audit 22 October 2026 (`feat/audit`). Produced from `scripts/verify-release.py`, the [acceptance manifest](acceptance-manifest.json) and the evidence linked below. This is an engineering self-assessment; the spec's independent release review (P0-055) has **not** happened.
 
 ```text
 Muni Release Report
 -----------------------
 Target: FULL_ORIGINAL_VISION_COMPLETE (unchanged; see release-target.md)
 Verdict: NOT_COMPLETE
-Commit: feat/completion head at time of writing (see git log); CI run 39425459386 green on f7d996c
+Commit: feat/audit head at time of writing (see git log); last recorded green CI run 39460611952 on d9b0f3e (docs/evidence/ci-runs.md)
 Primary track: Alexa+ — self-hosted MCP Streamable HTTP (2025-11-25) live on hosted HTTPS + labelled simulated Alexa+ web experience
-P0 verified: 41/55 (3 BLOCKED, 11 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
-Automated tests: backend pytest 211 passed (incl. real-video scene/pose and 27 QA regressions); Playwright 5/5; CI 5/5 jobs green incl. Android TV emulator D-pad journey
+P0 verified: 45/55 (3 BLOCKED, 7 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md; audit upgraded P0-004, P0-044, P0-045, P0-054; live Ring and Bee upgraded P0-008, P0-018, P0-038
+Automated tests: backend pytest 265 passed (incl. real-video scene/pose, 27 QA regressions and the F01–F24/P0-004 matrix in test_fixtures_matrix.py); Playwright 6/6 (incl. tv-remote.spec.ts); CI 5/5 jobs green incl. Android TV emulator D-pad journey
 Fire TV device/simulator: Vega OS app on the official Vega Virtual Device (tests/firetv/vega-device-report.md) and Fire OS APK on an Android TV API 30 emulator (33/33, in CI); physical Fire TV untested
 Bee: LIVE_VERIFIED on a real Bee device (SSE `new-utterance`/`todo-created` stream and todo backfill compiled into contracts); the judge demo day replays scripted Bee events
 Alexa+/MCP: LIVE_VERIFIED MCP server (hosted initialize + tool call); Alexa+ device NOT_CONNECTED; simulated experience SIMULATED_VERIFIED
@@ -27,9 +27,13 @@ Submission: NOT_READY (public video and Devpost entry need the owner's accounts)
 
 2. Ring: live source switching under token expiry (P0-019) and history-based watchdog reconciliation (P0-022) not exercised live; Playground tokens last ~30 minutes.
 3. Physical Fire TV device run (simulator/emulator runs done: P0-036, P0-047).
-4. Recorded-Ring threshold path (P0-032) and Ring-backed watchdog reconciliation (P0-022) beyond recorded stock footage.
+4. Recorded-Ring threshold path (P0-032) and Ring-event-driven watchdog reconciliation (P0-022); signed Ring motion only records a VIDEO_ANALYSIS_REQUIRED gap today.
 5. Public under-three-minute video upload and Devpost submission (P0-048, P0-051). Open Source PR: https://github.com/AmazonAppDev/devices-agent-skills/pull/16.
-6. Remaining engineering hardening rows (P0-004, P0-006, P0-007, P0-027, P0-029, P0-044, P0-045, P0-054) need live-provider faults or device views to be exercised.
+6. Remaining open engineering rows:
+   - **P0-006.** `/api/integrations/status` gives a last-verified time only for Bee and Ring, and AWS synchronization is not listed there.
+   - **P0-007.** AWS stack teardown is documented but has not been executed while the judge stack must stay live.
+   - **P0-027.** The TV incident view shows evidence references, not the images or clip, and has no incident audit timeline.
+   - **P0-029.** The report packet records no location source; "Front porch" is a fixed label.
 7. Independent release review (P0-055).
 
 ## Proof
@@ -40,5 +44,6 @@ Submission: NOT_READY (public video and Devpost entry need the owner's accounts)
 - TV: [device report](../tests/firetv/device-report.md), [walkthrough](evidence/firetv/walkthrough.mp4)
 - MCP: [external client](evidence/mcp-external-client.json), [Inspector CLI](evidence/mcp-inspector-cli.json)
 - CI: [ci-runs.md](evidence/ci-runs.md)
+- Fixtures F01–F24: [fixture-matrix.md](evidence/fixture-matrix.md) · write contract and degraded paths: [write-and-degradation-matrix.md](evidence/write-and-degradation-matrix.md)
 
 The product never marks a contract VERIFIED without policy-matching evidence; the golden end state deliberately leaves the sister call, drinks and parcel custody unresolved.
