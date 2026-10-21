@@ -23,7 +23,7 @@
 
 ## Owner actions that unblock remaining gates
 
-1. `BEE_TOKEN` in an ignored `.env`, then `uv run python scripts/bee-live-probe.py` while speaking promises (P0-008, Bee evidence).
+1. ~~Bee live test~~ — done by the owner with a borrowed device (attested).
 2. Fresh Ring Playground token, then `uv run --extra ring-video python scripts/ring-live-probe.py` (P0-018/019/038).
 3. A consented recording of the owner doing 15 squats (strengthens P0-039 with human footage).
 4. ~~Approve the Agent Skill PR~~ — opened https://github.com/AmazonAppDev/devices-agent-skills/pull/16.

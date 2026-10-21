@@ -17,4 +17,4 @@ Target: **FULL_ORIGINAL_VISION_COMPLETE** (not silently lowered).
 - AWS Builder: live stack — see `docs/submission.md`.
 - Open Source: Agent Skill ready in `packages/agent-skills/evidence-backed-commitments`; PR opened: https://github.com/AmazonAppDev/devices-agent-skills/pull/16.
 
-The original-vision target still cannot pass while live Bee/Ring, physical device and submission media gates remain.
+The original-vision target still cannot pass while physical-device, real-Alexa-device, video-upload and independent-review gates remain.
