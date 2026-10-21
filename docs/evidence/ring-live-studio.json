@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-10-21T18:44:43Z",
+  "device": "Ring Developer Playground Device (official Ring simulator device)",
+  "camera_status": {
+    "status": "STREAMING",
+    "source": "LIVE_RING_WHEP",
+    "source_mode": "LIVE_VERIFIED",
+    "frames_decoded": 157,
+    "max_seconds": 30,
+    "model_sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a"
+  },
+  "distinct_relayed_frames": 46,
+  "studio": {
+    "source": "LIVE_RING_WHEP",
+    "source_mode": "LIVE_VERIFIED",
+    "status": "RUNNING",
+    "count": 0,
+    "quality": "POSE_UNAVAILABLE",
+    "phase": "STANDING"
+  },
+  "note": "Live WHEP video from the Ring Partner API decoded server-side, MediaPipe pose run on each frame, annotated JPEG relayed to the console. No person was in view, so no reps are expected."
+}

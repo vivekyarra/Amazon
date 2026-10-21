@@ -1,0 +1,68 @@
+{
+  "probe": "ring-live-probe/1",
+  "started_at": "2026-10-21T18:41:52.326446+00:00",
+  "base_url": "https://api.amazonvision.com",
+  "token_present": true,
+  "redaction": "Device ids hashed; no images, names, addresses or tokens stored.",
+  "devices": {
+    "count": 1,
+    "shape": [
+      "attributes.image_url",
+      "attributes.name",
+      "id",
+      "relationships.capabilities.data.id",
+      "relationships.capabilities.data.type",
+      "relationships.capabilities.links.related",
+      "relationships.configurations.data.id",
+      "relationships.configurations.data.type",
+      "relationships.configurations.links.related",
+      "relationships.location.data.id",
+      "relationships.location.data.type",
+      "relationships.location.links.related",
+      "relationships.status.data.id",
+      "relationships.status.data.type",
+      "relationships.status.links.related",
+      "type"
+    ]
+  },
+  "capabilities": [
+    {
+      "device": "dev_8b956869d7",
+      "video": true,
+      "attribute_keys": [
+        "audio",
+        "battery_status",
+        "co_detection_listener",
+        "contact_detection",
+        "flood_detection",
+        "freeze_detection",
+        "glass_break_detection",
+        "image_enhancements",
+        "motion_detection",
+        "smoke_detection",
+        "tamper_detection",
+        "video"
+      ]
+    }
+  ],
+  "history": {
+    "device": "dev_8b956869d7",
+    "events": 0,
+    "types": []
+  },
+  "whep": {
+    "frames_decoded": 176,
+    "distinct_frame_digests": 176,
+    "whep_status": "201_ANSWER_RECEIVED",
+    "session_budget_seconds": 30,
+    "negotiated_codecs": [
+      "H264",
+      "RTX"
+    ],
+    "resolution": "1280x720",
+    "seconds_open": 10.1,
+    "session_closed": true
+  },
+  "verdict": "LIVE_VERIFIED_RING_VIDEO",
+  "finished_at": "2026-10-21T18:42:23.751987+00:00"
+}
