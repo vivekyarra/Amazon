@@ -151,22 +151,8 @@ def annotate(frame, points, studio=None):
         1,
         cv2.LINE_AA,
     )
-    if studio:
-        text = (
-            f"REPS {studio.get('count', 0)}/{studio.get('target_reps') or 15}  {studio.get('phase', '')}  knee {studio.get('angle', 0):.0f}"
-        )
-        cv2.rectangle(image, (0, h - 40), (w, h), (20, 20, 20), -1)
-        cv2.putText(image, text, (10, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (120, 240, 160), 2)
-        gate = studio.get("gate", "LOCKED")
-        cv2.putText(
-            image,
-            "REALITY-LOCK " + gate,
-            (w - 250, h - 14),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
-            (120, 240, 160) if gate == "UNLOCKED" else (80, 160, 250),
-            2,
-        )
+    # The console renders the authoritative rep counter and gate beside the frame; no burned-in copy.
+    del studio
     return image
 
 
