@@ -150,3 +150,10 @@ class PushSubscribeInput(StrictModel):
 
 class PushUnsubscribeInput(StrictModel):
     endpoint: str = Field(min_length=12, max_length=1000)
+
+
+class OwnerPromiseInput(StrictModel):
+    """A promise the signed-in owner types into the app (not a Bee capture)."""
+
+    utterance: str = Field(min_length=1, max_length=4000)
+    timezone: str = Field(default="Asia/Kolkata", max_length=64)

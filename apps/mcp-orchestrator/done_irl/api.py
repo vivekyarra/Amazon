@@ -23,6 +23,7 @@ from .models import (
     ClockInput,
     ConsentInput,
     PoseInput,
+    OwnerPromiseInput,
 )
 from .store import Store
 from .runtime import Runtime
@@ -576,6 +577,43 @@ def create_app(data_dir=None, passwords=None):
     @app.post("/api/ingest/bee-simulated")
     def ingest(body: BeeInput, request: Request, p=Depends(admin)):
         return command(request, p, lambda s, db: e.compile_bee(s, body))
+
+    def owner_input_source():
+        # One labelling rule for owner-typed promises, shared by the MCP compile tool and the app.
+        return {
+            "source": "MCP_OWNER_INPUT",
+            "source_mode": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+            "consent_scope": "demo" if demo else "household",
+        }
+
+    def compile_owner_input(s, bee):
+        s["_event_source"] = owner_input_source()
+        try:
+            return e.compile_bee(s, bee)
+        finally:
+            s.pop("_event_source", None)
+
+    @app.post("/api/owner/promises")
+    def owner_promise(body: OwnerPromiseInput, request: Request, p=Depends(owner)):
+        """Owner-scoped "Add a promise": same compiler and labels as the MCP compile tool, no admin bypass."""
+        key = request.headers.get("idempotency-key") or ""
+
+        def op(s, db):
+            from datetime import datetime, timezone
+
+            now = datetime.now(timezone.utc) if s.get("clock_mode") == "WALL" else datetime.fromisoformat(s["now"])
+            bee = BeeInput(
+                event_id="owner:" + hashlib.sha256(key.encode()).hexdigest()[:40],
+                utterance=body.utterance,
+                speaker="SELF",
+                counterparty="Household",
+                occurred_at=now,
+                timezone=body.timezone,
+            )
+            ids = compile_owner_input(s, bee)
+            return {"contract_ids": ids, "source": "MCP_OWNER_INPUT", "source_mode": owner_input_source()["source_mode"]}
+
+        return command(request, p, op)
 
     @app.post("/api/admin/scenarios/{stage}/run")
     def scenario(stage: int, body: ScenarioInput, request: Request, p=Depends(admin)):
@@ -1163,13 +1201,7 @@ def create_app(data_dir=None, passwords=None):
         )
 
         def op(s, db, p):
-            s["_event_source"] = {
-                "source": "MCP_OWNER_INPUT",
-                "source_mode": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
-                "consent_scope": "demo" if demo else "household",
-            }
-            ids = e.compile_bee(s, bee)
-            s.pop("_event_source", None)
+            ids = compile_owner_input(s, bee)
             return {"contract_ids": ids, "source_mode": s["source_mode"]}
 
         return tool_command("compile", [utterance_json, speaker_context], op)
