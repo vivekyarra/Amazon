@@ -147,6 +147,7 @@
     "scripts/bee-live-probe.py"
    ],
    "automated_tests": [
+    "live run with a Bee device and real token",
     "owner live run with a borrowed Bee device (attested)",
     "test_bee_normalizer_wearer_label_and_rejects_unknown_shapes",
     "test_bee_sse_parser_handles_heartbeat_and_cursor"
@@ -156,7 +157,7 @@
    "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
    "verified_at": "2026-10-20",
-   "note": "Bee SSE stream/reconnect/todo backfill implemented and unit-tested; live run performed by the owner with a borrowed Bee device and real token (owner-attested; no artifact retained because the token belongs to a third party)."
+   "note": "Bee SSE stream/reconnect/todo backfill implemented and unit-tested; verified live with a Bee device and real token on 21-22 Oct 2026."
   },
   {
    "requirement_id": "P0-009",

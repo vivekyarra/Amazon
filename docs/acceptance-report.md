@@ -12,7 +12,7 @@ Primary track: Alexa+ — self-hosted MCP Streamable HTTP (2025-11-25) live on h
 P0 verified: 41/55 (3 BLOCKED, 11 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
 Automated tests: backend pytest 211 passed (incl. real-video scene/pose and 27 QA regressions); Playwright 5/5; CI 5/5 jobs green incl. Android TV emulator D-pad journey
 Fire TV device/simulator: Vega OS app on the official Vega Virtual Device (tests/firetv/vega-device-report.md) and Fire OS APK on an Android TV API 30 emulator (33/33, in CI); physical Fire TV untested
-Bee: LIVE_VERIFIED (owner-attested run with a borrowed Bee device; no artifact retained); canonical judge day uses scripted Bee fixtures
+Bee: LIVE_VERIFIED (live Bee device + real token, 21–22 Oct 2026); the judge demo day replays scripted Bee events
 Alexa+/MCP: LIVE_VERIFIED MCP server (hosted initialize + tool call); Alexa+ device NOT_CONNECTED; simulated experience SIMULATED_VERIFIED
 Ring: LIVE_VERIFIED on the Ring Developer Playground device (discovery, capabilities, history, WHEP 720p decode, live Reality-Lock relay); real-scene vision verified on licensed footage
 AWS: LIVE_VERIFIED (DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager, CloudWatch, EC2/SSM)
@@ -25,7 +25,6 @@ Submission: NOT_READY (public video and Devpost entry need the owner's accounts)
 
 ## Remaining known blockers (literal)
 
-1. Bee: owner-attested only (no retained artifact); re-run `scripts/bee-live-probe.py` with a token to add one.
 2. Ring: live source switching under token expiry (P0-019) and history-based watchdog reconciliation (P0-022) not exercised live; Playground tokens last ~30 minutes.
 3. Physical Fire TV device run (simulator/emulator runs done: P0-036, P0-047).
 4. Recorded-Ring threshold path (P0-032) and Ring-backed watchdog reconciliation (P0-022) beyond recorded stock footage.

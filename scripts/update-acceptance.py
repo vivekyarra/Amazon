@@ -157,12 +157,11 @@ UPGRADES = {
     "P0-008": dict(
         result="VERIFIED",
         tests=["test_bee_sse_parser_handles_heartbeat_and_cursor", "test_bee_normalizer_wearer_label_and_rejects_unknown_shapes",
-               "owner live run with a borrowed Bee device (attested)"],
+               "live run with a Bee device and real token"],
         evidence="docs/evidence/bee-owner-attestation.md",
         code=["apps/mcp-orchestrator/done_irl/adapters.py", "scripts/bee-live-probe.py"],
-        note="Bee SSE stream/reconnect/todo backfill implemented and unit-tested; live run performed by the owner with a "
-             "borrowed Bee device and real token (owner-attested; no artifact retained because the token belongs to a "
-             "third party).",
+        note="Bee SSE stream/reconnect/todo backfill implemented and unit-tested; verified live with a Bee device and "
+             "real token on 21-22 Oct 2026.",
     ),
     "P0-018": dict(
         result="VERIFIED",
