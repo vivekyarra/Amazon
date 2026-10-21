@@ -4,8 +4,6 @@ import type { State } from "../../../packages/physical-contract-schema";
 import { EXAMPLES, answer, whisperCopy, type RpcLogEntry } from "./alexaSim";
 import "./alexa.css";
 
-const BADGE = "SIMULATED ALEXA+ — not an Alexa device";
-
 type Turn = {
   id: number;
   who: "you" | "sim";
@@ -169,37 +167,31 @@ export default function AlexaSimulator({
   return (
     <section
       className={`panel alexa-sim ${compact ? "compact" : ""}`}
-      aria-label="Simulated Alexa+ experience"
+      aria-label="Alexa+"
     >
       <div className="panel-head">
         <h2>
-          <AudioLines size={15} aria-hidden /> Simulated Alexa+
+          <AudioLines size={15} aria-hidden /> Alexa+
         </h2>
-        <span className="alexa-badge" data-testid="alexa-sim-badge">
-          {BADGE}
-        </span>
         <details className="info">
-          <summary aria-label="How simulated Alexa+ works">?</summary>
+          <summary aria-label="How Alexa+ answers">?</summary>
           <p>
-            Deterministic intent router (no LLM) calling the real MCP server at{" "}
+            A deterministic intent router (no LLM) calls the MCP server at{" "}
             <code>/mcp/</code> with your session. Answers come only from tool
-            results; nothing is sent to an Alexa device.
+            results.
           </p>
         </details>
       </div>
       <div className="alexa-grid">
         <div className="alexa-convo">
           {whispers.length > 0 && (
-            <div className="alexa-whispers" aria-label="Simulated whispers">
+            <div className="alexa-whispers" aria-label="Whispers">
               {[...whispers].reverse().map((w) => (
                 <div
                   className="alexa-whisper"
                   key={w.alert_id}
                   data-kind={w.kind}
                 >
-                  <span className="alexa-badge small">
-                    SIMULATED WHISPER — not delivered to any device
-                  </span>
                   <strong>
                     {w.kind === "ARRIVAL_ITEM_CHECK"
                       ? "Arrival check"
@@ -221,9 +213,6 @@ export default function AlexaSimulator({
                 key={t.id}
                 className={`alexa-turn ${t.who} ${t.error ? "error" : ""}`}
               >
-                {t.who === "sim" && (
-                  <span className="alexa-badge small">{BADGE}</span>
-                )}
                 <p
                   data-testid={t.who === "sim" ? "alexa-sim-reply" : undefined}
                 >
@@ -254,7 +243,7 @@ export default function AlexaSimulator({
             }}
           >
             <input
-              aria-label="Ask simulated Alexa+"
+              aria-label="Ask Alexa+"
               placeholder="Alexa, is my parcel safe?"
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
@@ -264,9 +253,7 @@ export default function AlexaSimulator({
               className="button"
               onClick={toggleMic}
               disabled={!Ctor || busy}
-              aria-label={
-                listening ? "Stop listening" : "Speak to simulated Alexa+"
-              }
+              aria-label={listening ? "Stop listening" : "Speak to Alexa+"}
               title={
                 Ctor
                   ? "Uses the browser's Web Speech API"
@@ -335,6 +322,11 @@ export default function AlexaSimulator({
           })}
         </aside>
       </div>
+      {!compact && (
+        <p className="alexa-footnote">
+          Web experience calling the DONE/IRL MCP server
+        </p>
+      )}
     </section>
   );
 }

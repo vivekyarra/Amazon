@@ -24,7 +24,7 @@ try {
  await page.waitForTimeout(2200);
  await page.getByRole('button',{name:'Review evidence / Prepare report'}).click();
  await page.waitForTimeout(1500);
- await page.getByRole('button',{name:'Review simulated report approval'}).click();
+ await page.getByRole('button',{name:'Review report'}).click();
  await page.waitForTimeout(1800);
  await page.getByRole('button',{name:'Close approval'}).click();
  await page.getByRole('button',{name:'Commitment ledger',exact:true}).click();

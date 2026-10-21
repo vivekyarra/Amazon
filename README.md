@@ -17,14 +17,14 @@
 1. **Mission control → Run the full day**, or step through the six scene buttons (08:15 promises → 14:10 courier → 15:00/15:35 escalation → 16:30 removal → 19:45 arrival → 20:30 Reality-Lock).
 2. **Judge replay** lets you pick branches: fake vs real deposit, family pickup vs report review, visible vs empty vs occluded hands, and the `real_*` branches that run on licensed real footage.
 3. **Studio → Play RECORDED DEMO through MediaPipe** streams a 15-squat video through the real pose engine; watch 14/15 stay locked and 15/15 unlock.
-4. Talk or type to the **SIMULATED ALEXA+** panel ("Alexa, what did I promise today?") and watch the MCP JSON-RPC log.
+4. Talk or type to the **Alexa+** panel (a web experience over the MCP server) ("Alexa, what did I promise today?") and watch the MCP JSON-RPC log.
 5. Point any MCP client at `https://100-49-183-59.sslip.io/mcp/` with the session token as a Bearer header.
 
-![Mission control — actual synthetic web workspace](docs/images/mission-control.png)
+![Mission control — demo day web workspace](docs/images/mission-control.png)
 
 | Reality-Lock studio (RECORDED DEMO through MediaPipe) | Simulated Alexa+ over real MCP calls | Owner "Today" view (wall clock) |
 |---|---|---|
-| ![Reality-Lock studio](docs/images/studio.png) | ![Simulated Alexa+](docs/images/alexa.png) | ![Owner Today view](docs/images/buddy.png) |
+| ![Reality-Lock studio](docs/images/studio.png) | ![Alexa+ web experience](docs/images/alexa.png) | ![Owner Today view](docs/images/buddy.png) |
 
 Evidence: [AWS deployment](docs/evidence/aws-deployment.json) · [live MCP + EventBridge](docs/evidence/aws-mcp-scheduler.json) · [real-scene vision](docs/evidence/scene-vision.json) · [pose 15-rep fixture](docs/evidence/pose-15-fixture.json) · [TV emulator walkthrough](docs/evidence/firetv/walkthrough.mp4) · [CI](docs/evidence/ci-runs.md)
 

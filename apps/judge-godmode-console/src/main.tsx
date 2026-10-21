@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 import {
@@ -8,6 +14,7 @@ import {
   Bell,
   Check,
   CheckCheck,
+  ChevronLeft,
   ChevronRight,
   Clock3,
   Code2,
@@ -16,7 +23,6 @@ import {
   FastForward,
   FileCheck2,
   Fingerprint,
-  FlaskConical,
   Home,
   Layers3,
   LockKeyhole,
@@ -54,7 +60,6 @@ import {
   Brand,
   ContractChip,
   Empty,
-  SourceTag,
   Status,
   api,
   contractSource,
@@ -64,7 +69,9 @@ import {
   human,
   isOpen,
   sensorVerified,
+  plain,
   sleep,
+  sourceWords,
   userConfirmed,
   uuid,
 } from "./ui";
@@ -93,7 +100,7 @@ const labels: Record<Page, string> = {
   replay: "Judge replay",
   contracts: "Commitment ledger",
   studio: "Reality-Lock studio",
-  alexa: "Simulated Alexa+",
+  alexa: "Alexa+",
   incidents: "Evidence & incidents",
   evidence: "Evidence packet",
   settings: "Connections & privacy",
@@ -122,7 +129,7 @@ const subtitles: Partial<Record<Page, string>> = {
   overview:
     "Promises you make out loud, closed only when real-world evidence proves them.",
   replay:
-    "One virtual day on the same handlers live mode uses. Every source is labeled.",
+    "Six scenes from one household day, run through the same handlers as live mode.",
   contracts: "Every promise stays open until its evidence policy is met.",
   studio: "Verified squats before evening entertainment.",
   alexa: "Voice-style questions answered only from real MCP tool calls.",
@@ -179,6 +186,21 @@ const icons: Record<string, typeof Package> = {
 };
 const reducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? true;
+// Below this width the sidebar is always an icon rail; phones switch to bottom tabs.
+const RAIL_QUERY = "(max-width: 959px)";
+const SIDEBAR_KEY = "done-irl.sidebar";
+const readCollapsed = () => {
+  try {
+    return localStorage.getItem(SIDEBAR_KEY) === "rail";
+  } catch {
+    return false;
+  }
+};
+const ATTENTION = [
+  "AWAITING_HUMAN_DECISION",
+  "EVIDENCE_PREPARED",
+  "REPORT_APPROVED",
+];
 
 function App() {
   const params = new URLSearchParams(location.search);
@@ -222,6 +244,49 @@ function App() {
   const [cameraDevice, setCameraDevice] = useState("");
   const [frameTick, setFrameTick] = useState(0);
   const [tvSession, setTvSession] = useState("");
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [narrow, setNarrow] = useState(
+    () => window.matchMedia?.(RAIL_QUERY).matches ?? false,
+  );
+  const [synced, setSynced] = useState(true);
+  const [pill, setPill] = useState<{ y: number; h: number } | null>(null);
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const rail = narrow || collapsed;
+  useEffect(() => {
+    const mq = window.matchMedia?.(RAIL_QUERY);
+    if (!mq) return;
+    const onChange = () => setNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  const toggleSidebar = () =>
+    setCollapsed((was) => {
+      try {
+        localStorage.setItem(SIDEBAR_KEY, was ? "full" : "rail");
+      } catch {
+        /* storage unavailable: the choice lasts for this visit */
+      }
+      return !was;
+    });
+  // One active-item indicator that glides between nav items (and into the footer).
+  useLayoutEffect(() => {
+    const side = sidebarRef.current;
+    if (!side) return;
+    const place = () => {
+      const el = side.querySelector<HTMLElement>(
+        '.nav-item[aria-current="page"]',
+      );
+      setPill((p) => {
+        if (!el) return null;
+        const next = { y: el.offsetTop, h: el.offsetHeight };
+        return p && p.y === next.y && p.h === next.h ? p : next;
+      });
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(side);
+    return () => ro.disconnect();
+  });
   useEffect(() => {
     if (authenticated && tv)
       void api("/tv/sessions", {})
@@ -275,7 +340,10 @@ function App() {
       .then((d) => setIntegrations(d.integrations))
       .catch(() => {});
     const es = new EventSource("/api/events/stream");
+    es.onopen = () => setSynced(true);
+    es.onerror = () => setSynced(false);
     es.addEventListener("ledger", () => {
+      setSynced(true);
       lastEvent.current++;
       void refresh().catch(() => {});
     });
@@ -539,14 +607,20 @@ function App() {
   ).length;
   const openCount = state.contracts.filter(isOpen).length;
   const incident = state.incidents[0];
+  const attention = state.incidents.filter((i) =>
+    ATTENTION.includes(i.status),
+  ).length;
   // Label incident media by the provenance the server recorded, never by assumption.
   const incidentSource = incident
     ? (state.evidence.find(
         (e) => e.evidence_id === incident.packet.removal_evidence_id,
       )?.provenance ?? "SIMULATED_VERIFIED")
     : "SIMULATED_VERIFIED";
-  const realScene = incidentSource === "REAL_RECORDED_STOCK";
-  const srcWord = realScene ? "licensed stock" : "synthetic";
+  const footage = incident?.packet.source;
+  const incidentSourceText =
+    incidentSource === "REAL_RECORDED_STOCK" && footage?.license
+      ? `Licensed public footage (${footage.license}, ${footage.author})`
+      : sourceWords(incidentSource);
   const latestImage = [...state.evidence]
     .reverse()
     .find((v) => v.mime.startsWith("image/") && v.kind !== "PERSON_CROP");
@@ -562,7 +636,7 @@ function App() {
   const latestAlert = state.alerts[state.alerts.length - 1];
   const studio = state.studio;
   const target = studio?.target_reps ?? 15;
-  // RECORDED DEMO: a pinned synthetic video decoded server-side through MediaPipe. Never LIVE RING.
+  // Pinned recorded workout video decoded server-side through MediaPipe (never the live camera).
   const recordedDemo = !live && studio?.source === "RECORDED_DEMO_VIDEO";
   const playRecordedDemo = () =>
     guarded(async () => {
@@ -655,7 +729,6 @@ function App() {
         </span>
         <span className="contract-meta">
           <ContractChip c={c} evidence={state.evidence} />
-          <SourceTag mode={contractSource(c)} />
         </span>
       </button>
     );
@@ -678,65 +751,113 @@ function App() {
   );
 
   return (
-    <div className={`app ${tv ? "tv-mode" : ""}`} data-page={page}>
-      <aside className="sidebar" aria-label="Primary">
-        <Brand />
-        <div className="workspace">
-          <span className="workspace-avatar" aria-hidden>
+    <div
+      className={`app ${tv ? "tv-mode" : ""} ${rail ? "rail" : ""}`}
+      data-page={page}
+    >
+      <aside className="sidebar" aria-label="Primary" ref={sidebarRef}>
+        <div className="side-head">
+          <Brand />
+        </div>
+        {!narrow && (
+          <button
+            className="side-toggle has-tip"
+            onClick={toggleSidebar}
+            aria-label={rail ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!rail}
+          >
+            <ChevronLeft size={14} strokeWidth={2.4} aria-hidden />
+            <span className="tip" aria-hidden>
+              {rail ? "Expand sidebar" : "Collapse sidebar"}
+            </span>
+          </button>
+        )}
+        <div className="household">
+          <span className="household-avatar" aria-hidden>
             {live ? "H" : "D"}
           </span>
-          <div>
-            <strong>{live ? "Your household" : "Demo household"}</strong>
-            <small>{admin ? "Judge workspace" : "Household owner"}</small>
-          </div>
+          <span className="side-label">
+            {live ? "My household" : "Demo day"}
+          </span>
         </div>
+        {pill && (
+          <span
+            className="side-indicator"
+            aria-hidden
+            style={{ transform: `translateY(${pill.y}px)`, height: pill.h }}
+          />
+        )}
         <nav className="nav">
           {navPages.map((id) => {
             const Icon = pageIcons[id];
             const active =
               page === id || (id === "incidents" && page === "evidence");
+            const count = id === "incidents" ? attention : 0;
             return (
               <button
                 key={id}
                 className={`nav-item ${active ? "active" : ""}`}
                 aria-current={active ? "page" : undefined}
+                aria-label={pageLabel(id)}
                 onClick={() => navigate(id)}
-                title={pageLabel(id)}
               >
-                {active && <span className="nav-pill" aria-hidden />}
-                <Icon size={17} aria-hidden />
-                <span className="nav-label">{pageLabel(id)}</span>
-                {id === "incidents" && incident && (
+                <span className="nav-icon" aria-hidden>
+                  <Icon size={18} />
+                  {count > 0 && <span className="nav-dot" />}
+                </span>
+                <span className="side-label" aria-hidden>
+                  {pageLabel(id)}
+                </span>
+                {count > 0 && (
                   <span className="nav-count" aria-hidden>
-                    1
+                    {count}
                   </span>
                 )}
               </button>
             );
           })}
         </nav>
-        <div className="sidebar-bottom">
+        <div className="side-foot">
           <button
             className={`nav-item ${page === "settings" ? "active" : ""}`}
             aria-current={page === "settings" ? "page" : undefined}
+            aria-label="Connections & privacy"
             onClick={() => navigate("settings")}
-            title="Connections & privacy"
           >
-            {page === "settings" && <span className="nav-pill" aria-hidden />}
-            <Settings2 size={17} aria-hidden />
-            <span className="nav-label">Connections & privacy</span>
+            <span className="nav-icon" aria-hidden>
+              <Settings2 size={18} />
+            </span>
+            <span className="side-label" aria-hidden>
+              Connections & privacy
+            </span>
           </button>
-          <div className="ledger-status" title="Persistent · SQLite WAL">
-            <span className="pulse-dot" aria-hidden />
-            <span className="nav-label">Ledger online</span>
+          <div
+            className={`side-status has-tip ${synced ? "" : "offline"}`}
+            role="status"
+            tabIndex={0}
+            aria-describedby="sync-tip"
+          >
+            <span className="status-dot" aria-hidden />
+            <span className="status-text">
+              {synced ? "Synced" : "Reconnecting…"}
+            </span>
+            <span className="tip" id="sync-tip" role="tooltip">
+              {synced
+                ? "Ledger synced · changes saved as they happen"
+                : "Connection lost · retrying in the background"}
+            </span>
           </div>
           <button
             className="nav-item"
+            aria-label="Sign out"
             onClick={() => void logOut()}
-            title="Sign out"
           >
-            <LogOut size={17} aria-hidden />
-            <span className="nav-label">Sign out</span>
+            <span className="nav-icon" aria-hidden>
+              <LogOut size={18} />
+            </span>
+            <span className="side-label" aria-hidden>
+              Sign out
+            </span>
           </button>
         </div>
       </aside>
@@ -755,20 +876,21 @@ function App() {
                 {running ? "Replaying" : "Working"}
               </span>
             )}
-            <span
-              className={`household-tag ${live ? "live" : ""}`}
-              title={
-                live
-                  ? "Your private household, wall-clock time"
-                  : "Synthetic demo household, virtual clock"
-              }
-            >
-              {live ? "PRIVATE HOUSEHOLD" : "SYNTHETIC DEMO"}
-            </span>
+            {!live && (
+              <span
+                className="demo-chip has-tip"
+                tabIndex={0}
+                aria-describedby="demo-tip"
+              >
+                Demo day
+                <span className="tip" id="demo-tip" role="tooltip">
+                  Replay of a scripted day. Your own household runs live.
+                </span>
+              </span>
+            )}
             <span className="clock" title={day(state.now)}>
               <Clock3 size={14} aria-hidden />
               {fmt(state.now)} IST
-              {!live && <span className="clock-note">virtual</span>}
             </span>
             {tvSession && (
               <span
@@ -910,7 +1032,6 @@ function App() {
                         ? `Scene ${state.scenario} of 6 · ${stages[state.scenario - 1][1]}`
                         : "Six scenes, one connected story"}
                     </span>
-                    <SourceTag mode="SIMULATED_VERIFIED" />
                   </div>
                   <ol
                     className="track"
@@ -971,7 +1092,7 @@ function App() {
                         <span className="kind">
                           {human(latestAlert.kind)} · {fmt(latestAlert.at)}
                         </span>
-                        <p>{latestAlert.message}</p>
+                        <p>{plain(latestAlert.message)}</p>
                       </div>
                     ) : (
                       <p className="muted-text">
@@ -1009,12 +1130,12 @@ function App() {
                         [
                           "studio",
                           "Studio",
-                          "Reality-Lock · RECORDED DEMO via MediaPipe",
+                          "Reality-Lock · pose-verified workout",
                         ],
                         [
                           "alexa",
                           "Alexa+",
-                          "Simulated voice over real MCP calls",
+                          "Voice answers from MCP tool calls",
                         ],
                         [
                           "incidents",
@@ -1091,15 +1212,9 @@ function App() {
                     <FastForward size={14} aria-hidden /> Advance 25 minutes
                   </button>
                   <span className="bar-clock">
-                    <Clock3 size={14} aria-hidden /> {fmt(state.now)} virtual
+                    <Clock3 size={14} aria-hidden /> {fmt(state.now)} IST
                   </span>
                   <span className="bar-divider" aria-hidden />
-                  <span
-                    className="bar-source"
-                    title="Live sources are not connected in the judge replay"
-                  >
-                    Source <SourceTag mode="SIMULATED_VERIFIED" />
-                  </span>
                   <select
                     aria-label="Failure injection"
                     defaultValue=""
@@ -1147,7 +1262,7 @@ function App() {
                       >
                         <option value="deposit">Real deposit</option>
                         <option value="fake">Courier fake-out</option>
-                        <optgroup label="Real stock footage · REAL_RECORDED_STOCK">
+                        <optgroup label="Licensed public footage">
                           <option value="real_deposit">Real deposit</option>
                           <option value="real_no_deposit">
                             Real no deposit
@@ -1165,7 +1280,7 @@ function App() {
                         <option value="unknown">Unknown person</option>
                         <option value="family">Family pickup</option>
                         <option value="retained">Parcel remains</option>
-                        <optgroup label="Real stock footage · REAL_RECORDED_STOCK">
+                        <optgroup label="Licensed public footage">
                           <option value="real_removal">Real removal</option>
                           <option value="real_pickup">Real owner pickup</option>
                           <option value="real_passerby">Real passer-by</option>
@@ -1193,7 +1308,7 @@ function App() {
                         <option value="empty">Drinks not visible</option>
                         <option value="visible">Drinks visible</option>
                         <option value="ambiguous">Occluded</option>
-                        <optgroup label="Real stock footage · REAL_RECORDED_STOCK">
+                        <optgroup label="Licensed public footage">
                           <option value="real_visible">
                             Real: bag visible
                           </option>
@@ -1258,7 +1373,6 @@ function App() {
                           <strong>{c.title}</strong>
                           <span className="psc-meta">
                             <ContractChip c={c} evidence={state.evidence} />
-                            <SourceTag mode={contractSource(c)} />
                           </span>
                         </button>
                       ))
@@ -1274,7 +1388,7 @@ function App() {
                       {latestImage ? (
                         <img
                           src={"/api/evidence/" + latestImage.evidence_id}
-                          alt="Calibrated synthetic porch observation"
+                          alt="Latest processed porch frame"
                         />
                       ) : (
                         <div className="frame-empty">
@@ -1283,13 +1397,10 @@ function App() {
                         </div>
                       )}
                       <figcaption>
-                        <SourceTag
-                          mode={latestImage?.provenance ?? "SIMULATED_VERIFIED"}
-                        />
                         <span>
-                          {latestImage?.provenance === "REAL_RECORDED_STOCK"
-                            ? "Licensed public clip · not Ring, not this household"
-                            : "Marker detector · not Ring"}
+                          {latestImage
+                            ? `Latest frame · ${fmt(latestImage.captured_at)} IST`
+                            : "Porch camera"}
                         </span>
                       </figcaption>
                     </figure>
@@ -1431,7 +1542,6 @@ function App() {
                             </span>
                             <span className="row-meta">
                               <ContractChip c={c} evidence={state.evidence} />
-                              <SourceTag mode={contractSource(c)} />
                             </span>
                           </button>
                         );
@@ -1481,9 +1591,6 @@ function App() {
                       required
                       maxLength={4000}
                     />
-                    <SourceTag
-                      mode={admin ? "SIMULATED_VERIFIED" : "MCP_OWNER_INPUT"}
-                    />
                     <button
                       className="button primary small"
                       disabled={busy || !state.consent}
@@ -1525,7 +1632,6 @@ function App() {
                           </div>
                           <div className="detail-chips">
                             <ContractChip c={c} evidence={state.evidence} />
-                            <SourceTag mode={contractSource(c)} />
                           </div>
                           <blockquote>“{c.original_utterance}”</blockquote>
                           <dl className="facts">
@@ -1539,16 +1645,17 @@ function App() {
                             </dd>
                             <dt>Verification</dt>
                             <dd>{human(c.verification_modality)}</dd>
+                            <dt>Source</dt>
+                            <dd>{sourceWords(contractSource(c))}</dd>
                             <dt>Evidence</dt>
                             <dd>
                               {linked.length
-                                ? linked.map((ev) => (
-                                    <SourceTag
-                                      key={ev.evidence_id}
-                                      mode={ev.provenance}
-                                      title={human(ev.kind)}
-                                    />
-                                  ))
+                                ? linked
+                                    .map(
+                                      (ev) =>
+                                        `${human(ev.kind)} (${sourceWords(ev.provenance).toLowerCase()})`,
+                                    )
+                                    .join(", ")
                                 : "None yet"}
                             </dd>
                           </dl>
@@ -1650,7 +1757,7 @@ function App() {
                                 <button
                                   className="button"
                                   disabled={busy}
-                                  title="Recorded as USER_CONFIRMED, not sensor proof"
+                                  title="Recorded as your confirmation, not sensor proof"
                                   onClick={() =>
                                     void guarded(() =>
                                       act(
@@ -1707,23 +1814,19 @@ function App() {
                       {studio?.status === "RUNNING"
                         ? live
                           ? "PROCESSING RING FRAMES"
-                          : recordedDemo
-                            ? "PROCESSING RECORDED DEMO FRAMES"
-                            : "PROCESSING SYNTHETIC FRAMES"
+                          : "PROCESSING FRAMES"
                         : studio
                           ? human(studio.status).toUpperCase()
                           : "CAMERA STUDIO"}
                     </span>
-                    <span className="studio-source">
-                      {live
-                        ? studio?.source_mode === "LIVE_VERIFIED" &&
-                          studio?.status === "RUNNING"
+                    {live && (
+                      <span className="studio-source">
+                        {studio?.source_mode === "LIVE_VERIFIED" &&
+                        studio?.status === "RUNNING"
                           ? "LIVE RING"
-                          : "AWAITING LIVE CAMERA"
-                        : recordedDemo
-                          ? "RECORDED DEMO"
-                          : "DEMO / SYNTHETIC"}
-                    </span>
+                          : "AWAITING LIVE CAMERA"}
+                      </span>
+                    )}
                   </div>
                   {studio && (
                     <span className="frame-wait" role="status">
@@ -1746,8 +1849,8 @@ function App() {
                         live
                           ? "Authorized Ring frames with MediaPipe skeleton"
                           : recordedDemo
-                            ? "Recorded demo video (synthetic humanoid) with MediaPipe skeleton"
-                            : "Synthetic marker pose extraction with skeleton overlay"
+                            ? "Recorded workout with MediaPipe skeleton overlay"
+                            : "Marker pose tracking with skeleton overlay"
                       }
                     />
                   ) : (
@@ -1757,7 +1860,7 @@ function App() {
                       <p>
                         {live
                           ? "Choose a linked Ring camera. MediaPipe evaluates complete movements."
-                          : "Play the recorded demo through MediaPipe, or process generated marker frames."}
+                          : "Play the recorded workout, or run the marker-tracked workout."}
                       </p>
                       {live && (
                         <label>
@@ -1785,7 +1888,7 @@ function App() {
                         disabled={busy || (live && !cameraDevice)}
                       >
                         <Video size={15} aria-hidden />
-                        {live ? "Connect Ring camera" : "Open synthetic camera"}
+                        {live ? "Connect Ring camera" : "Open camera feed"}
                       </button>
                     </div>
                   )}
@@ -1855,9 +1958,7 @@ function App() {
                         <p>
                           {live
                             ? `${target} camera-backed cycles verified.`
-                            : recordedDemo
-                              ? `${target} cycles verified from the RECORDED DEMO.`
-                              : `${target} synthetic cycles verified.`}{" "}
+                            : `${target} full cycles verified.`}{" "}
                           In-app gate unlocked.
                         </p>
                       </div>
@@ -1897,7 +1998,7 @@ function App() {
                         onClick={() => void playRecordedDemo()}
                       >
                         <Video size={15} aria-hidden />
-                        Play RECORDED DEMO through MediaPipe
+                        Play recorded workout
                       </button>
                       <button
                         className="button wide"
@@ -1905,9 +2006,7 @@ function App() {
                         onClick={() => void workout()}
                       >
                         <Play size={14} aria-hidden />
-                        {playing
-                          ? "Processing marker frames…"
-                          : "Run synthetic workout"}
+                        {playing ? "Processing marker frames…" : "Run workout"}
                       </button>
                     </div>
                   )}
@@ -1954,9 +2053,8 @@ function App() {
                     <summary>How verification works</summary>
                     <p>
                       Frames are decoded into pose landmarks and checked for
-                      full cycles with timestamps and quality gates. RECORDED
-                      DEMO is a pinned synthetic video, never LIVE RING. This is
-                      a web preview, not Fire TV runtime proof.
+                      full cycles with timestamps and quality gates. Only
+                      complete movements count toward the target.
                     </p>
                     <p>
                       Voluntary movement recognition, not medical guidance.
@@ -1991,15 +2089,10 @@ function App() {
                               incident.packet.source_frame_evidence_id ??
                               incident.packet.removal_evidence_id)
                           }
-                          alt={
-                            realScene
-                              ? "Removal frame from licensed public footage"
-                              : "Synthetic removal evidence"
-                          }
+                          alt="Annotated removal frame"
                         />
                         <figcaption>
-                          <SourceTag mode={incidentSource} />
-                          {fmt(incident.detected_at)} IST
+                          Removal · {fmt(incident.detected_at)} IST
                         </figcaption>
                       </figure>
                       {incident.packet.source_clip_evidence_id && (
@@ -2007,17 +2100,14 @@ function App() {
                           <video
                             controls
                             preload="metadata"
-                            aria-label={`15-second ${srcWord} removal clip`}
+                            aria-label="15-second removal clip"
                             src={
                               "/api/evidence/" +
                               incident.packet.source_clip_evidence_id
                             }
                           />
                           <figcaption>
-                            <SourceTag mode={incidentSource} />
-                            {realScene
-                              ? "Licensed public clip · not Ring"
-                              : "Generated clip · no live Ring recording"}
+                            {incident.clip_actual_duration_seconds}s clip
                           </figcaption>
                         </figure>
                       )}
@@ -2031,7 +2121,7 @@ function App() {
                       <Video size={15} aria-hidden />
                       <span>
                         {incident.clip_actual_duration_seconds
-                          ? `${incident.clip_actual_duration_seconds}s clip available. ${realScene ? "Licensed public footage (not Ring, not this household)" : "Synthetic source"} and annotated artifacts are preserved.`
+                          ? `${incident.clip_actual_duration_seconds}s clip available. Source and annotated artifacts are preserved.`
                           : "Evidence incomplete. No clip was preserved."}
                       </span>
                     </p>
@@ -2065,7 +2155,7 @@ function App() {
                           disabled={busy}
                           onClick={() => setShowApproval(true)}
                         >
-                          Review simulated report approval
+                          Review report
                           <ArrowRight size={15} aria-hidden />
                         </button>
                       )}
@@ -2091,10 +2181,10 @@ function App() {
                       )}
                     </div>
                     {incident.receipt && (
-                      <div className="banner warning receipt" role="status">
+                      <div className="banner receipt" role="status">
                         <ShieldCheck size={15} aria-hidden />
                         <span>
-                          <strong>{incident.receipt.label}</strong>
+                          <strong>Demo receiver — not sent to police</strong>
                           <code>{incident.receipt.receipt_id}</code>
                         </span>
                       </div>
@@ -2120,38 +2210,26 @@ function App() {
                             "/api/evidence/" +
                             incident.packet.person_crop_evidence_id
                           }
-                          alt={
-                            realScene
-                              ? "Person crop from licensed public footage"
-                              : "Synthetic person marker crop"
-                          }
+                          alt="Best available person crop"
                         />
                         <div>
                           <strong>Best available person crop</strong>
-                          <small>
-                            {realScene ? "Public footage" : "Synthetic"} · no
-                            facial identification
-                          </small>
+                          <small>No facial identification</small>
                         </div>
                       </div>
                       <dl className="facts">
                         <dt>Detected</dt>
-                        <dd>{fmt(incident.detected_at)} IST · virtual</dd>
+                        <dd>{fmt(incident.detected_at)} IST</dd>
                         <dt>Location</dt>
-                        <dd>
-                          {realScene
-                            ? "Public stock scene · not this household"
-                            : "Synthetic porch"}
-                        </dd>
+                        <dd>Front porch</dd>
                         <dt>Coverage</dt>
-                        <dd>
-                          {incident.clip_actual_duration_seconds}s {srcWord}{" "}
-                          clip
-                        </dd>
+                        <dd>{incident.clip_actual_duration_seconds}s clip</dd>
+                        <dt>Source</dt>
+                        <dd>{incidentSourceText}</dd>
                         <dt>Receiver</dt>
-                        <dd>DEMO_RECEIVER_ONLY</dd>
+                        <dd>Demo receiver</dd>
                         <dt>Official dispatches</dt>
-                        <dd>0 · simulated only</dd>
+                        <dd>0 · not sent to police</dd>
                       </dl>
                       {incident.packet.source?.license && (
                         <p className="credit">
@@ -2169,7 +2247,7 @@ function App() {
                       {incident.packet.capture_gaps?.length > 0 && (
                         <ul className="gaps" aria-label="Capture gaps">
                           {incident.packet.capture_gaps.map((g) => (
-                            <li key={g}>{g}</li>
+                            <li key={g}>{plain(g)}</li>
                           ))}
                         </ul>
                       )}
@@ -2241,10 +2319,10 @@ function App() {
                           <strong>{human(item.kind)}</strong>
                           <small>
                             {fmt(item.captured_at)} IST ·{" "}
+                            {sourceWords(item.provenance)} ·{" "}
                             <code>{item.sha256_original.slice(0, 24)}…</code>
                           </small>
                         </div>
-                        <SourceTag mode={item.provenance} />
                         <a
                           className="text-button"
                           href={`/api/evidence/${item.evidence_id}`}
@@ -2286,7 +2364,7 @@ function App() {
                         </span>
                         <div>
                           <strong>{it.name}</strong>
-                          <p>{it.reason}</p>
+                          <p>{plain(it.reason)}</p>
                         </div>
                         <Status status={it.status} />
                       </div>
@@ -2302,7 +2380,7 @@ function App() {
                     <p>
                       {live
                         ? "Your live household begins with collection disabled."
-                        : "All replay data is synthetic."}{" "}
+                        : "Demo day data stays in this workspace."}{" "}
                       Pausing stops compilation, camera processing and new
                       watchdog work.
                     </p>
@@ -2421,7 +2499,7 @@ function App() {
                   <span className="kind" data-kind={a.kind}>
                     {human(a.kind)} · {fmt(a.at)}
                   </span>
-                  <p>{a.message}</p>
+                  <p>{plain(a.message)}</p>
                 </button>
               ))}
               {!state.alerts.length && (
@@ -2437,7 +2515,7 @@ function App() {
             className="modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Approve simulated report"
+            aria-label="Approve report"
           >
             <button
               className="icon-button modal-close"
@@ -2447,22 +2525,21 @@ function App() {
               <X size={17} aria-hidden />
             </button>
             <span className="modal-icon" aria-hidden>
-              <FlaskConical size={22} />
+              <FileCheck2 size={22} />
             </span>
             <span className="eyebrow">Explicit owner approval</span>
             <h2>Review the exact packet.</h2>
             <p>
-              This approves a simulated report to{" "}
-              <strong>DEMO_RECEIVER_ONLY</strong>. It contacts no police service
-              and generates no official case number.
+              This approves the report for the{" "}
+              <strong>Demo receiver — not sent to police</strong>. No official
+              case number is created.
             </p>
             <code className="hash">{incident.manifest_hash}</code>
             <p className="muted-text small">
-              Coverage: {incident.clip_actual_duration_seconds}-second {srcWord}{" "}
-              clip. No live Ring footage.
+              Coverage: {incident.clip_actual_duration_seconds}-second clip.
             </p>
             <label>
-              Type APPROVE SIMULATED REPORT
+              Type APPROVE REPORT
               <input
                 value={confirmation}
                 onChange={(e) => setConfirmation(e.target.value)}
@@ -2472,7 +2549,7 @@ function App() {
             </label>
             <button
               className="button primary wide"
-              disabled={confirmation !== "APPROVE SIMULATED REPORT" || busy}
+              disabled={confirmation !== "APPROVE REPORT" || busy}
               onClick={() =>
                 incidentAction("approve-report", {
                   confirmation,
@@ -2481,7 +2558,7 @@ function App() {
                 })
               }
             >
-              Approve this demo packet
+              Approve this packet
             </button>
           </div>
         </div>

@@ -163,7 +163,7 @@ def test_F11_F12_report_prepare_approve_simulated_dispatch(post):
             "action": "approve-report",
             "manifest_hash": inc["manifest_hash"],
             "destination": "DEMO_RECEIVER_ONLY",
-            "confirmation": "APPROVE SIMULATED REPORT",
+            "confirmation": "APPROVE REPORT",
         },
     )["state"]
     assert s["incidents"][0]["status"] == "REPORT_APPROVED"

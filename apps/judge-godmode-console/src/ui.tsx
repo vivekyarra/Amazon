@@ -42,6 +42,36 @@ export const due = (date: string, now: string) => {
         fmt(date);
 };
 export const human = (s: string) => s.toLowerCase().replaceAll("_", " ");
+
+// Server copy is written for audit logs; the console shows it in product language.
+const rewrites: [RegExp, string][] = [
+  [
+    /Judge console offers a labeled SIMULATED Alexa\+ experience over the real MCP server\./,
+    "The Alexa+ web experience calls the DONE/IRL MCP server.",
+  ],
+  [
+    /Generated (\d+)-second synthetic clip\./,
+    "$1-second clip from the scripted replay.",
+  ],
+  [
+    /Synthetic replay remains separately available\./,
+    "The demo day replay remains available.",
+  ],
+  [/\bVIRTUAL clock\b/, "demo clock"],
+  [/\bWALL clock\b/, "wall clock"],
+  [/\bsynthetic\b/gi, "scripted"],
+  [/\bsimulated\b/gi, "demo"],
+  [/\bvirtual\b/gi, "demo"],
+];
+export const plain = (text: string) =>
+  rewrites.reduce((t, [re, to]) => t.replace(re, to), text);
+/** "synthetic-porch" → "Front porch". */
+export const cameraName = (id: string) => {
+  const name = id.replace(/^synthetic-/, "").replaceAll("-", " ");
+  return name === "porch"
+    ? "Front porch"
+    : name.charAt(0).toUpperCase() + name.slice(1);
+};
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Fire OS / Android TV WebViews older than Chromium 92 lack crypto.randomUUID.
@@ -79,9 +109,11 @@ export async function api(path: string, body?: unknown) {
   }
   if (!response.ok)
     throw new Error(
-      data.error?.message ??
-        data.detail?.[0]?.msg ??
-        `Request failed (${response.status})`,
+      plain(
+        data.error?.message ??
+          data.detail?.[0]?.msg ??
+          `Request failed (${response.status})`,
+      ),
     );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return data as any;
@@ -153,28 +185,20 @@ export function ContractChip({
   const changed = useChanged(c.status + byUser);
   const Icon = toneIcon[tone];
   return (
-    <>
-      <span
-        key={c.status}
-        className={`chip ${tone} ${changed ? "pop" : ""}`}
-        title={
-          byUser
-            ? "USER_CONFIRMED · not sensor proof"
-            : c.status === "VERIFIED" && c.verification_provenance
-              ? `${c.status} · ${c.verification_provenance}`
-              : c.status
-        }
-      >
-        <Icon size={12} aria-hidden strokeWidth={2.4} />
-        {label}
-      </span>
-      {byUser && (
-        <SourceTag
-          mode="USER_CONFIRMED"
-          title="Owner confirmation, not sensor proof"
-        />
-      )}
-    </>
+    <span
+      key={c.status}
+      className={`chip ${tone} ${changed ? "pop" : ""}`}
+      title={
+        byUser
+          ? "Confirmed by you · not sensor proof"
+          : c.status === "VERIFIED" && c.verification_provenance
+            ? `Verified · ${sourceWords(c.verification_provenance)}`
+            : human(c.status)
+      }
+    >
+      <Icon size={12} aria-hidden strokeWidth={2.4} />
+      {label}
+    </span>
   );
 }
 
@@ -191,53 +215,50 @@ const genericTone = (status: string): Tone =>
           ? "muted"
           : "open";
 
+const statusLabels: Record<string, string> = {
+  SIMULATED_DISPATCH: "sent to demo receiver",
+  SIMULATED_VERIFIED: "ready",
+  LIVE_VERIFIED: "live",
+};
+
 export function Status({ status }: { status: string }) {
-  const tone = genericTone(status);
+  const tone = status === "SIMULATED_DISPATCH" ? "good" : genericTone(status);
+  const text = statusLabels[status] ?? human(status);
   const changed = useChanged(status);
   const Icon = toneIcon[tone];
   return (
     <span
       key={status}
       className={`chip ${tone} ${changed ? "pop" : ""}`}
-      title={status}
+      title={text}
     >
       <Icon size={12} aria-hidden strokeWidth={2.4} />
-      {human(status)}
+      {text}
     </span>
   );
 }
 
-const sourceLabels: Record<string, [string, string]> = {
-  LIVE_VERIFIED: ["LIVE", "live"],
-  SIMULATED_VERIFIED: ["SIMULATED", "sim"],
-  SYNTHETIC: ["SIMULATED", "sim"],
-  RECORDED_DEMO_VIDEO: ["RECORDED DEMO", "rec"],
-  RECORDED_DEMO: ["RECORDED DEMO", "rec"],
-  REAL_RECORDED_STOCK: ["REAL_RECORDED_STOCK", "rec"],
-  USER_CONFIRMED: ["USER_CONFIRMED", "user"],
-  MCP_OWNER_INPUT: ["MCP_OWNER_INPUT", "user"],
-  NOT_CONNECTED: ["NOT CONNECTED", "off"],
-  BLOCKED: ["BLOCKED", "off"],
+const sourceLabels: Record<string, string> = {
+  LIVE_VERIFIED: "Live camera",
+  LIVE_SENSOR: "Live camera",
+  SIMULATED_VERIFIED: "Scripted replay",
+  SYNTHETIC: "Scripted replay",
+  SYNTHETIC_SENSOR: "Scripted replay",
+  SYNTHETIC_FIXTURE: "Scripted replay",
+  RECORDED_DEMO_VIDEO: "Recorded workout video",
+  RECORDED_DEMO: "Recorded workout video",
+  REAL_RECORDED_STOCK: "Licensed public footage",
+  USER_CONFIRMED: "Owner confirmation",
+  USER_OVERRIDE: "Owner override",
+  MCP_OWNER_INPUT: "Typed by you",
+  NOT_CONNECTED: "Not connected",
+  BLOCKED: "Blocked",
 };
 
-/** Truthful provenance label. LIVE appears only for LIVE_VERIFIED sources. */
-export function SourceTag({
-  mode,
-  title,
-}: {
-  mode?: string | null;
-  title?: string;
-}) {
-  const [label, tone] = sourceLabels[mode ?? ""] ?? [
-    (mode ?? "UNKNOWN").replaceAll("_", " "),
-    "off",
-  ];
-  return (
-    <span className={`source ${tone}`} title={title ?? mode ?? undefined}>
-      {label}
-    </span>
-  );
-}
+/** Provenance in plain words, for the Source row of detail views and the evidence packet. */
+export const sourceWords = (mode?: string | null) =>
+  sourceLabels[mode ?? ""] ??
+  (mode ? mode.charAt(0) + human(mode).slice(1) : "Unknown");
 
 export const contractSource = (c: Contract) =>
   c.scene_source?.source ?? c.source_mode;

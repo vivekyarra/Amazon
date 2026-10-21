@@ -1,4 +1,4 @@
-/* Simulated Alexa+ panel. Badges stay visible on every simulated turn. */
+/* Alexa+ panel: conversation, whispers and the MCP JSON-RPC log. */
 .alexa-sim {
   flex: 1;
   min-height: 0;
@@ -18,22 +18,12 @@
   font-size: 0.9em;
   color: var(--text);
 }
-.alexa-badge {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0.03em;
-  color: var(--violet);
-  background: rgba(187, 168, 255, 0.08);
-  border: 1px solid rgba(187, 168, 255, 0.3);
-  border-radius: 5px;
-  padding: 3px 7px;
-}
-.alexa-badge.small {
-  font-size: 9.5px;
-  padding: 1px 5px;
-  margin-bottom: 6px;
+.alexa-footnote {
+  flex: none;
+  padding: 8px 16px;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
 }
 .alexa-grid {
   flex: 1;

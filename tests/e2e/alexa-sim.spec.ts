@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import fs from "node:fs";
 
-// Typed-input journey for the SIMULATED Alexa+ panel. Proves the browser issues real
+// Typed-input journey for the Alexa+ web panel. Proves the browser issues real
 // JSON-RPC to /mcp/ and that answers reflect the shared household ledger.
 
 const mcpCall = (page: Page, tool: string) =>
@@ -13,10 +13,8 @@ const mcpCall = (page: Page, tool: string) =>
   );
 
 async function ask(page: Page, text: string, tool: string) {
-  const panel = page.getByRole("region", {
-    name: "Simulated Alexa+ experience",
-  });
-  await panel.getByLabel("Ask simulated Alexa+").fill(text);
+  const panel = page.getByRole("region", { name: "Alexa+", exact: true });
+  await panel.getByLabel("Ask Alexa+").fill(text);
   const [response] = await Promise.all([
     mcpCall(page, tool),
     panel.getByRole("button", { name: "Ask", exact: true }).click(),
@@ -46,16 +44,13 @@ test.beforeEach(async ({ page }) => {
   ]);
 });
 
-test("simulated Alexa+ answers from real MCP tool calls over the shared ledger", async ({
+test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
   page,
 }) => {
   await page.getByRole("button", { name: "Judge replay" }).click();
-  const panel = page.getByRole("region", {
-    name: "Simulated Alexa+ experience",
-  });
-  await expect(panel.getByTestId("alexa-sim-badge")).toHaveText(
-    "SIMULATED ALEXA+ — not an Alexa device",
-  );
+  const panel = page.getByRole("region", { name: "Alexa+", exact: true });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByText(/simulat/i)).toHaveCount(0);
 
   await page.getByRole("button", { name: "1. 08:15 Morning promises" }).click();
   await expect(
@@ -76,9 +71,6 @@ test("simulated Alexa+ answers from real MCP tool calls over the shared ledger",
       .first(),
   ).toBeVisible();
   await expect(panel.getByText("initialize", { exact: true })).toBeVisible();
-  await expect(panel.locator(".alexa-turn.sim .alexa-badge").last()).toHaveText(
-    "SIMULATED ALEXA+ — not an Alexa device",
-  );
 
   await page
     .getByRole("button", { name: "2. 14:10 Trust, then verify" })
@@ -96,9 +88,6 @@ test("simulated Alexa+ answers from real MCP tool calls over the shared ledger",
     .click();
   await expect(panel.locator(".alexa-whisper")).toContainText(
     "Your teacher meeting begins in 25 minutes, and I haven't confirmed you're preparing. Open meeting details?",
-  );
-  await expect(panel.locator(".alexa-whisper .alexa-badge").first()).toHaveText(
-    "SIMULATED WHISPER — not delivered to any device",
   );
 
   await ask(page, "Alexa, did I call my sister?", "request_user_verification");

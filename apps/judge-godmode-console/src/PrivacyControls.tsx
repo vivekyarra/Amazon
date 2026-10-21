@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Camera, Clock3, PlugZap, Trash2 } from "lucide-react";
 import "./privacy.css";
+import { cameraName } from "./ui";
 
 type ProviderStatus = { status: string; revoked_at?: string };
 type Privacy = {
@@ -77,8 +78,8 @@ export function PrivacyControls({ act, busy }: { act: Act; busy: boolean }) {
               return (
                 <div className="privacy-inline" key={device}>
                   <span>
-                    {device} · {excluded ? "EXCLUDED" : "allowed"} · mask rev{" "}
-                    {data.masks[device]?.calibration_revision ?? 0}
+                    {cameraName(device)} · {excluded ? "excluded" : "allowed"} ·
+                    mask rev {data.masks[device]?.calibration_revision ?? 0}
                   </span>
                   <button
                     className="button"
@@ -120,7 +121,9 @@ export function PrivacyControls({ act, busy }: { act: Act; busy: boolean }) {
                   onChange={(ev) => setMaskCamera(ev.target.value)}
                 >
                   {data.cameras.map((device) => (
-                    <option key={device}>{device}</option>
+                    <option key={device} value={device}>
+                      {cameraName(device)}
+                    </option>
                   ))}
                 </select>
                 <input

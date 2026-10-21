@@ -67,18 +67,14 @@ test("canonical full day updates shared ledger, keeps uncertainty and verifies 1
   await page
     .getByRole("button", { name: "Review evidence / Prepare report" })
     .click();
-  await page
-    .getByRole("button", { name: "Review simulated report approval" })
-    .click();
-  await page
-    .getByLabel("Type APPROVE SIMULATED REPORT")
-    .fill("APPROVE SIMULATED REPORT");
-  await page.getByRole("button", { name: "Approve this demo packet" }).click();
+  await page.getByRole("button", { name: "Review report" }).click();
+  await page.getByLabel("Type APPROVE REPORT").fill("APPROVE REPORT");
+  await page.getByRole("button", { name: "Approve this packet" }).click();
   await page
     .getByRole("button", { name: "Send to demo receiver only" })
     .click();
   await expect(
-    page.getByText("SIMULATED DISPATCH — NOT SENT TO POLICE"),
+    page.getByText("Demo receiver — not sent to police"),
   ).toBeVisible();
 });
 

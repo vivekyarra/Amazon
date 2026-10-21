@@ -97,7 +97,7 @@ def test_manifest_tampering_refuses_approval(app, post):
             "action": "approve-report",
             "manifest_hash": s["incidents"][0]["manifest_hash"],
             "destination": "DEMO_RECEIVER_ONLY",
-            "confirmation": "APPROVE SIMULATED REPORT",
+            "confirmation": "APPROVE REPORT",
         },
         status=409,
     )

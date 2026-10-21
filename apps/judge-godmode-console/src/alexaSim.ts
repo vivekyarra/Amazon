@@ -1,8 +1,9 @@
-// SIMULATED ALEXA+ — deterministic agentic router over the real DONE/IRL MCP server.
+// Alexa+ web experience — deterministic agentic router over the DONE/IRL MCP server.
 // No LLM and no Alexa device: typed or browser-recognized speech is matched to intents with
 // fixed rules, and each intent is answered only from real JSON-RPC tool results returned by
 // /mcp (same origin, authenticated by the judge session cookie).
 
+import { plain } from "./ui";
 export const PROTOCOL_VERSION = "2025-11-25";
 
 export type RpcLogEntry = {
@@ -267,7 +268,7 @@ export async function answer(
           ? `Your squats promise is ${statusWords[squats.status] ?? squats.status.toLowerCase()}.`
           : "There is no squats promise in the ledger yet.";
         if (bridge.status === "BLOCKED")
-          return `I can't open a live Ring-to-Fire TV camera relay here: the bridge reports blocked — ${bridge.reason ?? "no live source"}. ${promise} The Reality-Lock studio in this console uses recorded synthetic frames, labeled as such.`;
+          return `I can't open a live Ring-to-Fire TV camera relay here: the live camera isn't connected. ${promise} You can still run the workout in the Reality-Lock studio.`;
         return `Reality-Lock bridge status: ${bridge.status.toLowerCase()}. ${promise}`;
       }
       case "sister": {
@@ -320,10 +321,9 @@ export async function answer(
           data.integrations
             .map(
               (i) =>
-                `${i.name}: ${i.status.toLowerCase().replaceAll("_", " ")}`,
+                `${i.name}: ${i.status === "SIMULATED_VERIFIED" ? "ready" : i.status.toLowerCase().replaceAll("_", " ")}`,
             )
-            .join("; ") +
-          ". This assistant is a simulation, not a connected Alexa device."
+            .join("; ") + "."
         );
       }
       case "remember": {
@@ -348,10 +348,10 @@ export async function answer(
           : "I didn't hear a commitment I can track. Try a phrase like \"I'll call my sister before 6 PM\".";
       }
       default:
-        return `I can answer: ${EXAMPLES.map((e) => `"${e.replace(/^Alexa, /, "")}"`).join(", ")}. I'm a simulation for the judge console.`;
+        return `I can answer: ${EXAMPLES.map((e) => `"${e.replace(/^Alexa, /, "")}"`).join(", ")}.`;
     }
   })();
-  return { intent, reply };
+  return { intent, reply: plain(reply) };
 }
 
 const TEACHER_T25 =

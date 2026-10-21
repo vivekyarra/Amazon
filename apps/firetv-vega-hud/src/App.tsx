@@ -427,14 +427,14 @@ export const App = () => {
                   ask(
                     'Approve this exact report?',
                     'Manifest ' + shortHash(incident.manifest_hash, 24) + ' to DEMO_RECEIVER_ONLY. Approval does not send anything; dispatch is a further step.',
-                    'APPROVE SIMULATED REPORT',
+                    'APPROVE REPORT',
                     () =>
                       run('Approve report', path + 'approve-report', {
                         action: 'approve-report',
                         revision: incident.revision,
                         manifest_hash: incident.manifest_hash,
                         destination: 'DEMO_RECEIVER_ONLY',
-                        confirmation: 'APPROVE SIMULATED REPORT',
+                        confirmation: 'APPROVE REPORT',
                       }),
                   )
                 }

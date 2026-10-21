@@ -1112,7 +1112,7 @@ def incident_action(s, db, household, incident_id, action, data):
             inc["status"] != "EVIDENCE_PREPARED"
             or data.get("manifest_hash") != inc["manifest_hash"]
             or data.get("destination") != "DEMO_RECEIVER_ONLY"
-            or data.get("confirmation") != "APPROVE SIMULATED REPORT"
+            or data.get("confirmation") != "APPROVE REPORT"
         ):
             raise ApiError(
                 409,

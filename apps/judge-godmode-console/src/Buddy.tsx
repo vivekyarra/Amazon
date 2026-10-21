@@ -17,12 +17,11 @@ import type {
 import {
   ContractChip,
   Empty,
-  SourceTag,
   canConfirmDone,
-  contractSource,
   fmt,
   human,
   isOpen,
+  plain,
 } from "./ui";
 
 type Act = (path: string, body?: unknown) => Promise<unknown>;
@@ -149,7 +148,6 @@ export function Buddy({
         )}
         <div className="buddy-card-meta">
           <ContractChip c={c} evidence={state.evidence} />
-          <SourceTag mode={contractSource(c)} />
         </div>
         {(c.status === "NEEDS_CONFIRMATION" ||
           canConfirmDone(c) ||
@@ -185,7 +183,7 @@ export function Buddy({
                   )
                 }
                 aria-label={`Confirm done: ${c.title}`}
-                title="Recorded as USER_CONFIRMED, not sensor proof"
+                title="Recorded as your confirmation, not sensor proof"
               >
                 <CheckCheck size={14} aria-hidden /> Confirm done
               </button>
@@ -214,7 +212,7 @@ export function Buddy({
           <span className="kind" data-kind="DAILY_BRIEFING">
             Your day · {fmt(briefing.at)}
           </span>
-          {briefing.message}
+          {plain(briefing.message)}
         </p>
       )}
       <form
@@ -250,10 +248,6 @@ export function Buddy({
           placeholder="Add a promise — “I’ll pay the electricity bill by 6 pm”"
           maxLength={4000}
           disabled={!state.consent}
-        />
-        <SourceTag
-          mode="MCP_OWNER_INPUT"
-          title="Typed by you · compiled by the same MCP compiler"
         />
         <button
           className="button primary"
