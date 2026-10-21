@@ -185,7 +185,7 @@ export default function AlexaSimulator({
         <div className="alexa-convo">
           {whispers.length > 0 && (
             <div className="alexa-whispers" aria-label="Simulated whispers">
-              {whispers.map((w) => (
+              {[...whispers].reverse().map((w) => (
                 <div
                   className="alexa-whisper"
                   key={w.alert_id}

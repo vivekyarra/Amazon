@@ -26,6 +26,21 @@ export const day = (date: string) =>
     day: "numeric",
     month: "long",
   });
+/** "18:00" today, "Thu 07:00" on another day (IST). */
+export const due = (date: string, now: string) => {
+  const opts = { timeZone: "Asia/Kolkata" } as const;
+  const sameDay =
+    new Date(date).toLocaleDateString("en-GB", opts) ===
+    new Date(now).toLocaleDateString("en-GB", opts);
+  return sameDay
+    ? fmt(date)
+    : new Date(date).toLocaleDateString("en-GB", {
+        ...opts,
+        weekday: "short",
+      }) +
+        " " +
+        fmt(date);
+};
 export const human = (s: string) => s.toLowerCase().replaceAll("_", " ");
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

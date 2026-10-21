@@ -22,6 +22,10 @@
 
 ![Mission control — actual synthetic web workspace](docs/images/mission-control.png)
 
+| Reality-Lock studio (RECORDED DEMO through MediaPipe) | Simulated Alexa+ over real MCP calls | Owner "Today" view (wall clock) |
+|---|---|---|
+| ![Reality-Lock studio](docs/images/studio.png) | ![Simulated Alexa+](docs/images/alexa.png) | ![Owner Today view](docs/images/buddy.png) |
+
 Evidence: [AWS deployment](docs/evidence/aws-deployment.json) · [live MCP + EventBridge](docs/evidence/aws-mcp-scheduler.json) · [real-scene vision](docs/evidence/scene-vision.json) · [pose 15-rep fixture](docs/evidence/pose-15-fixture.json) · [TV emulator walkthrough](docs/evidence/firetv/walkthrough.mp4) · [CI](docs/evidence/ci-runs.md)
 
 ## Run locally

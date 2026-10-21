@@ -72,6 +72,16 @@ export interface Incident {
     source_clip_evidence_id?: string;
     annotated_clip_evidence_id?: string;
     person_crop_evidence_id: string;
+    source_frame_evidence_id?: string;
+    annotated_frame_evidence_id?: string;
+    source?: {
+      label: string;
+      title?: string;
+      author?: string;
+      license?: string;
+      license_url?: string;
+      page_url?: string;
+    };
     capture_gaps: string[];
   };
   receipt: { label: string; receipt_id: string } | null;

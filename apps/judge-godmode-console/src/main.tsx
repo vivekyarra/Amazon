@@ -59,6 +59,7 @@ import {
   api,
   contractSource,
   day,
+  due,
   fmt,
   human,
   isOpen,
@@ -533,9 +534,17 @@ function App() {
   ).length;
   const openCount = state.contracts.filter(isOpen).length;
   const incident = state.incidents[0];
+  // Label incident media by the provenance the server recorded, never by assumption.
+  const incidentSource = incident
+    ? (state.evidence.find(
+        (e) => e.evidence_id === incident.packet.removal_evidence_id,
+      )?.provenance ?? "SIMULATED_VERIFIED")
+    : "SIMULATED_VERIFIED";
+  const realScene = incidentSource === "REAL_RECORDED_STOCK";
+  const srcWord = realScene ? "licensed stock" : "synthetic";
   const latestImage = [...state.evidence]
     .reverse()
-    .find((v) => v.mime === "image/png" && v.kind !== "PERSON_CROP");
+    .find((v) => v.mime.startsWith("image/") && v.kind !== "PERSON_CROP");
   const eventList = [...state.events]
     .reverse()
     .filter(
@@ -635,7 +644,7 @@ function App() {
           <small>
             {c.counterparty.label} ·{" "}
             {c.due_at
-              ? fmt(c.due_at)
+              ? due(c.due_at, state.now)
               : human(c.deadline_trigger ?? "On evidence")}
           </small>
         </span>
@@ -735,6 +744,12 @@ function App() {
             <span className="crumb">{pageLabel(page)}</span>
           </div>
           <div className="topbar-right">
+            {(busy || running) && (
+              <span className="working" role="status">
+                <span className="spinner" aria-hidden />
+                {running ? "Replaying" : "Working"}
+              </span>
+            )}
             <span
               className={`household-tag ${live ? "live" : ""}`}
               title={
@@ -1127,6 +1142,12 @@ function App() {
                       >
                         <option value="deposit">Real deposit</option>
                         <option value="fake">Courier fake-out</option>
+                        <optgroup label="Real stock footage · REAL_RECORDED_STOCK">
+                          <option value="real_deposit">Real deposit</option>
+                          <option value="real_no_deposit">
+                            Real no deposit
+                          </option>
+                        </optgroup>
                       </select>
                     </label>
                     <label>
@@ -1139,6 +1160,11 @@ function App() {
                         <option value="unknown">Unknown person</option>
                         <option value="family">Family pickup</option>
                         <option value="retained">Parcel remains</option>
+                        <optgroup label="Real stock footage · REAL_RECORDED_STOCK">
+                          <option value="real_removal">Real removal</option>
+                          <option value="real_pickup">Real owner pickup</option>
+                          <option value="real_passerby">Real passer-by</option>
+                        </optgroup>
                       </select>
                     </label>
                     <label>
@@ -1162,6 +1188,12 @@ function App() {
                         <option value="empty">Drinks not visible</option>
                         <option value="visible">Drinks visible</option>
                         <option value="ambiguous">Occluded</option>
+                        <optgroup label="Real stock footage · REAL_RECORDED_STOCK">
+                          <option value="real_visible">
+                            Real: bag visible
+                          </option>
+                          <option value="real_empty">Real: hands empty</option>
+                        </optgroup>
                       </select>
                     </label>
                     <button
@@ -1249,7 +1281,11 @@ function App() {
                         <SourceTag
                           mode={latestImage?.provenance ?? "SIMULATED_VERIFIED"}
                         />
-                        <span>Marker detector · not Ring</span>
+                        <span>
+                          {latestImage?.provenance === "REAL_RECORDED_STOCK"
+                            ? "Licensed public clip · not Ring, not this household"
+                            : "Marker detector · not Ring"}
+                        </span>
                       </figcaption>
                     </figure>
                     <div className="events">
@@ -1384,7 +1420,7 @@ function App() {
                               <small>
                                 {c.counterparty.label} ·{" "}
                                 {c.due_at
-                                  ? fmt(c.due_at) + " IST"
+                                  ? due(c.due_at, state.now) + " IST"
                                   : human(c.deadline_trigger ?? "On evidence")}
                               </small>
                             </span>
@@ -1493,7 +1529,7 @@ function App() {
                             <dt>Due / trigger</dt>
                             <dd>
                               {c.due_at
-                                ? fmt(c.due_at) + " IST"
+                                ? due(c.due_at, state.now) + " IST"
                                 : human(c.deadline_trigger ?? "On evidence")}
                             </dd>
                             <dt>Verification</dt>
@@ -1946,12 +1982,18 @@ function App() {
                         <img
                           src={
                             "/api/evidence/" +
-                            incident.packet.removal_evidence_id
+                            (incident.packet.annotated_frame_evidence_id ??
+                              incident.packet.source_frame_evidence_id ??
+                              incident.packet.removal_evidence_id)
                           }
-                          alt="Synthetic removal evidence"
+                          alt={
+                            realScene
+                              ? "Removal frame from licensed public footage"
+                              : "Synthetic removal evidence"
+                          }
                         />
                         <figcaption>
-                          <SourceTag mode="SIMULATED_VERIFIED" />
+                          <SourceTag mode={incidentSource} />
                           {fmt(incident.detected_at)} IST
                         </figcaption>
                       </figure>
@@ -1960,15 +2002,17 @@ function App() {
                           <video
                             controls
                             preload="metadata"
-                            aria-label="15-second synthetic removal clip"
+                            aria-label={`15-second ${srcWord} removal clip`}
                             src={
                               "/api/evidence/" +
                               incident.packet.source_clip_evidence_id
                             }
                           />
                           <figcaption>
-                            <SourceTag mode="SIMULATED_VERIFIED" />
-                            Generated clip · no live Ring recording
+                            <SourceTag mode={incidentSource} />
+                            {realScene
+                              ? "Licensed public clip · not Ring"
+                              : "Generated clip · no live Ring recording"}
                           </figcaption>
                         </figure>
                       )}
@@ -1982,7 +2026,7 @@ function App() {
                       <Video size={15} aria-hidden />
                       <span>
                         {incident.clip_actual_duration_seconds
-                          ? `${incident.clip_actual_duration_seconds}s clip available. Synthetic source and annotated artifacts are preserved.`
+                          ? `${incident.clip_actual_duration_seconds}s clip available. ${realScene ? "Licensed public footage (not Ring, not this household)" : "Synthetic source"} and annotated artifacts are preserved.`
                           : "Evidence incomplete. No clip was preserved."}
                       </span>
                     </p>
@@ -2071,21 +2115,32 @@ function App() {
                             "/api/evidence/" +
                             incident.packet.person_crop_evidence_id
                           }
-                          alt="Synthetic person marker crop"
+                          alt={
+                            realScene
+                              ? "Person crop from licensed public footage"
+                              : "Synthetic person marker crop"
+                          }
                         />
                         <div>
                           <strong>Best available person crop</strong>
-                          <small>Synthetic · no facial identification</small>
+                          <small>
+                            {realScene ? "Public footage" : "Synthetic"} · no
+                            facial identification
+                          </small>
                         </div>
                       </div>
                       <dl className="facts">
                         <dt>Detected</dt>
                         <dd>{fmt(incident.detected_at)} IST · virtual</dd>
                         <dt>Location</dt>
-                        <dd>Synthetic porch</dd>
+                        <dd>
+                          {realScene
+                            ? "Public stock scene · not this household"
+                            : "Synthetic porch"}
+                        </dd>
                         <dt>Coverage</dt>
                         <dd>
-                          {incident.clip_actual_duration_seconds}s synthetic
+                          {incident.clip_actual_duration_seconds}s {srcWord}{" "}
                           clip
                         </dd>
                         <dt>Receiver</dt>
@@ -2093,6 +2148,26 @@ function App() {
                         <dt>Official dispatches</dt>
                         <dd>0 · simulated only</dd>
                       </dl>
+                      {incident.packet.source?.license && (
+                        <p className="credit">
+                          Footage: {incident.packet.source.title} ·{" "}
+                          {incident.packet.source.author} ·{" "}
+                          <a
+                            href={incident.packet.source.license_url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {incident.packet.source.license}
+                          </a>
+                        </p>
+                      )}
+                      {incident.packet.capture_gaps?.length > 0 && (
+                        <ul className="gaps" aria-label="Capture gaps">
+                          {incident.packet.capture_gaps.map((g) => (
+                            <li key={g}>{g}</li>
+                          ))}
+                        </ul>
+                      )}
                       <span className="eyebrow">SHA-256 manifest</span>
                       <code className="hash">{incident.manifest_hash}</code>
                       <p className="muted-text small">
@@ -2372,13 +2447,13 @@ function App() {
             <span className="eyebrow">Explicit owner approval</span>
             <h2>Review the exact packet.</h2>
             <p>
-              This approves a synthetic report to{" "}
+              This approves a simulated report to{" "}
               <strong>DEMO_RECEIVER_ONLY</strong>. It contacts no police service
               and generates no official case number.
             </p>
             <code className="hash">{incident.manifest_hash}</code>
             <p className="muted-text small">
-              Coverage: {incident.clip_actual_duration_seconds}-second synthetic
+              Coverage: {incident.clip_actual_duration_seconds}-second {srcWord}{" "}
               clip. No live Ring footage.
             </p>
             <label>
