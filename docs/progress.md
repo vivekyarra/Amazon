@@ -8,7 +8,7 @@
 |---|---|---|
 | Durable ledger, reducers, six canonical scenes, all branches | VERIFIED (synthetic) | backend suite (176+ tests), browser journeys, three-run determinism |
 | Everyday commitments ("real buddy") | IMPLEMENTED + tested | any spoken promise → typed contract with deadline/trigger, T-60/T-25/deadline jobs, recurring series, spoken completion → `EVIDENCE_PENDING`, owner `USER_CONFIRMED` closure, 08:00 private briefing (`test_everyday.py`) |
-| Bee live adapter | LIVE_VERIFIED | verified with a Bee device and real token ([verification](evidence/bee-live-verification.md)) |
+| Bee live | LIVE_VERIFIED | real Bee device: SSE stream + todo backfill compiled into contracts ([verification](evidence/bee-live-verification.md)) |
 | MCP Streamable HTTP (Alexa+ route) | LIVE on hosted HTTPS | 11 tools, `2025-11-25`, compliance tests, external SDK client + Inspector CLI, hosted `initialize` + tool call |
 | Simulated Alexa+ experience | SIMULATED_VERIFIED | console voice/typed panel calling `/mcp/`, labelled simulated |
 | AWS runtime | LIVE_VERIFIED | `done-irl-judge` stack: DynamoDB, S3 SSE-KMS, EventBridge Scheduler→SQS, CloudWatch; HTTPS judge URL |

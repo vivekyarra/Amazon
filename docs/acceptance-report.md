@@ -12,7 +12,7 @@ Primary track: Alexa+ — self-hosted MCP Streamable HTTP (2025-11-25) live on h
 P0 verified: 41/55 (3 BLOCKED, 11 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
 Automated tests: backend pytest 211 passed (incl. real-video scene/pose and 27 QA regressions); Playwright 5/5; CI 5/5 jobs green incl. Android TV emulator D-pad journey
 Fire TV device/simulator: Vega OS app on the official Vega Virtual Device (tests/firetv/vega-device-report.md) and Fire OS APK on an Android TV API 30 emulator (33/33, in CI); physical Fire TV untested
-Bee: LIVE_VERIFIED (live Bee device + real token, 21–22 Oct 2026); the judge demo day replays scripted Bee events
+Bee: LIVE_VERIFIED on a real Bee device (SSE `new-utterance`/`todo-created` stream and todo backfill compiled into contracts); the judge demo day replays scripted Bee events
 Alexa+/MCP: LIVE_VERIFIED MCP server (hosted initialize + tool call); Alexa+ device NOT_CONNECTED; simulated experience SIMULATED_VERIFIED
 Ring: LIVE_VERIFIED on the Ring Developer Playground device (discovery, capabilities, history, WHEP 720p decode, live Reality-Lock relay); real-scene vision verified on licensed footage
 AWS: LIVE_VERIFIED (DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager, CloudWatch, EC2/SSM)

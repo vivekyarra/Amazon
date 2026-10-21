@@ -8,7 +8,7 @@
 - **Fire TV Reality-Lock.** A D-pad TV app; 15 squats counted by MediaPipe Pose unlock the in-app entertainment gate (14 stays locked).
 - **AWS.** Live on DynamoDB, S3 (SSE-KMS), EventBridge Scheduler, SQS and CloudWatch.
 
-> **Status:** the product runs end to end on live AWS infrastructure, a live Ring Partner API integration (Ring Developer Playground device, WHEP video into Reality-Lock), a live hosted MCP server, and real video inference. Bee is verified live with a Bee device. A physical Fire TV device and a real Alexa device were not available (the Vega Virtual Device, an Android TV emulator and a web Alexa+ experience are used). See [integration status](docs/integration-status.md), [traceability](docs/requirements-traceability.md) and the [acceptance report](docs/acceptance-report.md).
+> **Status:** the product runs end to end on live AWS infrastructure, a live Ring Partner API integration (Ring Developer Playground device, WHEP video into Reality-Lock), a live Bee integration (real Bee device: SSE utterances and todos compiled into contracts), a live hosted MCP server, and real video inference. A physical Fire TV device and a real Alexa device were not available (the Vega Virtual Device, an Android TV emulator and a web Alexa+ experience are used). See [integration status](docs/integration-status.md), [traceability](docs/requirements-traceability.md) and the [acceptance report](docs/acceptance-report.md).
 
 ## Try it online (judges)
 
