@@ -1,8 +1,8 @@
 # Public references and attribution
 
-Implementation follows the [official Ring developer documentation](https://developer.amazon.com/docs/ring/overview.html), [Bee developer API](https://api.developer.bee.amazon.dev), [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25) and SDK APIs. Current Ring webhook verification uses the documented `X-Signature` raw-body HMAC contract; account-linking nonce encodings are not interchangeable with webhook signatures. Ring's documented example STUN server is used for the WHEP receiver, which gathers ICE before posting a receive-only SDP offer. These code paths still need authorized account/runtime verification.
+Implementation follows the [official Ring developer documentation](https://developer.amazon.com/docs/ring/overview.html), [Bee developer API](https://api.developer.bee.amazon.dev), [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25) and SDK APIs. Ring webhook verification uses the documented `X-Signature` raw-body HMAC contract (account-linking nonce encodings are a separate scheme). The WHEP receiver uses Ring's documented example STUN server and gathers ICE before posting a receive-only SDP offer; it is verified live against the Ring Developer Playground device ([evidence](evidence/ring-live-studio.json)).
 
-The public repository [Srustika-18/squat-counter](https://github.com/Srustika-18/squat-counter/tree/9b64cbf1c1f6bfdbfd87a158911dc624d5573c14) was inspected as a reference and provides the **14.52-second video.mp4** used for a limited positive human-pose model check. No counter implementation was copied. The sample is labeled `PUBLIC_LICENSED_RECORDED`, never consented household footage or a live Ring source. Its SHA-256 and actual result are in [the model-check evidence](evidence/mediapipe-public-reference.json). `scripts/check-public-pose.py` downloads only the pinned reference/model, checks both hashes, runs actual MediaPipe and requires a limited positive result. The footage does not meet the fifteen-rep acceptance fixture.
+The public repository [Srustika-18/squat-counter](https://github.com/Srustika-18/squat-counter/tree/9b64cbf1c1f6bfdbfd87a158911dc624d5573c14) was inspected as a reference, and its **14.52-second video.mp4** was used locally for a positive human-pose model check. No counter implementation was copied. The sample is labelled `PUBLIC_LICENSED_RECORDED`, never household footage or a live Ring source.
 
 The repository's MIT license is reproduced below for attribution. The original media remains in ignored local artifacts rather than being republished as an original Muni asset.
 
@@ -30,9 +30,9 @@ The repository's MIT license is reproduced below for attribution. The original m
 
 A separate public squat dataset repository was also inspected, but its `license` file was empty. Its footage was not used. Merely finding a public repository is not permission to silently republish someone else's work or assert a separate open-source mini-challenge contribution.
 
-## Fifteen-rep pose fixture (P0-039, F17/F18)
+## Fifteen-rep pose fixture
 
-The canonical fifteen-rep fixture is **SYNTHETIC / GENERATED**, not human footage and not a Ring recording. `scripts/generate-synthetic-squats.py` ray-traces a humanoid figure (shaded capsules/ellipsoids with skin, clothing and face features) and poses it by forward kinematics. Each of the 15 reps has its own seeded depth (128–140° knee flexion), tempo, sway and arm raise, and every frame carries fresh sensor noise; no footage is looped or copied between reps. The generator is byte-reproducible (seed `20261020`), and the outputs are MIT-licensed project assets:
+The canonical fifteen-rep fixture is **generated**, not human footage and not a Ring recording. `scripts/generate-synthetic-squats.py` ray-traces a humanoid figure (shaded capsules/ellipsoids with skin, clothing and face features) and poses it by forward kinematics. Each of the 15 reps has its own seeded depth (128–140° knee flexion), tempo, sway and arm raise, and every frame carries fresh sensor noise; no footage is looped or copied between reps. The generator is byte-reproducible (seed `20261020`), and the outputs are MIT-licensed project assets:
 
 | Fixture | File | SHA-256 |
 |---|---|---|
@@ -43,7 +43,7 @@ The official [MediaPipe Pose Landmarker lite model](https://storage.googleapis.c
 
 Observed limits: with the larger `pose_landmarker_full` model (SHA-256 `5134a3aa…27a839011b1`, used only for local comparison), the same fixture produced 13 of 15 reps. Reps 6 and 7 were not counted, and 6 frames were flagged as left/right asymmetric. The fixture shows that the pipeline counts complete movements from pixels. It is not a measure of real-world accuracy. Inference is also not bit-identical across platforms. A bare rep-1 clip with no standing lead-in counted 1 rep on Windows and 0 on the Ubuntu CI runner, so the loop negative starts from the fixture's own standing lead-in.
 
-### Real human footage investigated (not committed)
+### Real human footage evaluated (not committed)
 
 These freely licensed Wikimedia Commons clips were downloaded only to scratch storage with `curl` and run through the same pinned lite model and verifier. All of them were **0 reps**, mostly because of low hip/knee/ankle visibility (backlit or side views where one leg is occluded), left/right asymmetry, or close-up framing. The verifier was not loosened to make them pass, and none of these clips is redistributed here.
 
@@ -58,7 +58,7 @@ These freely licensed Wikimedia Commons clips were downloaded only to scratch st
 | Sentadillas.ogv | PaolaAltamirano | CC BY-SA 4.0 | 0 reps |
 | Muscle Strengthening at Home - Half squat.webm | CDC | Public domain | 0 reps (half-squats; a real-world negative) |
 
-Pexels and Pixabay search pages returned HTTP 403 to non-browser clients, so no footage from those sites was assessed. Human-video confirmation of fifteen reps remains pending.
+Pexels and Pixabay search pages returned HTTP 403 to non-browser clients, so no footage from those sites was assessed.
 
 ## REAL_RECORDED_STOCK scene-vision fixtures
 
@@ -81,4 +81,4 @@ Pexels clips are used under the [Pexels License](https://www.pexels.com/license/
 
 Object detection uses the official MediaPipe [EfficientDet-Lite0 float32 COCO model](https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite) (Apache-2.0 per the MediaPipe model card), fetched from storage.googleapis.com into ignored `artifacts/vision/` and checked against SHA-256 `40338edf5ec70d43e318b0a716a84d4564cd1802759a7a07170c7e43796dbf58`. No AGPL detector (e.g. Ultralytics YOLO) is used. Actual per-clip results: [scene-vision evidence](evidence/scene-vision.json).
 
-Candidates rejected: several Pexels porch clips with a moving/zooming camera (zones cannot stay calibrated), and Mixkit clips (license outside the allowed set).
+Clips considered and rejected: several Pexels porch clips with a moving/zooming camera (zones cannot stay calibrated), and Mixkit clips (license outside the allowed set).

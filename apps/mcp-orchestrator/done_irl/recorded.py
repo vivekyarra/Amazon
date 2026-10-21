@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 SOURCE = "RECORDED_DEMO_VIDEO"
 LABEL = "RECORDED DEMO"
 
-# Official MediaPipe Pose Landmarker (lite, float16, v1). Same URL/hash as scripts/check-public-pose.py.
+# Official MediaPipe Pose Landmarker (lite, float16, v1). Same URL/hash as scripts/fetch-pose-model.py.
 POSE_MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
     "pose_landmarker_lite/float16/1/pose_landmarker_lite.task"

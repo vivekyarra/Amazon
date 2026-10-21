@@ -2,17 +2,17 @@
 
 ```mermaid
 flowchart LR
-    B[Bee SSE / protected utterance replay] --> Q[(Encrypted durable inbox)]
+    B[Bee SSE stream / todo backfill] --> Q[(Encrypted durable inbox)]
     R[Signed Ring webhook + device binding] --> Q
     Q --> W[Leased worker / shared reducers]
-    M[Authenticated REST / official MCP] --> W
+    M[Authenticated REST / MCP Streamable HTTP] --> W
     W --> DB[(AES-GCM SQLite WAL ledger)]
-    T[Persisted jobs + wall/virtual clock] --> W
-    C[Authorized Ring WHEP receiver] --> P[Actual video decode / MediaPipe]
-    F[Synthetic pixel fixtures] --> V[Calibrated OpenCV / same pose reducer]
+    T[Persisted jobs + wall/replay clock] --> W
+    C[Ring WHEP receiver] --> P[Server-side video decode / MediaPipe Pose]
+    F[Recorded clips / scripted replay frames] --> V[MediaPipe object detection / OpenCV]
     P --> W
     V --> W
-    DB --> UI[React web / companion / native Fire OS shell]
+    DB --> UI[React web / companion / Fire TV clients]
     DB --> O[(Transactional AWS outbox)]
     O --> S3[(Private SSE-KMS S3 / ciphertext)]
     O --> DDB[(Conditional DynamoDB projections)]
@@ -20,34 +20,34 @@ flowchart LR
     SCH --> T
 ```
 
-All surfaces consume the same household-scoped state. The official MCP SDK mounts Streamable HTTP at `/mcp/`; REST and MCP share compiler, authorization, evidence policies and transactional storage. State, event audit, command deduplication responses, artifact bytes and AWS outbox inserts commit under one SQLite `BEGIN IMMEDIATE` transaction. Conflicting owner revisions and reused idempotency keys fail explicitly.
+Every surface consumes the same household-scoped state. The official MCP SDK mounts Streamable HTTP at `/mcp/`; REST and MCP share the commitment compiler, authorization, evidence policies and transactional storage. State, event audit, command deduplication responses, artifact bytes and AWS outbox inserts commit in one SQLite `BEGIN IMMEDIATE` transaction. Conflicting owner revisions and reused idempotency keys fail explicitly.
 
-## Two clocks and source provenance
+## Clocks and source provenance
 
-The isolated synthetic deployment uses a persisted **virtual clock** and administrator-only replay controls. A separately configured live pilot uses a **wall clock**, owner-only accounts, a provisioned encryption key and HTTPS. New live households have collection disabled. A one-second worker reconciles durable pending deadline jobs, skips stale alert tiers and never converts a missed deadline to verification. Live API reads display current wall time; historical event times stay persisted.
+The demo household runs on a persisted **replay clock** with administrator-only replay controls. Owner households run on the **wall clock**, with owner-only accounts, a provisioned encryption key and HTTPS; collection starts disabled until the owner enables it. A one-second worker reconciles durable deadline jobs, skips stale alert tiers and never converts a missed deadline into verification. Every observation carries its source label (live, recorded or scripted replay) end to end.
 
-Provider events enter a deduplicated, encrypted inbox. A receipt is claimed with a sixty-second lease. Its reducer mutations and acknowledgement commit together; a crash recovers the lease. Permanent malformed events enter a visible dead state; retryable failures back off with bounded attempts. Consent revocation cancels pending work and stops camera processing. Bee cursors advance only after a receipt is durable. The Bee normalizer still needs actual-account schema verification; it does not invent undocumented payload fields.
+Provider events enter a deduplicated, encrypted inbox. A receipt is claimed with a sixty-second lease; its reducer mutations and acknowledgement commit together, and a crash recovers the lease. Permanently malformed events enter a visible dead state; retryable failures back off with bounded attempts. Consent revocation cancels pending work and stops camera processing. Bee cursors advance only after a receipt is durable. The Bee normalizer mirrors the event shapes of the official bee-cli and ignores unknown envelopes rather than guessing; it is verified against a live Bee device ([evidence](evidence/bee-live-verification.md)).
 
-Ring webhook HMAC verification follows the documented **`X-Signature: sha256=<HMAC(raw_body)>`** contract. Account and device mappings are provisioned server-side. Provider retries use durable receipt identities; known Ring observation IDs and Bee utterance IDs also survive snapshot recovery in the event history. A valid motion notification proves notification delivery, not parcel deposit, removal, attendance or exercise.
+Ring webhook HMAC verification follows the documented **`X-Signature: sha256=<HMAC(raw_body)>`** contract. Account and device mappings are provisioned server-side. Provider retries use durable receipt identities; known Ring observation IDs and Bee utterance IDs also survive snapshot recovery. By design, a motion notification proves delivery of a notification only, never parcel deposit, removal, attendance or exercise.
 
 ## Evidence, video and TV
 
-Household state, command responses, inbox payloads and media bytes are encrypted with AES-256-GCM; authenticated associated data binds ciphertext to its household and record identity. The ledger key is stored separately with owner-only permissions and must be backed up securely. Artifact SHA-256 and canonical manifest chains detect modification; they do not prove truth or legal admissibility. Expired local artifact bytes are physically deleted and manifest tombstones retained. A missing key, damaged ciphertext or incorrect identity fails closed.
+Household state, command responses, inbox payloads and media bytes are encrypted with AES-256-GCM; associated data binds each ciphertext to its household and record identity. The ledger key is stored separately with owner-only permissions. Artifact SHA-256 hashes and canonical manifest chains detect modification (integrity, not a claim of legal admissibility). Expired artifact bytes are physically deleted and manifest tombstones retained. A missing key, damaged ciphertext or wrong identity fails closed.
 
-The live WHEP path checks camera authorization/capability, gathers receive-only video ICE, negotiates through the backend, decodes actual frames and runs a SHA-pinned MediaPipe model. Browser/TV clients receive household-authenticated JPEGs with skeleton overlays, never upstream SDP, session URLs or provider credentials. Video/pose frame hashes prevent simple repeated-frame counting. Session limits, camera loss, low visibility, asymmetric form, partial cycles and pauses cannot bypass the 15-cycle gate. A camera reconnect preserves verified count while resetting an incomplete phase. The codec loopback test uses explicitly generated video and proves transport/cleanup, **not an actual Ring connection**.
+The Ring WHEP path checks camera authorization and video capability, gathers receive-only ICE, negotiates through the backend, decodes frames server-side and runs a SHA-pinned MediaPipe Pose model on each one. Browser and TV clients receive household-authenticated JPEGs with skeleton overlays, never upstream SDP, session URLs or provider credentials. This path ran live against the Ring Developer Playground device: 157 frames decoded and 46 annotated frames relayed into the Reality-Lock studio ([evidence](evidence/ring-live-studio.json)). Frame hashes prevent repeated-frame counting; session limits, camera loss, low visibility, asymmetric form, partial cycles and pauses cannot bypass the 15-cycle gate. A camera reconnect preserves the verified count while resetting an incomplete phase.
 
-The synthetic detector processes calibrated colored parcel/person/drinks geometry. It is not a general real-scene detector. The fifteen-second source/annotated removal clips have real playable bytes, hashes and derivation links, but are explicitly synthetic. A separate public licensed human sample produced one accepted rep through actual MediaPipe inference; the canonical fifteen-human-rep fixture remains unmet.
+Real-footage porch and threshold vision (`scene.py`) runs the pinned MediaPipe EfficientDet-Lite0 detector, ROI change detection and an IoU tracker over ten licensed recorded clips, each returning its expected verdict ([evidence](evidence/scene-vision.json), [sources](public-references.md#real_recorded_stock-scene-vision-fixtures)). The fifteen-rep pose fixture is a generated, labelled recording processed by the same MediaPipe model and reducer as live Ring frames ([evidence](evidence/pose-15-fixture.json)). A deterministic OpenCV marker engine drives the scripted replay scenarios.
 
-The native Fire OS shell has distinct ledger, incident, evidence-packet and Reality-Lock navigation targets. It consumes the same HTTPS/authenticated UI. TV session registration is household-scoped and bounded; registration does **not** attest actual Fire OS runtime. MCP can open a camera relay for a valid registered TV session in the same household. In-app voluntary gating does not control third-party apps.
+Fire TV clients — a Vega OS app on the Vega Virtual Device and a native Fire OS APK — expose ledger, incident, evidence-packet and Reality-Lock views over the same authenticated API. TV session registration is household-scoped and bounded, and MCP can open a camera relay for a registered TV session in the same household. The entertainment gate is a voluntary in-app gate; Muni does not control third-party apps.
 
-## AWS and recovery boundary
+## AWS and recovery
 
-The optional AWS worker publishes encrypted snapshots/media through a transactional outbox. DynamoDB conditional revisions prevent stale snapshots from regressing projections. Single-table prefixes make contract, subagent, incident, evidence and audit query patterns explicit. EventBridge T60/T25/deadline schedules send SQS wakeups; a local durable reconciler recovers missed delivery. Invalid hints exhaust bounded receives and enter DLQ. Cloud synchronization failure degrades readiness and retains work for retry.
+The AWS worker publishes encrypted snapshots and media through a transactional outbox. DynamoDB conditional revisions prevent stale snapshots from regressing projections; single-table prefixes make contract, sub-agent, incident, evidence and audit queries explicit. EventBridge Scheduler T-60/T-25/deadline schedules send SQS wake-ups; a local durable reconciler covers missed deliveries, and invalid hints exhaust bounded receives into the DLQ. Cloud synchronization failure degrades readiness and retains work for retry.
 
-Snapshot recovery authenticates key context, snapshot/media hashes and household identity, omits expired media, preserves outbox revision order and refuses to overwrite an existing household. It restores state/media, not sessions, command-cache rows or in-progress inbox leases; EBS/SQLite backups are needed for complete local recovery. Live initialization refuses to create an empty household when its cloud snapshot already exists. This prevents accidental empty-state replacement, but does not implement automatic failover.
+Snapshot recovery authenticates key context, snapshot/media hashes and household identity, omits expired media, preserves outbox revision order and refuses to overwrite an existing household. It restores state and media (not sessions, the command cache or in-progress inbox leases; EBS/SQLite backups cover full local recovery). Live initialization refuses to create an empty household when its cloud snapshot already exists.
 
-[The AWS template and operating guide](../infra/aws/README.md) provision one active EC2 reducer behind HTTPS, encrypted persistent EBS, S3/DynamoDB/SQS/Scheduler, scoped IAM, private secret bootstrap, logs and alarms. Local Moto tests and CloudFormation lint pass. The judge stack was deployed and smoke-tested over HTTPS ([evidence](evidence/aws-deployment.json)); stack teardown has not been executed.
+The judge stack (`infra/aws/judge-demo.yaml`) runs one EC2 reducer behind HTTPS with DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager and CloudWatch, deployed and smoke-tested over HTTPS ([evidence](evidence/aws-deployment.json)). See the [AWS guide](../infra/aws/README.md).
 
-## Remaining scale and product limits
+## Design scope
 
-The aggregate history grows with usage. This is a bounded hackathon/pilot implementation, with one active writer per ledger volume; high availability, paginated normalized history, sustained load tests and production certification remain outstanding. General parcel/drinks scene models, genuine device/API proofs and token-refresh/account-linking flows still require implementation or verification. Per-camera exclusion, masks, retention, provider disconnect and household deletion are implemented and tested (`test_privacy.py`). All original release criteria remain in the traceability manifest.
+Muni runs one active writer per ledger volume; the event history is an aggregate that grows with usage. Horizontal scaling, paginated normalized history and automatic failover are outside the current scope. Per-camera exclusion, privacy masks, retention, provider disconnect and household deletion are implemented and tested (`test_privacy.py`); see [privacy and security](privacy-security.md).

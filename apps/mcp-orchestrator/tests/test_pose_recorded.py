@@ -4,7 +4,7 @@ The fixtures are SYNTHETIC generated humanoid videos (scripts/generate-synthetic
 These tests decode the video pixels, run the SHA-pinned MediaPipe Pose Landmarker model and
 feed the same reducer used by live Ring frames. No landmarks or counts are injected.
 
-The model is fetched exactly like scripts/check-public-pose.py (official URL, pinned SHA-256,
+The model is fetched exactly like scripts/fetch-pose-model.py (official URL, pinned SHA-256,
 size-limited) into ignored artifacts/vision/. If mediapipe cannot load or the model cannot be
 fetched (offline sandbox), these tests skip with the reason instead of passing silently.
 """

@@ -3,7 +3,7 @@
 // fixed rules, and each intent is answered only from real JSON-RPC tool results returned by
 // /mcp (same origin, authenticated by the judge session cookie).
 
-import { plain } from "./ui";
+import { plain, uuid } from "./ui";
 export const PROTOCOL_VERSION = "2025-11-25";
 
 export type RpcLogEntry = {
@@ -335,7 +335,7 @@ export async function answer(
           "compile_ambient_commitment",
           {
             utterance_json: {
-              event_id: "alexa-sim-" + crypto.randomUUID(),
+              event_id: "alexa-sim-" + uuid(),
               utterance,
               occurred_at: new Date().toISOString(),
             },

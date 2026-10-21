@@ -1,14 +1,24 @@
-# Judge runbook
+# Judge runbook — Muni in five minutes
 
-1. Follow the README installation steps; start the single backend/frontend service. No personal Amazon device token is needed for the synthetic replay. Use the private installation-generated judge password, never a shared Amazon account credential.
-2. Start in **Mission control**. The source is visibly **SYNTHETIC DEMO**. Click **Run the full day** and allow about 30 seconds. Actual API calls mutate the persisted household; this is not a sequence of canned screens.
-3. Morning: inspect four contracts and original utterances. Their status begins ACTIVE, with separate required evidence. The compiler has a deliberately limited English grammar; it is not an unbounded LLM interpretation claim.
-4. Delivery: inspect the source frame. Generated pixels are segmented and tracked. Deposit starts a logical watchdog, not final custody closure. Change Courier to **fake-out** after a reset to exercise a disputed delivery.
-5. Deadlines: inspect exact 15:00/15:35 teacher jobs. The sister has separate 17:00/17:35 jobs. A clock jump past a deadline records missed/unverified status; it never verifies. Choose engaged preparation to suppress a needless high-priority alert.
-6. Removal: open **Evidence & incidents**. Review actual synthetic snapshots, person marker crop, hashes, a 15-second generated clip (or a clearly labeled encoder-unavailable snapshot fallback) and unknown intent. Choose authorized pickup or prepare a report; preparing alone sends nothing. Simulated approval binds to a manifest and an explicit phrase. The demo receiver contacts no police and produces no official case ID.
-7. Arrival: choose not-visible, visible or occluded drinks. Each leaves uncertainty truthful. Owner pickup is accepted only on the parcel-remains branch.
-8. Studio: generated marker frames pass through OpenCV landmark extraction and the pose reducer. At fourteen full cycles the in-app gate stays locked; the fifteenth unlocks. No other entertainment app is controlled. An accessible override leaves the physical commitment unverified.
-9. Use the event inspector, contract detail and companion bell to inspect shared state. The MCP inspector describes actual external-client testing; scenario REST calls are not mislabeled as MCP traces. Camera/token failure injection pauses processing. Revoke consent to stop collection. Export validates actual artifact hashes.
-10. Open TV preview to test keyboard focus, or build/install the Fire OS APK using its README. Web preview and APK compilation are separate from the required Fire TV device recording. Device, live Ring, Bee and Alexa+ connection proof remain blocked until supplied.
+**Live:** https://100-49-183-59.sslip.io · sign in as `demo-admin` (password in the Devpost testing instructions).
+The **Demo day** household replays one scripted day; your clicks run the same backend, reducers and evidence policy as a live household.
 
-CLI alternative: while the backend runs, execute `./scripts/seed-demo-data.sh`. Run the tests and read `docs/acceptance-report.md` before evaluating completion claims.
+| # | Do this | What to notice |
+|---|---|---|
+| 1 | **Mission control → Run the full day** | Six scenes play in order (08:15 → 20:30). Promises appear as contracts; none start verified. |
+| 2 | Open **Commitment ledger**, click *Call your sister* | "Why not done yet": it needs conversation evidence. The 17:00 / 17:35 nudges fired, then the deadline passed → **Missed**, never auto-verified. |
+| 3 | Open the teacher meeting | **Verified by evidence** — closed only after a participation record arrived at 16:05. |
+| 4 | **Evidence & incidents** | Real CCTV of a parcel leaving the porch, tracked with detection boxes, a hash-chained packet and one question: was this authorized? Try *Confirm authorized pickup* or *Review evidence / Prepare report* → approve → the demo receiver records it and **nothing is sent to police**. |
+| 5 | Back on Mission control, read **Right now** | The 19:45 arrival check: drinks weren't visible, so Muni asks you to check — no accusation. |
+| 6 | **Reality-Lock studio → Play recorded workout** | MediaPipe counts each full squat from the video. 14/15 stays locked; the 15th unlocks the in-app reward. |
+| 7 | **Alexa+** → "what did I promise today?" | Each answer cites the MCP tools it called; the tool cards show name, arguments, result and latency. |
+| 8 | Type a promise of your own: *"I'll pay the electricity bill by Friday"* | Parsed into a contract with a deadline, T-60/T-25 jobs and the right verification method. |
+| 9 | **Judge replay** | The six spec buttons with branches: fake delivery, family pickup, visible/empty/ambiguous drinks, real-footage branches; the MCP JSON-RPC log streams on the right. |
+
+**MCP from your own client:** `https://100-49-183-59.sslip.io/mcp/` — Streamable HTTP, protocol `2025-11-25`, Bearer = the `done_session` cookie value after signing in.
+
+**Fire TV:** the Vega OS app (`apps/firetv-vega-hud`) runs on the Vega Virtual Device; the Fire OS APK (`apps/firetv-command-hud`) sideloads on Fire TV / Android TV and is D-pad tested in CI.
+
+**Run it yourself:** `./scripts/setup-local.sh && ./scripts/start-local.sh`, then `./scripts/access.sh` for local passwords. Tests: `uv run --extra ring-video --extra aws pytest -q` and `npm run test:e2e`.
+
+**Reset:** *Reset day* on Mission control restores a clean demo day at any time.

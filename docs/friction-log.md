@@ -2,7 +2,7 @@
 
 ## Amazon developer tools (official friction-log format)
 
-Each entry below was actually encountered on 20 October 2026 while building Muni. Format: task · steps · expected vs actual · severity · workaround · request.
+Each entry below was actually encountered between 20 and 22 October 2026 while building Muni. Format: task · steps · expected vs actual · severity · workaround · request.
 
 A1. **Bee API stream event shapes are undocumented.** *Task:* ingest live Bee utterances and todos. *Steps:* read https://docs.bee.computer/docs/api; it lists `GET /v1/stream` event types (`new-utterance`, `todo-created`, ...) but no payload schema. *Expected:* a JSON schema/sample per event type. *Actual:* the original adapter guessed a flat `{"utterance": "..."}` shape and would have rejected every real event; the real shape (`{utterance:{id,text,speaker,spoken_at}, conversation_uuid}`, `{todo:{id,text,completed,alarmAt}}`) had to be read from the official `bee-cli` source (`sources/commands/stream/index.ts`). *Severity:* High for integrators. *Workaround:* normalizer mirroring bee-cli plus tests; unknown shapes are ignored, never guessed. *Request:* publish per-event JSON schemas, sample payloads and timestamp units.
 
@@ -14,12 +14,19 @@ A4. **CloudFront account verification surfaces only mid-deployment.** *Task:* HT
 
 A5. **MCP Python SDK rejects public deployments by default (Alexa+ MCP route).** *Task:* expose the Streamable HTTP MCP server on the public judge URL. *Actual:* `initialize` returned `421 Invalid Host header` because FastMCP's DNS-rebinding protection defaults to localhost hosts only. *Severity:* Medium (silent until tested from outside). *Workaround:* explicit allowed hosts/origins from deployment config, with a regression test. *Request:* Alexa+ MCP onboarding docs should include a public-deployment checklist (Host/Origin, auth, protocol version).
 
-## Other engineering notes (cloud workspace and CI)
+A6. **Ring Developer Playground tokens last 30 minutes.** *Task:* keep a live Ring view available to judges for the review window. *Steps:* generated a Playground access token, ran `scripts/ring-live-probe.py` and the studio WHEP relay. *Expected:* a sandbox credential that survives a multi-day judging window. *Actual:* live discovery, event history and WHEP video worked, then the token expired after 30 minutes; WHEP sessions themselves end after 30–60 seconds. *Severity:* Medium. *Workaround:* event-driven watchdog that reconnects per event, explicit coverage gaps, redacted probe evidence captured while the token was valid. *Request:* longer-lived sandbox tokens (or refresh tokens) for the Playground device.
 
+A7. **Vega Virtual Device shows no system keyboard for `TextInput`.** *Task:* sign in on the Vega OS app. *Steps:* focused a React Native `TextInput` on the Vega Virtual Device with the D-pad and pressed select. *Expected:* the system IME. *Actual:* no keyboard appeared, so text could not be entered. *Severity:* Medium (blocks any login flow). *Workaround:* an in-app 5×10 D-pad keyboard. *Request:* IME support on the Virtual Device, or document the limitation in the Vega SDK getting-started guide.
 
-These are actual observations, not ten fabricated entries. The source spec’s ten-entry goal is internal. The official bonus/rule claim still needs owner verification against the current competition site.
+A8. **Scripted Vega input is reliable only one key at a time.** *Task:* automate the D-pad journey on the Vega Virtual Device. *Steps:* sent key sequences through `vda shell inputd-cli button_press`; ran from WSL2 Ubuntu. *Expected:* a batched key sequence like `adb shell input`. *Actual:* batched `inputd-cli series` and piped console mode dropped or misplaced presses; one press per call was reliable but took about 13 minutes for a 24-character password, and the launching WSL shell had to stay alive. *Severity:* Low. *Workaround:* single-key helpers with settle delays (`tests/firetv/vega/`) and a kept-alive shell. *Request:* a batched input command and a detached virtual-device launch mode.
 
-1. **Cloud package cache location:** `uv sync` first failed because `/home/agent/.cache/uv` was read-only. Set UV_CACHE_DIR to a writable workspace cache. Request: expose writable cache defaults in cloud setup.
+A9. **No Fire OS emulator image; older WebView lacks `crypto.randomUUID`.** *Task:* validate the Fire OS APK without Fire TV hardware. *Steps:* used an Android TV API 30 emulator, launched the APK and signed in. *Expected:* a Fire OS image to test against, and modern web APIs in the system WebView. *Actual:* no Fire OS emulator is offered; sign-in failed because `crypto.randomUUID` was missing in the WebView. *Severity:* Medium. *Workaround:* UUID fallback and a CI emulator D-pad journey (33 checks). *Request:* an official Fire OS emulator image or cloud test device.
+
+## Other engineering notes (build environment and CI)
+
+Observed in the sandboxed build workspace, local toolchain and CI.
+
+1. **Package cache location:** `uv sync` first failed because the default uv cache directory was read-only. Set UV_CACHE_DIR to a writable workspace cache. Request: expose writable cache defaults in sandboxed environments.
 2. **GitHub API reachability:** native Git read/push worked while `gh api` returned Forbidden. Adding `api.github.com` to environment domains restored API access after propagation. Request: separate Git versus API capability indicators.
 3. **Documentation reachability:** Amazon/MCP official documentation initially returned proxy 403; the public Amazon GitHub sample README was reachable. Added the actual required documentation hosts, preserved presets. Request: show the denied hostname/action in onboarding.
 4. **Origin policy and test port:** module assets on the browser test port 8091 were rejected by a fixed-port origin allowlist. Accept the service’s same origin while retaining explicit external-origin rejection. Request: mount/examples should cover production built assets as well as API CSRF.
@@ -27,8 +34,5 @@ These are actual observations, not ten fabricated entries. The source spec’s t
 6. **JRE versus JDK:** `java` existed but Android compilation failed because the installation lacked JAVA_COMPILER. Installed an official checksum-verified full JDK. Request: preflight build tools should check javac rather than java alone.
 7. **Gradle proxy:** Gradle did not automatically use the shell’s HTTPS proxy and could not resolve the Android plugin. Supplied supported JVM proxy properties and the system trust store, preserving TLS verification. Request: make proxy diagnostics explicit.
 8. **Overlapping browser runs:** older test processes continued after their web server was stopped and interfered with a subsequent suite’s shared demo namespace. Stopped owned test processes and ran the suite in isolation; reset setup now waits for its actual response. Request: clearly report orphaned webServer/test ownership on cancellation.
-
-Do not pad this list to ten. Runtime/device observations should be added only when actually encountered.
-
 9. **Retired Android SDK package in CI:** `android-actions/setup-android@v3` defaulted to `tools`, which the SDK repository no longer provides. Set `packages: platform-tools` and install explicit platform/build tools. Request: update action defaults and report removed-package migrations.
-10. **MediaPipe native dependency:** Python import succeeded, but creating PoseLandmarker failed because `libGLESv2.so.2` was absent. Resolved using Debian’s signed repository metadata and checksum-verified `libgles2` package, extracted into the writable cloud tools directory; inference then decoded 20 frames with zero false reps. Request: document native runtime prerequisites independently from Python import checks.
+10. **MediaPipe native dependency:** Python import succeeded, but creating PoseLandmarker failed because `libGLESv2.so.2` was absent. Resolved using Debian’s signed repository metadata and checksum-verified `libgles2` package, extracted into a writable tools directory; inference then decoded 20 frames with zero false reps. Request: document native runtime prerequisites independently from Python import checks.
