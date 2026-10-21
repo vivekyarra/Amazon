@@ -1,48 +1,68 @@
+/* Owner privacy controls (spec 12.1). */
 .privacy-controls {
-  grid-column: 1 / -1;
+  overflow: hidden;
 }
 .privacy-row {
-  padding: 18px 23px;
   display: flex;
   align-items: flex-start;
-  gap: 15px;
+  gap: var(--s3);
+  padding: 12px var(--s4);
   border-top: 1px solid var(--line);
-  color: #90a184;
+  color: var(--text-2);
+}
+.privacy-row > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
 }
 .privacy-row > div,
 .privacy-row > form {
   flex: 1;
+  min-width: 0;
 }
 .privacy-row strong {
-  font-size: 12px;
-  color: inherit;
+  font-size: 13px;
+  color: var(--text);
 }
 .privacy-row p {
-  font-size: 10px;
-  color: #9da89a;
-  margin-top: 7px;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  margin-top: 6px;
+  line-height: 1.45;
 }
 .privacy-inline {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 11px;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+}
+.privacy-row > form.privacy-inline > strong {
+  flex-basis: 100%;
 }
 .privacy-inline > span {
   flex: 1;
-  min-width: 160px;
+  min-width: 140px;
+  overflow-wrap: anywhere;
 }
-.privacy-inline input {
+.privacy-inline input,
+.privacy-inline select {
   flex: 1;
   min-width: 80px;
-  font-size: 11px;
+  height: 30px;
+  font-size: var(--fs-sm);
 }
 .privacy-inline input[type="number"] {
-  flex: 0 0 70px;
+  flex: 0 0 72px;
 }
-.privacy-controls > p.muted {
-  padding: 0 23px 12px;
-  font-size: 10px;
+.privacy-inline .button {
+  height: 30px;
+  padding: 0 10px;
+  font-size: var(--fs-sm);
+}
+.privacy-controls .muted {
+  padding: 0 var(--s4) 12px;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
 }

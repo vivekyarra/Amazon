@@ -1,161 +1,189 @@
+/* Simulated Alexa+ panel. Badges stay visible on every simulated turn. */
 .alexa-sim {
-  margin-top: 18px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
-.alexa-sim .panel-heading h2 {
+.alexa-page {
   display: flex;
-  align-items: center;
-  gap: 7px;
+}
+.alexa-sim .panel-head {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.alexa-sim .panel-head h2 svg {
+  color: var(--accent);
 }
 .alexa-sim code {
-  font-size: 9px;
-  background: #f1f4f3;
-  padding: 1px 4px;
-  border-radius: 3px;
+  font-size: 0.9em;
+  color: var(--text);
 }
 .alexa-badge {
   display: inline-block;
-  font-size: 9px;
+  font-family: var(--mono);
+  font-size: 10px;
   font-weight: 650;
-  letter-spacing: 0.5px;
-  color: #6b3d00;
-  background: #fff1d6;
-  border: 1px solid #f2c879;
-  border-radius: 4px;
-  padding: 5px 8px;
-  white-space: normal;
+  letter-spacing: 0.03em;
+  color: var(--violet);
+  background: rgba(187, 168, 255, 0.08);
+  border: 1px solid rgba(187, 168, 255, 0.3);
+  border-radius: 5px;
+  padding: 3px 7px;
 }
 .alexa-badge.small {
-  font-size: 7.5px;
-  padding: 2px 5px;
-  margin-bottom: 5px;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  margin-bottom: 6px;
 }
 .alexa-grid {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
   border-top: 1px solid var(--line);
 }
 .alexa-convo {
-  padding: 16px 20px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  padding: 12px var(--s4) var(--s4);
   min-width: 0;
 }
 .alexa-whispers {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  gap: 6px;
+  flex: none;
+  max-height: 40%;
+  overflow: auto;
 }
 .alexa-whisper {
-  border: 1px dashed #e0b25c;
-  background: #fffaf0;
-  border-radius: 7px;
-  padding: 9px 11px;
+  border: 1px dashed rgba(255, 197, 110, 0.45);
+  background: rgba(255, 197, 110, 0.06);
+  border-radius: var(--r-md);
+  padding: 8px 10px;
+  animation: rise 0.4s var(--ease) both;
 }
 .alexa-whisper strong {
   display: block;
-  font-size: 10px;
+  font-size: var(--fs-xs);
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 .alexa-whisper p {
-  margin: 4px 0 0;
-  font-size: 11px;
+  margin-top: 3px;
+  font-size: var(--fs-sm);
+  color: var(--text);
   font-style: italic;
 }
 .alexa-turns {
+  flex: 1;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 340px;
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 .alexa-turn {
   max-width: 92%;
-  border-radius: 8px;
-  padding: 8px 11px;
-  font-size: 11px;
-  line-height: 1.45;
-}
-.alexa-turn p {
-  margin: 0;
+  border-radius: 14px;
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  animation: rise 0.35s var(--ease) both;
 }
 .alexa-turn small {
   display: block;
   margin-top: 4px;
-  font-size: 8.5px;
-  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
 }
 .alexa-turn.you {
   align-self: flex-end;
-  background: #223e32;
-  color: #fff;
+  background: linear-gradient(180deg, #2a3b4f, #223246);
+  border-bottom-right-radius: 4px;
 }
 .alexa-turn.sim {
   align-self: flex-start;
-  background: #f1f6f9;
-  border: 1px solid #dce7ee;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
 }
 .alexa-turn.sim.error {
-  background: #fff1f1;
-  border-color: #f2c4c4;
+  border-color: rgba(255, 149, 139, 0.35);
+  background: rgba(255, 149, 139, 0.07);
 }
 .alexa-empty {
-  color: var(--muted);
-  font-size: 10px;
-  margin: 0;
+  color: var(--text-3);
+  font-size: var(--fs-sm);
 }
 .alexa-examples {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  flex: none;
 }
 .alexa-examples .button {
-  margin: 0;
-  white-space: normal;
-  text-align: left;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--text-2);
+}
+.alexa-sim.compact .alexa-examples {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
 }
 .alexa-input {
   display: flex;
   gap: 6px;
+  flex: none;
 }
 .alexa-input input {
   flex: 1;
-  min-width: 0;
-  border: 1px solid #dfe5e5;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 11px;
 }
 .alexa-input .button {
-  margin: 0;
+  padding: 0 11px;
 }
 .alexa-note {
-  font-size: 9px;
-  color: var(--muted);
-  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
 }
 .alexa-rail {
   border-left: 1px solid var(--line);
-  background: #fafbfb;
-  padding: 12px 14px;
-  max-height: 560px;
+  background: rgba(0, 0, 0, 0.16);
+  padding: 12px;
   overflow-y: auto;
   min-width: 0;
+  min-height: 0;
+  scrollbar-width: thin;
 }
 .alexa-rail-head {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  align-items: baseline;
+  font-size: var(--fs-sm);
   margin-bottom: 8px;
 }
 .alexa-rail-head span {
-  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-3);
 }
 .alexa-rpc {
   border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 6px;
+  background: var(--surface);
+  border-radius: var(--r-sm);
   margin-bottom: 6px;
-  font-size: 10px;
+  font-size: 12px;
+  overflow: hidden;
+  animation: rise 0.3s var(--ease) both;
 }
 .alexa-rpc summary {
   display: flex;
@@ -163,35 +191,49 @@
   align-items: center;
   padding: 6px 8px;
   cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.alexa-rpc summary strong {
+  font-weight: 600;
+}
+.alexa-rpc summary code {
+  color: var(--accent);
 }
 .alexa-rpc summary time {
   margin-left: auto;
-  color: var(--muted);
+  color: var(--text-3);
 }
 .alexa-rpc summary .ok {
-  color: #21734f;
+  color: var(--accent);
   font-weight: 650;
 }
 .alexa-rpc summary .bad {
-  color: #b42318;
+  color: var(--coral);
   font-weight: 650;
 }
 .alexa-rpc pre {
-  margin: 0;
-  padding: 6px 8px;
-  border-top: 1px solid #f0f2f3;
-  font-size: 9px;
   max-height: 180px;
-  overflow: auto;
   white-space: pre-wrap;
   word-break: break-word;
+  border-top: 1px solid var(--line);
+}
+.alexa-sim.compact .alexa-grid {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(120px, 34%);
+}
+.alexa-sim.compact .alexa-rail {
+  border-left: 0;
+  border-top: 1px solid var(--line);
 }
 @media (max-width: 1000px) {
   .alexa-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(360px, 1fr) minmax(200px, auto);
   }
   .alexa-rail {
     border-left: 0;
     border-top: 1px solid var(--line);
+    max-height: 320px;
   }
 }

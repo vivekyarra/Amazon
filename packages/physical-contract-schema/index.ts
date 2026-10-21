@@ -29,6 +29,16 @@ export interface Contract {
   visibility?: string;
   observation_status?: string;
   scheduled_jobs: { kind: string; at: string; status: string }[];
+  recurrence?: { freq: string } | null;
+  verification_note?: string;
+  commitment_origin?: string;
+  deadline_assumption?: string | null;
+  scene_source?: { source: string };
+  /** Set when VERIFIED: USER_CONFIRMED is an owner tap, never sensor proof (spec 4.3). */
+  verification_provenance?: string;
+  /** Another speaker proposed a new deadline; not applied until the owner acts. */
+  proposed_amendment?: { due_at: string; source_event_id: string; at: string };
+  target_reps?: number | null;
 }
 export interface LedgerEvent {
   event_id: string;
@@ -78,6 +88,7 @@ export interface Studio {
   quality: string;
   angle: number;
   fixture_frame_index?: number;
+  target_reps?: number;
 }
 export interface State {
   clock_mode?: "WALL" | "VIRTUAL";

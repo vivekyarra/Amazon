@@ -62,172 +62,170 @@ export function PrivacyControls({ act, busy }: { act: Act; busy: boolean }) {
   const [min, max] = data.retention_bounds;
   return (
     <section className="panel privacy-controls">
-      <div className="panel-heading">
-        <div>
-          <h2>Privacy controls</h2>
-          <p>
-            Owner-only. Every change is idempotent and written to the audit
-            ledger.
-          </p>
-        </div>
+      <div className="panel-head">
+        <h2>Privacy controls</h2>
+        <span className="muted-text small">Audited · idempotent</span>
       </div>
-
-      <div className="privacy-row">
-        <Camera size={17} />
-        <div>
-          <strong>Cameras</strong>
-          {data.cameras.length === 0 && <p>No linked cameras.</p>}
-          {data.cameras.map((device) => {
-            const excluded = data.excluded_cameras.includes(device);
-            return (
-              <div className="privacy-inline" key={device}>
-                <span>
-                  {device} · {excluded ? "EXCLUDED" : "allowed"} · mask rev{" "}
-                  {data.masks[device]?.calibration_revision ?? 0}
-                </span>
-                <button
-                  className="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void run("/privacy/cameras/exclusion", {
-                      device_id: device,
-                      excluded: !excluded,
-                    })
+      <div className="scroll">
+        <div className="privacy-row">
+          <Camera size={17} />
+          <div>
+            <strong>Cameras</strong>
+            {data.cameras.length === 0 && <p>No linked cameras.</p>}
+            {data.cameras.map((device) => {
+              const excluded = data.excluded_cameras.includes(device);
+              return (
+                <div className="privacy-inline" key={device}>
+                  <span>
+                    {device} · {excluded ? "EXCLUDED" : "allowed"} · mask rev{" "}
+                    {data.masks[device]?.calibration_revision ?? 0}
+                  </span>
+                  <button
+                    className="button"
+                    disabled={busy}
+                    onClick={() =>
+                      void run("/privacy/cameras/exclusion", {
+                        device_id: device,
+                        excluded: !excluded,
+                      })
+                    }
+                  >
+                    {excluded ? "Include" : "Exclude"}
+                  </button>
+                </div>
+              );
+            })}
+            {data.cameras.length > 0 && (
+              <form
+                className="privacy-inline"
+                onSubmit={(ev) => {
+                  ev.preventDefault();
+                  let polygons: unknown;
+                  try {
+                    polygons = JSON.parse(maskText);
+                  } catch {
+                    setNote("Masks must be JSON: [[[x, y], ...], ...] in 0–1.");
+                    return;
                   }
-                >
-                  {excluded ? "Include" : "Exclude"}
-                </button>
-              </div>
-            );
-          })}
-          {data.cameras.length > 0 && (
-            <form
-              className="privacy-inline"
-              onSubmit={(ev) => {
-                ev.preventDefault();
-                let polygons: unknown;
-                try {
-                  polygons = JSON.parse(maskText);
-                } catch {
-                  setNote("Masks must be JSON: [[[x, y], ...], ...] in 0–1.");
-                  return;
-                }
-                void run("/privacy/cameras/masks", {
-                  device_id: maskCamera,
-                  polygons,
-                  revision: data.masks[maskCamera]?.calibration_revision ?? 0,
-                });
-              }}
-            >
-              <select
-                value={maskCamera}
-                onChange={(ev) => setMaskCamera(ev.target.value)}
+                  void run("/privacy/cameras/masks", {
+                    device_id: maskCamera,
+                    polygons,
+                    revision: data.masks[maskCamera]?.calibration_revision ?? 0,
+                  });
+                }}
               >
-                {data.cameras.map((device) => (
-                  <option key={device}>{device}</option>
-                ))}
-              </select>
-              <input
-                aria-label="PRIVATE_MASKS normalized polygons"
-                value={maskText}
-                onChange={(ev) => setMaskText(ev.target.value)}
-                maxLength={20000}
-              />
-              <button className="button" disabled={busy}>
-                Save masks
-              </button>
-            </form>
-          )}
-          <p>{data.original_artifact_policy}</p>
-        </div>
-      </div>
-
-      <div className="privacy-row">
-        <Clock3 size={17} />
-        <form
-          className="privacy-inline"
-          onSubmit={(ev) => {
-            ev.preventDefault();
-            void run("/privacy/retention", { days });
-          }}
-        >
-          <strong>Evidence retention</strong>
-          <input
-            type="number"
-            min={min}
-            max={max}
-            value={days}
-            onChange={(ev) => setDays(Number(ev.target.value))}
-          />
-          <span>days</span>
-          <button className="button" disabled={busy}>
-            Apply
-          </button>
-        </form>
-      </div>
-
-      <div className="privacy-row">
-        <PlugZap size={17} />
-        <div>
-          <strong>Providers</strong>
-          {Object.entries(data.providers).map(([name, provider]) => {
-            const revoked = provider.status === "REVOKED";
-            return (
-              <div className="privacy-inline" key={name}>
-                <span>
-                  {name} ·{" "}
-                  {revoked ? "NOT_CONNECTED (revoked)" : provider.status}
-                </span>
-                <button
-                  className="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void run(
-                      `/privacy/providers/${name}/${revoked ? "reauthorize" : "disconnect"}`,
-                    )
-                  }
+                <select
+                  aria-label="Camera for masks"
+                  value={maskCamera}
+                  onChange={(ev) => setMaskCamera(ev.target.value)}
                 >
-                  {revoked ? "Re-authorize" : "Disconnect"}
+                  {data.cameras.map((device) => (
+                    <option key={device}>{device}</option>
+                  ))}
+                </select>
+                <input
+                  aria-label="PRIVATE_MASKS normalized polygons"
+                  value={maskText}
+                  onChange={(ev) => setMaskText(ev.target.value)}
+                  maxLength={20000}
+                />
+                <button className="button" disabled={busy}>
+                  Save masks
                 </button>
-              </div>
-            );
-          })}
+              </form>
+            )}
+            <p>{data.original_artifact_policy}</p>
+          </div>
         </div>
-      </div>
 
-      <div className="privacy-row">
-        <Trash2 size={17} />
-        <form
-          className="privacy-inline"
-          onSubmit={(ev) => {
-            ev.preventDefault();
-            void run("/privacy/household/delete", {
-              household_id: data.household_id,
-              confirmation: phrase,
-            }).then(() => setPhrase(""));
-          }}
-        >
-          <strong>Delete household data</strong>
-          <input
-            aria-label="Deletion confirmation phrase"
-            placeholder={data.delete_phrase}
-            value={phrase}
-            onChange={(ev) => setPhrase(ev.target.value)}
-          />
-          <button
-            className="button"
-            disabled={busy || phrase !== data.delete_phrase}
+        <div className="privacy-row">
+          <Clock3 size={17} />
+          <form
+            className="privacy-inline"
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              void run("/privacy/retention", { days });
+            }}
           >
-            Delete
-          </button>
-        </form>
+            <strong>Evidence retention</strong>
+            <input
+              aria-label="Retention days"
+              type="number"
+              min={min}
+              max={max}
+              value={days}
+              onChange={(ev) => setDays(Number(ev.target.value))}
+            />
+            <span>days</span>
+            <button className="button" disabled={busy}>
+              Apply
+            </button>
+          </form>
+        </div>
+
+        <div className="privacy-row">
+          <PlugZap size={17} />
+          <div>
+            <strong>Providers</strong>
+            {Object.entries(data.providers).map(([name, provider]) => {
+              const revoked = provider.status === "REVOKED";
+              return (
+                <div className="privacy-inline" key={name}>
+                  <span>
+                    {name} ·{" "}
+                    {revoked ? "NOT_CONNECTED (revoked)" : provider.status}
+                  </span>
+                  <button
+                    className="button"
+                    disabled={busy}
+                    onClick={() =>
+                      void run(
+                        `/privacy/providers/${name}/${revoked ? "reauthorize" : "disconnect"}`,
+                      )
+                    }
+                  >
+                    {revoked ? "Re-authorize" : "Disconnect"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="privacy-row">
+          <Trash2 size={17} />
+          <form
+            className="privacy-inline"
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              void run("/privacy/household/delete", {
+                household_id: data.household_id,
+                confirmation: phrase,
+              }).then(() => setPhrase(""));
+            }}
+          >
+            <strong>Delete household data</strong>
+            <input
+              aria-label="Deletion confirmation phrase"
+              placeholder={data.delete_phrase}
+              value={phrase}
+              onChange={(ev) => setPhrase(ev.target.value)}
+            />
+            <button
+              className="button"
+              disabled={busy || phrase !== data.delete_phrase}
+            >
+              Delete
+            </button>
+          </form>
+        </div>
+        {data.deletion_receipts.map((receipt) => (
+          <p className="muted" key={receipt.receipt_id}>
+            Deletion receipt {receipt.receipt_id} · {receipt.completed_at}
+          </p>
+        ))}
+        {note && <p className="muted">{note}</p>}
       </div>
-      {data.deletion_receipts.map((receipt) => (
-        <p className="muted" key={receipt.receipt_id}>
-          Deletion receipt {receipt.receipt_id} · {receipt.completed_at}
-        </p>
-      ))}
-      {note && <p className="muted">{note}</p>}
     </section>
   );
 }

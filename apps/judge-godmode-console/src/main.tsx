@@ -1,27 +1,28 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
 import {
   Activity,
-  ArrowDownLeft,
   ArrowRight,
   AudioLines,
   Bell,
   Check,
   CheckCheck,
   ChevronRight,
-  Circle,
   Clock3,
   Code2,
   Download,
   Eye,
+  FastForward,
   FileCheck2,
   Fingerprint,
+  FlaskConical,
   Home,
   Layers3,
   LockKeyhole,
+  LockKeyholeOpen,
   LogOut,
-  Maximize2,
-  Monitor,
+  MessageSquareText,
   Package,
   Pause,
   Play,
@@ -32,79 +33,142 @@ import {
   Settings2,
   ShieldCheck,
   Signal,
-  Sparkles,
   Terminal,
   Tv,
   Users,
   Video,
-  Volume2,
   X,
-  Zap,
 } from "lucide-react";
 import type {
   Contract,
   State,
 } from "../../../packages/physical-contract-schema";
+import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./style.css";
 import { PrivacyControls } from "./PrivacyControls";
 import { PushOptIn } from "./PushOptIn";
 import AlexaSimulator from "./AlexaSimulator";
+import { Buddy } from "./Buddy";
+import {
+  Brand,
+  ContractChip,
+  Empty,
+  SourceTag,
+  Status,
+  api,
+  contractSource,
+  day,
+  fmt,
+  human,
+  isOpen,
+  sensorVerified,
+  sleep,
+  userConfirmed,
+  uuid,
+} from "./ui";
 
 type Page =
   | "overview"
   | "replay"
   | "contracts"
   | "studio"
+  | "alexa"
   | "incidents"
   | "evidence"
   | "settings";
+const PAGES: Page[] = [
+  "overview",
+  "replay",
+  "contracts",
+  "studio",
+  "alexa",
+  "incidents",
+  "evidence",
+  "settings",
+];
 const labels: Record<Page, string> = {
   overview: "Mission control",
   replay: "Judge replay",
   contracts: "Commitment ledger",
   studio: "Reality-Lock studio",
+  alexa: "Simulated Alexa+",
   incidents: "Evidence & incidents",
   evidence: "Evidence packet",
   settings: "Connections & privacy",
 };
+const short: Record<Page, string> = {
+  overview: "Control",
+  replay: "Replay",
+  contracts: "Ledger",
+  studio: "Studio",
+  alexa: "Alexa+",
+  incidents: "Evidence",
+  evidence: "Evidence",
+  settings: "Privacy",
+};
+const pageIcons: Record<Page, typeof Home> = {
+  overview: Home,
+  replay: Layers3,
+  contracts: CheckCheck,
+  studio: ScanLine,
+  alexa: AudioLines,
+  incidents: ShieldCheck,
+  evidence: FileCheck2,
+  settings: Settings2,
+};
+const subtitles: Partial<Record<Page, string>> = {
+  overview:
+    "Promises you make out loud, closed only when real-world evidence proves them.",
+  replay:
+    "One virtual day on the same handlers live mode uses. Every source is labeled.",
+  contracts: "Every promise stays open until its evidence policy is met.",
+  studio: "Verified squats before evening entertainment.",
+  alexa: "Voice-style questions answered only from real MCP tool calls.",
+  incidents: "Preserve what happened. You decide what happens next.",
+  evidence: "Original and derived artifacts with provenance and SHA-256.",
+  settings: "Know what’s connected. Control what’s collected.",
+};
+// [time, title, source, spec 5.2 button wording]
 const stages = [
   [
     "08:15",
     "Morning promises",
     "Bee stream",
-    "Four promises. No reminder prompt.",
+    "1. 8:15 AM Morning Promises (Bee Stream)",
   ],
   [
     "14:10",
     "Trust, then verify",
     "Courier deposit",
-    "A delivery claim meets physical evidence.",
+    "2. 2:10 PM Courier Fake-Out vs. Real Deposit",
   ],
   [
     "15:00",
     "A timely intervention",
     "Deadline auditor",
-    "Silent at T−60. Context-aware at T−25.",
+    "3. 3:00 PM / 3:35 PM T-60m Silent & T-25m Active Escalation",
   ],
   [
     "16:30",
     "Keep a human in the loop",
     "PorchWatchdog",
-    "A removal is an observation, not an accusation.",
+    "4. 4:30 PM Package Taken → Family vs. Police Report Review",
   ],
   [
     "19:45",
     "The doorway check",
     "Threshold scanner",
-    "Not visible doesn’t mean forgotten.",
+    "5. 7:45 PM Returning Home Without Wife's Drinks (Ear Whisper)",
   ],
   [
     "20:30",
     "Earn your evening",
     "Reality-Lock",
-    "Fifteen full movements. Evidence before unlock.",
+    "6. 8:30 PM Fire TV Reality-Lock → Ring Live Camera Squat Unlock",
   ],
 ];
+const stageIcons = [AudioLines, Package, Clock3, ShieldCheck, Home, Activity];
 const icons: Record<string, typeof Package> = {
   drinks: Home,
   sister: Users,
@@ -112,61 +176,16 @@ const icons: Record<string, typeof Package> = {
   squats: Activity,
   parcel: Package,
 };
-const fmt = (date: string) =>
-  new Date(date).toLocaleTimeString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-const human = (s: string) => s.toLowerCase().replaceAll("_", " ");
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-// Fire OS / Android TV WebViews older than Chromium 92 lack crypto.randomUUID.
-const uuid = (): string => {
-  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  const b = crypto.getRandomValues(new Uint8Array(16));
-  b[6] = (b[6] & 0x0f) | 0x40;
-  b[8] = (b[8] & 0x3f) | 0x80;
-  const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-};
-
-async function api(path: string, body?: unknown) {
-  const response = await fetch("/api" + path, {
-    method: body === undefined ? "GET" : "POST",
-    credentials: "same-origin",
-    headers:
-      body === undefined
-        ? {}
-        : {
-            "Content-Type": "application/json",
-            "Idempotency-Key": uuid(),
-          },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(
-      data.error?.message ?? data.detail?.[0]?.msg ?? "Request failed",
-    );
-  return data;
-}
+const reducedMotion = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? true;
 
 function App() {
+  const params = new URLSearchParams(location.search);
   const [state, setState] = useState<State | null>(null),
     [page, setPage] = useState<Page>(
-      ([
-        "overview",
-        "replay",
-        "contracts",
-        "studio",
-        "incidents",
-        "evidence",
-        "settings",
-      ].includes(new URLSearchParams(location.search).get("page") ?? "")
-        ? new URLSearchParams(location.search).get("page")
-        : "overview") as Page,
+      PAGES.includes(params.get("page") as Page)
+        ? (params.get("page") as Page)
+        : "overview",
     );
   const [authenticated, setAuthenticated] = useState(false),
     [loading, setLoading] = useState(true),
@@ -185,6 +204,7 @@ function App() {
   const [consoleTab, setConsoleTab] = useState<"events" | "decisions" | "mcp">(
     "events",
   );
+  const [ledgerFilter, setLedgerFilter] = useState("all");
   const [customUtterance, setCustomUtterance] = useState(""),
     [integrations, setIntegrations] = useState<
       { name: string; status: string; reason: string }[]
@@ -195,7 +215,7 @@ function App() {
     [confirmation, setConfirmation] = useState("");
   const stop = useRef(false),
     lastEvent = useRef(0);
-  const tv = new URLSearchParams(location.search).has("tv");
+  const tv = params.has("tv");
   const live = state?.clock_mode === "WALL";
   const [cameraDevices, setCameraDevices] = useState<string[]>([]);
   const [cameraDevice, setCameraDevice] = useState("");
@@ -229,6 +249,13 @@ function App() {
     const timer = setInterval(() => setFrameTick((t) => t + 1), 200);
     return () => clearInterval(timer);
   }, [authenticated, live, recordedSource, page]);
+  const studioRunning = state?.studio?.status === "RUNNING";
+  useEffect(() => {
+    if (!authenticated || page !== "studio" || !studioRunning) return;
+    const timer = setInterval(() => void refresh().catch(() => {}), 600);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated, page, studioRunning]);
   const refresh = useCallback(async () => {
     const data = await api("/state");
     setState(data.state);
@@ -243,11 +270,13 @@ function App() {
   }, [refresh]);
   useEffect(() => {
     if (!authenticated) return;
-    api("/integrations/status").then((d) => setIntegrations(d.integrations));
+    api("/integrations/status")
+      .then((d) => setIntegrations(d.integrations))
+      .catch(() => {});
     const es = new EventSource("/api/events/stream");
     es.addEventListener("ledger", () => {
       lastEvent.current++;
-      void refresh();
+      void refresh().catch(() => {});
     });
     es.addEventListener("auth-expired", () => setAuthenticated(false));
     const interval = setInterval(
@@ -265,7 +294,7 @@ function App() {
       if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].includes(e.key)) {
         const items = [
           ...document.querySelectorAll<HTMLElement>(
-            "button:not(:disabled),a,input,select",
+            "button:not(:disabled),a,input,select,summary",
           ),
         ].filter((el) => el.offsetParent !== null);
         const current = items.indexOf(document.activeElement as HTMLElement);
@@ -311,6 +340,16 @@ function App() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [tv]);
+  // Escape closes overlays everywhere (not only on TV).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setShowNotifications(false);
+      setShowApproval(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   const act = async (path: string, body: unknown = {}) => {
     setError("");
     try {
@@ -359,6 +398,21 @@ function App() {
       setPlaying(false);
     }
   };
+  const navigate = (next: Page, focus: Contract | null = null) => {
+    const apply = () => {
+      setPage(next);
+      setSelected(focus);
+    };
+    const url = new URL(location.href);
+    url.searchParams.set("page", next);
+    history.replaceState(null, "", url);
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => unknown;
+    };
+    if (next !== page && doc.startViewTransition && !reducedMotion() && !tv)
+      doc.startViewTransition(() => flushSync(apply));
+    else apply();
+  };
   const fullDay = async () => {
     setRunning(true);
     stop.current = false;
@@ -369,7 +423,7 @@ function App() {
         await sleep(850);
       }
       if (!stop.current) {
-        setPage("studio");
+        navigate("studio");
         await workout();
       }
     } catch {
@@ -399,52 +453,34 @@ function App() {
   };
   const logOut = async () => {
     cancelReplay();
-    await api("/auth/logout", {});
+    try {
+      await api("/auth/logout", {});
+    } catch {
+      /* session already gone */
+    }
     setAuthenticated(false);
     setState(null);
-  };
-  const navigate = (next: Page) => {
-    setPage(next);
-    setSelected(null);
+    setError("");
   };
 
   if (loading)
     return (
-      <div className="loading">
-        <Fingerprint size={42} />
+      <div className="loading" role="status">
+        <span className="brand-symbol big" aria-hidden>
+          <CheckCheck size={26} strokeWidth={2.6} />
+        </span>
         <p>Connecting to the reality ledger…</p>
       </div>
     );
   if (!authenticated)
     return (
       <main className="login">
-        <div className="login-story">
+        <div className="login-card">
           <Brand />
-          <div>
-            <span className="eyebrow light">EVIDENCE OVER ASSUMPTION</span>
-            <h1>
-              Life makes promises.
-              <br />
-              <em>Reality keeps score.</em>
-            </h1>
-            <p>
-              A shared reality ledger for the things you said you’d do.
-              <br />
-              From the morning conversation to the last verified squat.
-            </p>
-            <div className="login-pill">
-              <ShieldCheck size={16} /> Human judgment. Always in the loop.
-            </div>
-          </div>
-          <small>DONE/IRL · APIs lie. Reality doesn’t.</small>
-        </div>
-        <div className="login-form">
-          <div className="login-mark">
-            <Fingerprint size={38} />
-          </div>
-          <span className="eyebrow">YOUR REALITY, CONNECTED</span>
-          <h2>Welcome to mission control.</h2>
-          <p>Sign in to your private DONE/IRL workspace.</p>
+          <h1>Life makes promises. Reality keeps score.</h1>
+          <p className="login-lede">
+            Sign in to your private DONE/IRL workspace.
+          </p>
           <form onSubmit={login}>
             <label>
               Workspace account
@@ -470,32 +506,32 @@ function App() {
                 {error}
               </div>
             )}
-            <button className="button primary" disabled={loginBusy}>
+            <button className="button primary wide" disabled={loginBusy}>
               {loginBusy ? "Connecting…" : "Open mission control"}
-              <ArrowRight size={16} />
+              <ArrowRight size={16} aria-hidden />
             </button>
           </form>
-          <div className="login-note">
-            <LockKeyhole size={17} />
-            <p>
-              Local access is generated during setup.
-              <br />
-              Run <code>./scripts/access.sh</code> in your private terminal.
-              <br />
-              No Amazon credentials needed for replay.
-            </p>
-          </div>
+          <p className="login-note">
+            <LockKeyhole size={14} aria-hidden />
+            <span>
+              Passwords are generated locally. Run{" "}
+              <code>./scripts/access.sh</code> in your own terminal.
+            </span>
+          </p>
         </div>
       </main>
     );
   if (!state) return null;
-  const verified = state.contracts.filter(
-    (c) => c.status === "VERIFIED",
+  const admin = role === "admin";
+  const pageLabel = (p: Page) =>
+    p === "overview" && !admin ? "Today" : labels[p];
+  const verified = state.contracts.filter((c) =>
+    sensorVerified(c, state.evidence),
   ).length;
-  const active = state.contracts.filter(
-    (c) => !["VERIFIED", "CANCELLED", "REJECTED"].includes(c.status),
+  const confirmedByYou = state.contracts.filter((c) =>
+    userConfirmed(c, state.evidence),
   ).length;
-  const currentStage = stages[Math.max(0, state.scenario - 1)];
+  const openCount = state.contracts.filter(isOpen).length;
   const incident = state.incidents[0];
   const latestImage = [...state.evidence]
     .reverse()
@@ -509,7 +545,9 @@ function App() {
           ev.event_type,
         ),
     );
+  const latestAlert = state.alerts[state.alerts.length - 1];
   const studio = state.studio;
+  const target = studio?.target_reps ?? 15;
   // RECORDED DEMO: a pinned synthetic video decoded server-side through MediaPipe. Never LIVE RING.
   const recordedDemo = !live && studio?.source === "RECORDED_DEMO_VIDEO";
   const playRecordedDemo = () =>
@@ -548,948 +586,1092 @@ function App() {
       setShowApproval(false);
       setConfirmation("");
     });
-  const goContract = (c: Contract) => {
-    setSelected(c);
-    setPage("contracts");
+  const goContract = (c: Contract) => navigate("contracts", c);
+  const navPages: Page[] = admin
+    ? ["overview", "replay", "contracts", "studio", "alexa", "incidents"]
+    : ["overview", "contracts", "studio", "alexa", "incidents"];
+  const sceneButton = (i: number, variant: "track" | "list") => {
+    const [time, title, source, spec] = stages[i];
+    const Icon = stageIcons[i];
+    const done = state.scenario > i;
+    const current = state.scenario === i + 1;
+    return (
+      <li key={time}>
+        <button
+          className={`scene in-${variant} ${current ? "current" : ""} ${done ? "done" : ""}`}
+          disabled={busy || running || !admin}
+          onClick={() => void guarded(() => runStage(i + 1))}
+          aria-label={`${i + 1}. ${time} ${title} — ${spec}`}
+          aria-current={current ? "step" : undefined}
+          title={spec}
+        >
+          <span className="scene-node" aria-hidden>
+            {done && !current ? <Check size={15} /> : <Icon size={15} />}
+          </span>
+          <span className="scene-text">
+            <span className="scene-time">
+              {variant === "track" && time}
+              <span className="scene-source">{source}</span>
+            </span>
+            <strong>{variant === "list" ? spec : title}</strong>
+          </span>
+        </button>
+      </li>
+    );
+  };
+  const contractCard = (c: Contract) => {
+    const Icon = icons[c.key] ?? CheckCheck;
+    return (
+      <button
+        className="contract-card"
+        key={c.contract_id}
+        onClick={() => goContract(c)}
+      >
+        <span className={`contract-icon ${c.key}`} aria-hidden>
+          <Icon size={16} />
+        </span>
+        <span className="contract-text">
+          <strong>{c.title}</strong>
+          <small>
+            {c.counterparty.label} ·{" "}
+            {c.due_at
+              ? fmt(c.due_at)
+              : human(c.deadline_trigger ?? "On evidence")}
+          </small>
+        </span>
+        <span className="contract-meta">
+          <ContractChip c={c} evidence={state.evidence} />
+          <SourceTag mode={contractSource(c)} />
+        </span>
+      </button>
+    );
   };
 
+  const consentBanner = !state.consent && (
+    <div className="banner warning" role="status">
+      <Pause size={15} aria-hidden />
+      <span>
+        Collection paused. Watchdogs and camera processing require consent.
+      </span>
+      <button
+        className="button small"
+        disabled={busy}
+        onClick={() => void guarded(() => act("/consent", { enabled: true }))}
+      >
+        {live ? "Enable household collection" : "Restore demo consent"}
+      </button>
+    </div>
+  );
+
   return (
-    <div className={`app ${tv ? "tv-mode" : ""}`}>
-      <aside className="sidebar">
+    <div className={`app ${tv ? "tv-mode" : ""}`} data-page={page}>
+      <aside className="sidebar" aria-label="Primary">
         <Brand />
         <div className="workspace">
-          <span className="workspace-avatar">D</span>
+          <span className="workspace-avatar" aria-hidden>
+            {live ? "H" : "D"}
+          </span>
           <div>
             <strong>{live ? "Your household" : "Demo household"}</strong>
-            <small>Private workspace</small>
+            <small>{admin ? "Judge workspace" : "Household owner"}</small>
           </div>
-          <span className="workspace-dot" />
         </div>
-        <span className="nav-caption">WORKSPACE</span>
-        <nav>
-          {(
-            [
-              ["overview", Home],
-              ["replay", Layers3],
-              ["contracts", CheckCheck],
-              ["studio", ScanLine],
-              ["incidents", ShieldCheck],
-            ] as const
-          ).map(([id, Icon]) => (
-            <button
-              key={id}
-              className={`nav-item ${page === id ? "active" : ""}`}
-              onClick={() => navigate(id)}
-            >
-              <Icon size={18} />
-              <span>{labels[id]}</span>
-              {id === "incidents" && incident && (
-                <span className="nav-count">1</span>
-              )}
-              {id === "replay" && <span className="nav-small">DEMO</span>}
-            </button>
-          ))}
+        <nav className="nav">
+          {navPages.map((id) => {
+            const Icon = pageIcons[id];
+            const active =
+              page === id || (id === "incidents" && page === "evidence");
+            return (
+              <button
+                key={id}
+                className={`nav-item ${active ? "active" : ""}`}
+                aria-current={active ? "page" : undefined}
+                onClick={() => navigate(id)}
+                title={pageLabel(id)}
+              >
+                {active && <span className="nav-pill" aria-hidden />}
+                <Icon size={17} aria-hidden />
+                <span className="nav-label">{pageLabel(id)}</span>
+                {id === "incidents" && incident && (
+                  <span className="nav-count" aria-hidden>
+                    1
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
         <div className="sidebar-bottom">
-          <div className="connected-note">
-            <span className="pulse-dot" />
-            <div>
-              <strong>Reality ledger online</strong>
-              <small>Persistent · SQLite WAL</small>
-            </div>
-            <Signal size={16} />
-          </div>
           <button
             className={`nav-item ${page === "settings" ? "active" : ""}`}
+            aria-current={page === "settings" ? "page" : undefined}
             onClick={() => navigate("settings")}
+            title="Connections & privacy"
           >
-            <Settings2 size={18} />
-            Connections & privacy
+            {page === "settings" && <span className="nav-pill" aria-hidden />}
+            <Settings2 size={17} aria-hidden />
+            <span className="nav-label">Connections & privacy</span>
           </button>
-          <div className="profile">
-            <span className="avatar">{role === "admin" ? "JD" : "OW"}</span>
-            <div>
-              <strong>
-                {role === "admin" ? "Judge workspace" : "Household owner"}
-              </strong>
-              <small>
-                {role === "admin"
-                  ? "Replay administrator"
-                  : "Private household"}
-              </small>
-            </div>
-            <button
-              className="icon-button"
-              title="Sign out"
-              onClick={() => void logOut()}
-            >
-              <LogOut size={16} />
-            </button>
+          <div className="ledger-status" title="Persistent · SQLite WAL">
+            <span className="pulse-dot" aria-hidden />
+            <span className="nav-label">Ledger online</span>
           </div>
+          <button
+            className="nav-item"
+            onClick={() => void logOut()}
+            title="Sign out"
+          >
+            <LogOut size={17} aria-hidden />
+            <span className="nav-label">Sign out</span>
+          </button>
         </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <div className="breadcrumbs">
-            Workspace
-            <ChevronRight size={14} />
-            <strong>{labels[page]}</strong>
+          <div className="topbar-title">
+            <span className="mobile-brand">
+              <Brand compact />
+            </span>
+            <span className="crumb">{pageLabel(page)}</span>
           </div>
           <div className="topbar-right">
-            <span className="source-tag">
-              <span />
+            <span
+              className={`household-tag ${live ? "live" : ""}`}
+              title={
+                live
+                  ? "Your private household, wall-clock time"
+                  : "Synthetic demo household, virtual clock"
+              }
+            >
               {live ? "PRIVATE HOUSEHOLD" : "SYNTHETIC DEMO"}
             </span>
-            <span className="clock">
-              <Clock3 size={15} />
+            <span className="clock" title={day(state.now)}>
+              <Clock3 size={14} aria-hidden />
               {fmt(state.now)} IST
+              {!live && <span className="clock-note">virtual</span>}
             </span>
-            <button
-              className="icon-button notification-button"
-              aria-label="Open notifications"
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
-              <Bell size={19} />
-              {state.alerts.length > 0 && <i />}
-            </button>
             {tvSession && (
               <span
-                className="studio-source"
+                className="household-tag"
                 title="Authenticated session; device runtime proof is separate"
               >
                 TV session {tvSession.slice(-8)}
               </span>
             )}
-            <span className="avatar small">{live ? "OW" : "JD"}</span>
+            <button
+              className="icon-button hide-mobile"
+              aria-label="Open TV preview"
+              title="Open TV preview (web, not device proof)"
+              onClick={() => window.open("/?tv=1", "_blank", "noopener")}
+            >
+              <Tv size={17} aria-hidden />
+            </button>
+            <a
+              className="icon-button hide-mobile"
+              href="/api/export"
+              download
+              aria-label="Export evidence"
+              title="Export evidence"
+            >
+              <Download size={17} aria-hidden />
+            </a>
+            <button
+              className="icon-button notification-button"
+              aria-label="Open notifications"
+              aria-expanded={showNotifications}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <Bell size={17} aria-hidden />
+              {state.alerts.length > 0 && <i aria-hidden />}
+            </button>
+            <button
+              className="icon-button show-mobile"
+              aria-label="Connections & privacy"
+              onClick={() => navigate("settings")}
+            >
+              <Settings2 size={17} aria-hidden />
+            </button>
+            <button
+              className="icon-button show-mobile"
+              aria-label="Sign out"
+              onClick={() => void logOut()}
+            >
+              <LogOut size={17} aria-hidden />
+            </button>
           </div>
         </header>
-        <main className="content">
+        <main className="content" id="main">
           {tv && (
             <div className="tv-navigation">
               {(["overview", "contracts", "incidents", "studio"] as Page[]).map(
                 (id) => (
                   <button
                     key={id}
-                    className="button"
+                    className={`button ${page === id ? "active" : ""}`}
                     onClick={() => navigate(id)}
                   >
-                    {labels[id]}
+                    {pageLabel(id)}
                   </button>
                 ),
               )}
             </div>
           )}
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">TUESDAY, 20 OCTOBER · VIRTUAL DAY</div>
-              <h1>
-                {labels[page]}
-                <span className="heading-dot">.</span>
-              </h1>
-              <p>
-                {page === "overview"
-                  ? "A little less remembering. A lot more knowing."
-                  : page === "replay"
-                    ? "One connected day. Six moments where reality matters."
-                    : page === "studio"
-                      ? "A promise to yourself, backed by movement."
-                      : page === "incidents"
-                        ? "Preserve what happened. You decide what happens next."
-                        : page === "settings"
-                          ? "Know what’s connected. Control what’s collected."
-                          : "Every promise has a story. Every closure needs evidence."}
-              </p>
-            </div>
-            <div className="heading-actions">
-              <button
-                className="button"
-                onClick={() => window.open("/?tv=1", "_blank", "noopener")}
-              >
-                <Tv size={16} />
-                TV preview
-                <ArrowRight size={14} />
-              </button>
-              <a className="button" href="/api/export" download>
-                <Download size={16} />
-                Export evidence
-              </a>
-            </div>
-          </div>
-          {error && (
-            <div className="error-banner" role="alert">
-              <span>{error}</span>
-              <button
-                className="icon-button"
-                aria-label="Dismiss error"
-                onClick={() => setError("")}
-              >
-                <X size={17} />
-              </button>
-            </div>
-          )}
-          {!state.consent && (
-            <div className="warning-banner">
-              <Pause size={16} />
-              Collection paused. Watchdogs and camera processing require
-              consent.
-              <button
-                onClick={() =>
-                  void guarded(() => act("/consent", { enabled: true }))
-                }
-              >
-                Restore demo consent
-              </button>
-            </div>
-          )}
-          {(page === "overview" || page === "replay") && (
-            <>
-              <section className="hero">
-                <div className="hero-copy">
-                  <div className="hero-kicker">
-                    <span className="pulse-dot" />
-                    THE REALITY LAYER FOR YOUR DAY
-                  </div>
-                  <h2>
-                    Said is a start.
-                    <br />
-                    <span>Verified is done.</span>
-                  </h2>
-                  <p>
-                    Your commitments, connected to the world.
-                    <br />
-                    Not another reminder. A reason to trust the outcome.
-                  </p>
-                  <div className="hero-buttons">
-                    <button
-                      className="button mint"
-                      disabled={running || busy || role !== "admin"}
-                      onClick={() => void fullDay()}
-                    >
-                      <Play size={15} fill="currentColor" />
-                      {running ? "Replaying the day…" : "Run the full day"}
-                      <ArrowRight size={16} />
-                    </button>
-                    <button
-                      className="hero-link"
-                      onClick={() => navigate("replay")}
-                    >
-                      Explore the replay
-                      <ChevronRight size={15} />
-                    </button>
-                  </div>
-                  <div className="hero-foot">
-                    <ShieldCheck size={13} />
-                    Synthetic sources. Real state transitions. Always labeled.
-                  </div>
-                </div>
-                <div className="reality-visual">
-                  <div className="orbit orbit-one" />
-                  <div className="orbit orbit-two" />
-                  <div className="orbit orbit-three" />
-                  <div className="center-orb">
-                    <Fingerprint size={52} />
-                    <span>REALITY ENGINE</span>
-                    <small>Evidence → confidence → closure</small>
-                  </div>
-                  <div className="orbit-node node-bee">
-                    <AudioLines size={18} />
-                    <div>
-                      <strong>Bee</strong>
-                      <small>Conversation context</small>
-                    </div>
-                    <i />
-                  </div>
-                  <div className="orbit-node node-ring">
-                    <Video size={18} />
-                    <div>
-                      <strong>Ring</strong>
-                      <small>Physical observation</small>
-                    </div>
-                    <i />
-                  </div>
-                  <div className="orbit-node node-tv">
-                    <Tv size={18} />
-                    <div>
-                      <strong>Fire TV</strong>
-                      <small>Verified action</small>
-                    </div>
-                    <i />
-                  </div>
-                  <span className="visual-label">SIMULATED CONNECTIONS</span>
-                </div>
-              </section>
-              <div className="stats-grid">
-                <Stat
-                  icon={CheckCheck}
-                  label="COMMITMENTS"
-                  value={state.contracts.length.toString().padStart(2, "0")}
-                  detail={`${active} still in progress`}
-                  color="mint"
-                />
-                <Stat
-                  icon={ShieldCheck}
-                  label="VERIFIED BY EVIDENCE"
-                  value={verified.toString().padStart(2, "0")}
-                  detail="No reminder counts as done"
-                  color="blue"
-                />
-                <Stat
-                  icon={Eye}
-                  label="PERSISTENT WATCHDOGS"
-                  value={state.subagents
-                    .filter((a) => a.status === "WATCHING")
-                    .length.toString()
-                    .padStart(2, "0")}
-                  detail="Event-driven, not always recording"
-                  color="purple"
-                />
-                <Stat
-                  icon={Fingerprint}
-                  label="EVIDENCE COLLECTED"
-                  value={state.evidence.length.toString().padStart(2, "0")}
-                  detail="SHA-256 integrity protected"
-                  color="amber"
-                />
+          <div className="view" key={page}>
+            <header className="page-head">
+              <div className="page-title">
+                <h1>
+                  {pageLabel(page)}
+                  <span className="heading-dot">.</span>
+                </h1>
+                <p>
+                  {page === "overview" && !admin
+                    ? `${day(state.now)} · ${openCount} open · ${verified} verified · ${confirmedByYou} confirmed by you`
+                    : subtitles[page]}
+                </p>
               </div>
-              <section className="replay-section">
-                <div className="section-title">
-                  <div>
-                    <span className="eyebrow">THE CANONICAL DAY</span>
-                    <h2>Six moments. One connected story.</h2>
-                  </div>
-                  <div className="replay-controls">
-                    {(running || playing) && (
-                      <button className="button" onClick={cancelReplay}>
-                        <Pause size={14} />
-                        Pause
-                      </button>
-                    )}
-                    <button
-                      className="text-button"
-                      disabled={busy}
-                      onClick={reset}
-                    >
-                      <RotateCcw size={14} />
-                      Reset day
+              {page === "overview" && admin && (
+                <div className="page-actions">
+                  {(running || playing) && (
+                    <button className="button" onClick={cancelReplay}>
+                      <Pause size={15} aria-hidden />
+                      Pause
                     </button>
-                    <span className="tiny-tag">JUDGE MODE</span>
-                  </div>
+                  )}
+                  <button
+                    className="button ghost"
+                    disabled={busy}
+                    onClick={reset}
+                  >
+                    <RotateCcw size={15} aria-hidden />
+                    Reset day
+                  </button>
+                  <button
+                    className="button primary"
+                    disabled={running || busy}
+                    onClick={() => void fullDay()}
+                  >
+                    <Play size={15} fill="currentColor" aria-hidden />
+                    {running ? "Replaying the day…" : "Run the full day"}
+                  </button>
                 </div>
-                <div className="stage-grid">
-                  {stages.map(([time, title, source, description], i) => {
-                    const Icon = [
-                      AudioLines,
-                      Package,
-                      Clock3,
-                      ShieldCheck,
-                      Home,
-                      Activity,
-                    ][i];
-                    const done = state.scenario > i;
-                    return (
-                      <button
-                        className={`stage-card ${state.scenario === i + 1 ? "current" : ""} ${done ? "started" : ""}`}
-                        key={time}
-                        disabled={busy || running || role !== "admin"}
-                        onClick={() => void guarded(() => runStage(i + 1))}
-                        aria-label={`${i + 1}. ${time} ${title}`}
-                      >
-                        <div className="stage-top">
-                          <span className="stage-index">0{i + 1}</span>
-                          <span>{time}</span>
-                          {done ? (
-                            <Check size={13} />
-                          ) : (
-                            <ArrowRight size={13} />
-                          )}
-                        </div>
-                        <div className="stage-icon">
-                          <Icon size={21} />
-                        </div>
-                        <h3>{title}</h3>
-                        <p>{description}</p>
-                        <div className="stage-source">
-                          {source}
-                          <ChevronRight size={12} />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-              {page === "replay" && (
-                <section className="panel replay-options">
-                  <div>
-                    <span className="eyebrow">EXPLICIT SCENARIO FORKS</span>
-                    <h3>Change the story, keep the truth.</h3>
-                    <p>Reset before changing a branch already played.</p>
-                  </div>
-                  <label>
-                    Courier
-                    <select
-                      aria-label="Courier"
-                      value={deposit}
-                      onChange={(e) => setDeposit(e.target.value)}
-                    >
-                      <option value="deposit">Real deposit</option>
-                      <option value="fake">Courier fake-out</option>
-                    </select>
-                  </label>
-                  <label>
-                    Removal
-                    <select
-                      aria-label="Removal"
-                      value={branch}
-                      onChange={(e) => setBranch(e.target.value)}
-                    >
-                      <option value="unknown">Unknown person</option>
-                      <option value="family">Authorized family pickup</option>
-                      <option value="retained">Parcel remains</option>
-                    </select>
-                  </label>
-                  <label>
-                    Meeting context
-                    <select
-                      aria-label="Meeting context"
-                      value={engagement}
-                      onChange={(e) => setEngagement(e.target.value)}
-                    >
-                      <option value="disengaged">
-                        Preparation unconfirmed
-                      </option>
-                      <option value="engaged">Actively preparing</option>
-                    </select>
-                  </label>
-                  <label>
-                    Arrival
-                    <select
-                      aria-label="Arrival"
-                      value={arrival}
-                      onChange={(e) => setArrival(e.target.value)}
-                    >
-                      <option value="empty">Drinks not visible</option>
-                      <option value="visible">Drinks visible</option>
-                      <option value="ambiguous">Occluded / ambiguous</option>
-                    </select>
-                  </label>
-                </section>
               )}
-              <div className="overview-bottom">
-                <section className="panel commitments-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h2>Your commitment ledger</h2>
-                      <p>
-                        Promises stay open until the evidence says otherwise.
-                      </p>
-                    </div>
+            </header>
+            {error && (
+              <div className="banner error" role="alert">
+                <span>{error}</span>
+                <button
+                  className="icon-button"
+                  aria-label="Dismiss error"
+                  onClick={() => setError("")}
+                >
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+            )}
+            {consentBanner}
+
+            {page === "overview" && !admin && (
+              <Buddy
+                state={state}
+                act={act}
+                busy={busy}
+                guarded={guarded}
+                onOpen={goContract}
+              />
+            )}
+
+            {page === "overview" && admin && (
+              <div className="overview">
+                <section className="panel day-panel" aria-label="The day">
+                  <div className="panel-head">
+                    <h2>The canonical day</h2>
+                    <span className="muted-text">
+                      {state.scenario
+                        ? `Scene ${state.scenario} of 6 · ${stages[state.scenario - 1][1]}`
+                        : "Six scenes, one connected story"}
+                    </span>
+                    <SourceTag mode="SIMULATED_VERIFIED" />
+                  </div>
+                  <ol
+                    className="track"
+                    style={
+                      {
+                        "--p": Math.max(0, state.scenario - 1) / 5,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {stages.map((_, i) => sceneButton(i, "track"))}
+                  </ol>
+                </section>
+                <section className="panel promises-panel" aria-label="Promises">
+                  <div className="panel-head">
+                    <h2>Promises</h2>
+                    <span className="muted-text">
+                      {verified} verified
+                      {confirmedByYou
+                        ? ` · ${confirmedByYou} confirmed by you`
+                        : ""}{" "}
+                      · {openCount} open
+                    </span>
                     <button
                       className="text-button"
                       onClick={() => navigate("contracts")}
                     >
-                      View all
-                      <ArrowRight size={14} />
+                      Open ledger <ArrowRight size={14} aria-hidden />
                     </button>
                   </div>
-                  {state.contracts.length ? (
-                    state.contracts.map((c) => (
-                      <ContractRow
-                        key={c.contract_id}
-                        c={c}
-                        onClick={() => goContract(c)}
-                      />
-                    ))
-                  ) : (
-                    <div className="empty-state">
-                      <div className="empty-icon">
-                        <AudioLines size={25} />
-                      </div>
-                      <h3>Every promise starts somewhere.</h3>
-                      <p>
-                        Start the morning replay to hear the household’s
-                        <br />
-                        four commitments become durable contracts.
-                      </p>
-                      <button
-                        className="text-button"
-                        onClick={() => void guarded(() => runStage(1))}
-                      >
-                        Play morning promises
-                        <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  )}
-                  <div className="panel-footer">
-                    <LockKeyhole size={12} /> Private to your household. Never
-                    verified by a reminder.
-                  </div>
-                </section>
-                <section className="panel live-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h2>Inside the reality engine</h2>
-                      <p>Input → verification → durable state</p>
-                    </div>
-                    <span className="live-badge">
-                      <span />
-                      LIVE LEDGER
-                    </span>
-                  </div>
-                  <div className="engine-status">
-                    <div className="engine-status-icon">
-                      <Radio size={20} />
-                    </div>
-                    <div>
-                      <strong>
-                        {state.events.length
-                          ? currentStage[1]
-                          : "Ready when you are"}
-                      </strong>
-                      <small>
-                        {state.events.length
-                          ? `${fmt(state.now)} · Scenario ${state.scenario}/6`
-                          : "Waiting for the first consented event"}
-                      </small>
-                    </div>
-                    <Activity size={18} />
-                  </div>
-                  <div className="compact-events">
-                    {state.events.length ? (
-                      [...state.events]
-                        .reverse()
-                        .slice(0, 4)
-                        .map((ev) => (
-                          <div className="compact-event" key={ev.event_id}>
-                            <span
-                              className={`event-dot ${ev.event_type.includes("verified") ? "verified" : ""}`}
-                            />
-                            <div>
-                              <strong>
-                                {human(ev.event_type.replaceAll(".", " · "))}
-                              </strong>
-                              <small>
-                                {ev.event_id} · {ev.trace_id}
-                              </small>
-                            </div>
-                            <time>{fmt(ev.occurred_at)}</time>
-                          </div>
-                        ))
+                  <div className="card-grid">
+                    {state.contracts.length ? (
+                      state.contracts.map(contractCard)
                     ) : (
-                      <>
-                        <div className="pipeline-step">
-                          <AudioLines size={17} />
-                          <div>
-                            <strong>Listen with consent</strong>
-                            <small>
-                              Understand the promise and its context
-                            </small>
-                          </div>
-                          <span>01</span>
-                        </div>
-                        <div className="pipeline-step">
-                          <Eye size={17} />
-                          <div>
-                            <strong>Observe with purpose</strong>
-                            <small>
-                              Look for relevant, authorized evidence
-                            </small>
-                          </div>
-                          <span>02</span>
-                        </div>
-                        <div className="pipeline-step">
-                          <ShieldCheck size={17} />
-                          <div>
-                            <strong>Close with confidence</strong>
-                            <small>
-                              Keep uncertainty visible, humans in control
-                            </small>
-                          </div>
-                          <span>03</span>
-                        </div>
-                      </>
+                      <Empty icon={AudioLines} title="No promises yet.">
+                        <p>
+                          Play the morning scene to compile four spoken
+                          promises.
+                        </p>
+                        <button
+                          className="button small"
+                          disabled={busy || running}
+                          onClick={() => void guarded(() => runStage(1))}
+                        >
+                          <Play size={13} aria-hidden /> Play morning promises
+                        </button>
+                      </Empty>
                     )}
                   </div>
-                  <button
-                    className="panel-link"
-                    onClick={() => navigate("replay")}
-                  >
-                    <Terminal size={14} />
-                    Open event & decision stream
-                    <ArrowRight size={14} />
-                  </button>
                 </section>
-              </div>
-            </>
-          )}
-          {page === "replay" && (
-            <>
-              <section className="panel replay-toolbar">
-                <span>
-                  <Clock3 size={16} />
-                  {fmt(state.now)} virtual time
-                </span>
-                <button
-                  className="button"
-                  onClick={() =>
-                    void guarded(() =>
-                      act("/admin/clock/advance", { minutes: 25 }),
-                    )
-                  }
-                >
-                  Advance 25 minutes
-                </button>
-                <button
-                  className="button"
-                  onClick={() => void guarded(() => act("/admin/sister-proof"))}
-                >
-                  Inject sister call proof
-                </button>
-                <button
-                  className="button"
-                  onClick={() => void guarded(() => act("/admin/owner-pickup"))}
-                >
-                  Observe owner pickup
-                </button>
-                <select
-                  aria-label="Failure injection"
-                  defaultValue=""
-                  onChange={(ev) => {
-                    if (ev.target.value)
-                      void guarded(() =>
-                        act("/admin/failures/" + ev.target.value),
+                <div className="overview-side">
+                  <section className="panel now-panel" aria-label="Right now">
+                    <div className="panel-head">
+                      <h2>Right now</h2>
+                      <span className="live-dot" aria-hidden />
+                    </div>
+                    {latestAlert ? (
+                      <div className="now-alert" data-kind={latestAlert.kind}>
+                        <span className="kind">
+                          {human(latestAlert.kind)} · {fmt(latestAlert.at)}
+                        </span>
+                        <p>{latestAlert.message}</p>
+                      </div>
+                    ) : (
+                      <p className="muted-text">
+                        Quiet so far. Alerts appear here as the day unfolds.
+                      </p>
+                    )}
+                    <dl className="now-stats">
+                      <div>
+                        <dt>Verified</dt>
+                        <dd>{verified}</dd>
+                      </div>
+                      <div>
+                        <dt>Watchdogs</dt>
+                        <dd>
+                          {
+                            state.subagents.filter(
+                              (a) => a.status === "WATCHING",
+                            ).length
+                          }
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Evidence</dt>
+                        <dd>{state.evidence.length}</dd>
+                      </div>
+                      <div>
+                        <dt>Events</dt>
+                        <dd>{state.events.length}</dd>
+                      </div>
+                    </dl>
+                  </section>
+                  <nav className="panel jump" aria-label="Explore">
+                    {(
+                      [
+                        [
+                          "studio",
+                          "Studio",
+                          "Reality-Lock · RECORDED DEMO via MediaPipe",
+                        ],
+                        [
+                          "alexa",
+                          "Alexa+",
+                          "Simulated voice over real MCP calls",
+                        ],
+                        [
+                          "incidents",
+                          "Evidence",
+                          "Incident review · SHA-256 packet",
+                        ],
+                        [
+                          "settings",
+                          "Privacy",
+                          "Connections, consent, retention",
+                        ],
+                      ] as [Page, string, string][]
+                    ).map(([id, name, detail]) => {
+                      const Icon = pageIcons[id];
+                      return (
+                        <button
+                          key={id}
+                          className="jump-tile"
+                          onClick={() => navigate(id)}
+                        >
+                          <Icon size={17} aria-hidden />
+                          <span>
+                            <strong>{name}</strong>
+                            <small>{detail}</small>
+                          </span>
+                          <ChevronRight size={15} aria-hidden />
+                        </button>
                       );
-                    ev.target.value = "";
-                  }}
+                    })}
+                  </nav>
+                </div>
+              </div>
+            )}
+
+            {page === "replay" && (
+              <div className="console">
+                <div
+                  className="console-bar"
+                  role="toolbar"
+                  aria-label="Replay controls"
                 >
-                  <option value="" disabled>
-                    Inject a failure…
-                  </option>
-                  <option value="camera-offline">Camera offline</option>
-                  <option value="token-expired">Token expired</option>
-                  <option value="storage-unavailable">
-                    Storage unavailable
-                  </option>
-                  <option value="clear">Clear injected failures</option>
-                </select>
-              </section>
-              <div className="replay-workbench">
-                <section className="panel camera-panel">
-                  <div className="panel-heading">
-                    <h2>Source observation</h2>
-                    <span className="tiny-tag">SYNTHETIC PIXELS</span>
+                  <button
+                    className="button small"
+                    disabled={busy}
+                    onClick={reset}
+                  >
+                    <RotateCcw size={14} aria-hidden /> Reset
+                  </button>
+                  <button
+                    className="button small primary"
+                    disabled={running || busy || !admin}
+                    onClick={() => void fullDay()}
+                  >
+                    <Play size={13} fill="currentColor" aria-hidden />
+                    {running ? "Replaying…" : "Run full day"}
+                  </button>
+                  <button
+                    className="button small"
+                    disabled={!(running || playing)}
+                    onClick={cancelReplay}
+                  >
+                    <Pause size={14} aria-hidden /> Pause
+                  </button>
+                  <span className="bar-divider" aria-hidden />
+                  <button
+                    className="button small"
+                    disabled={busy}
+                    onClick={() =>
+                      void guarded(() =>
+                        act("/admin/clock/advance", { minutes: 25 }),
+                      )
+                    }
+                  >
+                    <FastForward size={14} aria-hidden /> Advance 25 minutes
+                  </button>
+                  <span className="bar-clock">
+                    <Clock3 size={14} aria-hidden /> {fmt(state.now)} virtual
+                  </span>
+                  <span className="bar-divider" aria-hidden />
+                  <span
+                    className="bar-source"
+                    title="Live sources are not connected in the judge replay"
+                  >
+                    Source <SourceTag mode="SIMULATED_VERIFIED" />
+                  </span>
+                  <select
+                    aria-label="Failure injection"
+                    defaultValue=""
+                    className="small"
+                    onChange={(ev) => {
+                      if (ev.target.value)
+                        void guarded(() =>
+                          act("/admin/failures/" + ev.target.value),
+                        );
+                      ev.target.value = "";
+                    }}
+                  >
+                    <option value="" disabled>
+                      Inject a failure…
+                    </option>
+                    <option value="camera-offline">Camera offline</option>
+                    <option value="token-expired">Token expired</option>
+                    <option value="storage-unavailable">
+                      Storage unavailable
+                    </option>
+                    <option value="clear">Clear injected failures</option>
+                  </select>
+                  <a className="button small" href="/api/export" download>
+                    <Download size={14} aria-hidden /> Export
+                  </a>
+                </div>
+                <aside className="panel console-scenes" aria-label="Scenes">
+                  <div className="panel-head">
+                    <h2>Scenes</h2>
+                    <span className="muted-text">{state.scenario}/6</span>
                   </div>
-                  {latestImage ? (
-                    <img
-                      src={"/api/evidence/" + latestImage.evidence_id}
-                      alt="Calibrated synthetic porch observation"
-                    />
-                  ) : (
-                    <div className="camera-empty">
-                      <Video size={36} />
-                      <p>
-                        Run a camera scenario to inspect its actual processed
-                        frame.
-                      </p>
-                    </div>
-                  )}
-                  <div className="camera-caption">
-                    <span>Calibrated marker detector · v1</span>
-                    <span>No live Ring feed</span>
-                  </div>
-                </section>
-                <section className="panel event-panel">
-                  <div className="tabs">
-                    {(["events", "decisions", "mcp"] as const).map((tab) => (
-                      <button
-                        className={consoleTab === tab ? "active" : ""}
-                        onClick={() => setConsoleTab(tab)}
-                        key={tab}
+                  <ol className="scene-list">
+                    {stages.map((_, i) => sceneButton(i, "list"))}
+                  </ol>
+                  <fieldset className="forks">
+                    <legend title="Reset before replaying a scene with a new branch">
+                      Scenario forks
+                    </legend>
+                    <label>
+                      Courier
+                      <select
+                        aria-label="Courier"
+                        value={deposit}
+                        onChange={(e) => setDeposit(e.target.value)}
                       >
-                        {tab === "mcp"
-                          ? "MCP inspector"
-                          : tab === "events"
-                            ? "Event stream"
-                            : "Verification decisions"}
-                      </button>
+                        <option value="deposit">Real deposit</option>
+                        <option value="fake">Courier fake-out</option>
+                      </select>
+                    </label>
+                    <label>
+                      Removal
+                      <select
+                        aria-label="Removal"
+                        value={branch}
+                        onChange={(e) => setBranch(e.target.value)}
+                      >
+                        <option value="unknown">Unknown person</option>
+                        <option value="family">Family pickup</option>
+                        <option value="retained">Parcel remains</option>
+                      </select>
+                    </label>
+                    <label>
+                      Meeting context
+                      <select
+                        aria-label="Meeting context"
+                        value={engagement}
+                        onChange={(e) => setEngagement(e.target.value)}
+                      >
+                        <option value="disengaged">Unconfirmed</option>
+                        <option value="engaged">Actively preparing</option>
+                      </select>
+                    </label>
+                    <label>
+                      Arrival
+                      <select
+                        aria-label="Arrival"
+                        value={arrival}
+                        onChange={(e) => setArrival(e.target.value)}
+                      >
+                        <option value="empty">Drinks not visible</option>
+                        <option value="visible">Drinks visible</option>
+                        <option value="ambiguous">Occluded</option>
+                      </select>
+                    </label>
+                    <button
+                      className="button small"
+                      disabled={busy}
+                      onClick={() =>
+                        void guarded(() => act("/admin/sister-proof"))
+                      }
+                    >
+                      Inject sister call proof
+                    </button>
+                    <button
+                      className="button small"
+                      disabled={busy}
+                      onClick={() =>
+                        void guarded(() => act("/admin/owner-pickup"))
+                      }
+                    >
+                      Observe owner pickup
+                    </button>
+                  </fieldset>
+                </aside>
+                <section
+                  className="panel console-center"
+                  aria-label="Contracts and pipeline"
+                >
+                  <ol className="pipeline" aria-label="Pipeline">
+                    {(
+                      [
+                        [
+                          "Stream input",
+                          state.events.filter((e) =>
+                            e.event_type.startsWith("bee."),
+                          ).length,
+                        ],
+                        ["Orchestrator", state.events.length],
+                        ["Contracts", state.contracts.length],
+                        ["Sub-agents", state.subagents.length],
+                        ["Evidence", state.evidence.length],
+                        ["Screen", state.alerts.length],
+                      ] as [string, number][]
+                    ).map(([name, n]) => (
+                      <li key={name} className={n ? "on" : ""} title={name}>
+                        <strong key={n}>{n}</strong>
+                        <span>{name}</span>
+                      </li>
                     ))}
-                    <span>{state.events.length} EVENTS</span>
+                  </ol>
+                  <div className="psc-list">
+                    {state.contracts.length ? (
+                      state.contracts.map((c) => (
+                        <button
+                          className="psc"
+                          key={c.contract_id}
+                          onClick={() => goContract(c)}
+                        >
+                          <strong>{c.title}</strong>
+                          <span className="psc-meta">
+                            <ContractChip c={c} evidence={state.evidence} />
+                            <SourceTag mode={contractSource(c)} />
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <Empty
+                        icon={AudioLines}
+                        title="Start with scene 1 to compile promises."
+                      />
+                    )}
                   </div>
-                  {consoleTab === "mcp" ? (
-                    <div className="mcp-inspector">
-                      <Code2 size={26} />
-                      <h3>One protocol. Shared truth.</h3>
-                      <p>
-                        The official MCP SDK serves Streamable HTTP at{" "}
-                        <code>/mcp/</code>. Tool calls use this same ledger. A
-                        protocol test uses an external SDK client.
-                      </p>
-                      <pre>
-                        {JSON.stringify(
-                          { jsonrpc: "2.0", method: "tools/list", id: 1 },
-                          null,
-                          2,
-                        )}
-                      </pre>
-                      <p>
-                        Scenario buttons invoke REST event ingestion; these are
-                        not fabricated MCP calls.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="event-scroll">
-                      {eventList.length ? (
-                        eventList.map((ev) => (
-                          <details key={ev.event_id}>
-                            <summary>
-                              <span className="event-dot" />
-                              <time>{fmt(ev.occurred_at)}</time>
-                              <strong>{ev.event_type}</strong>
-                              <span>{ev.event_id}</span>
-                            </summary>
-                            <pre>{JSON.stringify(ev, null, 2)}</pre>
-                          </details>
-                        ))
+                  <div className="console-split">
+                    <figure className="frame">
+                      {latestImage ? (
+                        <img
+                          src={"/api/evidence/" + latestImage.evidence_id}
+                          alt="Calibrated synthetic porch observation"
+                        />
                       ) : (
-                        <div className="empty-state">
-                          <Terminal size={24} />
-                          <p>No matching events yet.</p>
+                        <div className="frame-empty">
+                          <Video size={22} aria-hidden />
+                          <span>Camera scenes show their processed frame</span>
+                        </div>
+                      )}
+                      <figcaption>
+                        <SourceTag
+                          mode={latestImage?.provenance ?? "SIMULATED_VERIFIED"}
+                        />
+                        <span>Marker detector · not Ring</span>
+                      </figcaption>
+                    </figure>
+                    <div className="events">
+                      <div className="tabs" role="tablist">
+                        {(["events", "decisions", "mcp"] as const).map(
+                          (tab) => (
+                            <button
+                              role="tab"
+                              aria-selected={consoleTab === tab}
+                              className={consoleTab === tab ? "active" : ""}
+                              onClick={() => setConsoleTab(tab)}
+                              key={tab}
+                            >
+                              {tab === "mcp"
+                                ? "MCP"
+                                : tab === "events"
+                                  ? "Events"
+                                  : "Decisions"}
+                            </button>
+                          ),
+                        )}
+                        <span>{state.events.length}</span>
+                      </div>
+                      {consoleTab === "mcp" ? (
+                        <div className="mcp-inspector">
+                          <Code2 size={18} aria-hidden />
+                          <p>
+                            Streamable HTTP MCP at <code>/mcp/</code> shares
+                            this ledger. Scene buttons use REST ingestion, not
+                            fabricated MCP calls; live MCP traffic appears in
+                            the Alexa+ panel.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="event-scroll">
+                          {eventList.length ? (
+                            eventList.map((ev) => (
+                              <details key={ev.event_id}>
+                                <summary>
+                                  <time>{fmt(ev.occurred_at)}</time>
+                                  <strong>{ev.event_type}</strong>
+                                </summary>
+                                <pre>{JSON.stringify(ev, null, 2)}</pre>
+                              </details>
+                            ))
+                          ) : (
+                            <Empty
+                              icon={Terminal}
+                              title="No matching events yet."
+                            />
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </section>
-              </div>
-              <AlexaSimulator state={state} />
-            </>
-          )}
-          {page === "contracts" && (
-            <div className="ledger-layout">
-              <section className="panel">
-                <div className="panel-heading">
-                  <h2>
-                    All commitments{" "}
-                    <span className="count-badge">
-                      {state.contracts.length}
-                    </span>
-                  </h2>
-                  <span className="tiny-tag">SHARED STATE</span>
-                </div>
-                {state.contracts.map((c) => (
-                  <ContractRow
-                    key={c.contract_id}
-                    c={c}
-                    onClick={() => setSelected(c)}
-                  />
-                ))}
-                {!state.contracts.length && (
-                  <div className="empty-state">
-                    <CheckCheck size={28} />
-                    <h3>Your ledger is clear.</h3>
-                    <p>Run the morning scenario to compile four promises.</p>
-                    <button
-                      className="button primary"
-                      onClick={() => void guarded(() => runStage(1))}
-                    >
-                      Start the morning
-                      <Play size={14} />
-                    </button>
                   </div>
-                )}
-                <div className="custom-ingest">
-                  <h3>A new promise, in your own words.</h3>
-                  <p>
-                    Try “I’ll call my sister before 7 PM.” Synthetic input uses
-                    the same compiler.
-                  </p>
+                </section>
+                <div className="console-alexa">
+                  <AlexaSimulator state={state} compact />
+                </div>
+              </div>
+            )}
+
+            {page === "alexa" && (
+              <div className="alexa-page">
+                <AlexaSimulator state={state} />
+              </div>
+            )}
+
+            {page === "contracts" && (
+              <div className="ledger">
+                <section className="panel ledger-list" aria-label="Commitments">
+                  <div className="panel-head">
+                    <h2>
+                      All commitments{" "}
+                      <span className="count">{state.contracts.length}</span>
+                    </h2>
+                  </div>
+                  <div className="segmented" role="group" aria-label="Filter">
+                    {(
+                      [
+                        ["all", "All"],
+                        ["check", "Needs your check"],
+                        ["open", "Not yet verified"],
+                        ["verified", "Verified"],
+                        ["missed", "Missed"],
+                      ] as const
+                    ).map(([id, name]) => (
+                      <button
+                        key={id}
+                        aria-pressed={ledgerFilter === id}
+                        onClick={() => setLedgerFilter(id)}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="ledger-rows">
+                    {state.contracts
+                      .filter((c) =>
+                        ledgerFilter === "all"
+                          ? true
+                          : ledgerFilter === "check"
+                            ? [
+                                "NEEDS_CONFIRMATION",
+                                "EVIDENCE_PENDING",
+                                "DISPUTED",
+                              ].includes(c.status)
+                            : ledgerFilter === "verified"
+                              ? c.status === "VERIFIED"
+                              : ledgerFilter === "missed"
+                                ? c.status === "MISSED"
+                                : ["ACTIVE", "ENGAGED", "DISCOVERED"].includes(
+                                    c.status,
+                                  ),
+                      )
+                      .map((c) => {
+                        const Icon = icons[c.key] ?? CheckCheck;
+                        return (
+                          <button
+                            className={`ledger-row ${selected?.contract_id === c.contract_id ? "selected" : ""}`}
+                            key={c.contract_id}
+                            onClick={() => setSelected(c)}
+                          >
+                            <span
+                              className={`contract-icon ${c.key}`}
+                              aria-hidden
+                            >
+                              <Icon size={16} />
+                            </span>
+                            <span className="contract-text">
+                              <strong>{c.title}</strong>
+                              <small>
+                                {c.counterparty.label} ·{" "}
+                                {c.due_at
+                                  ? fmt(c.due_at) + " IST"
+                                  : human(c.deadline_trigger ?? "On evidence")}
+                              </small>
+                            </span>
+                            <span className="row-meta">
+                              <ContractChip c={c} evidence={state.evidence} />
+                              <SourceTag mode={contractSource(c)} />
+                            </span>
+                          </button>
+                        );
+                      })}
+                    {!state.contracts.length && (
+                      <Empty icon={CheckCheck} title="Your ledger is clear.">
+                        {admin && (
+                          <button
+                            className="button small"
+                            disabled={busy}
+                            onClick={() => void guarded(() => runStage(1))}
+                          >
+                            Start the morning <Play size={13} aria-hidden />
+                          </button>
+                        )}
+                      </Empty>
+                    )}
+                  </div>
                   <form
+                    className="add-promise compact"
                     onSubmit={(ev) => {
                       ev.preventDefault();
                       void guarded(async () => {
-                        await act("/ingest/bee-simulated", {
-                          event_id: uuid(),
-                          utterance: customUtterance,
-                          speaker: "SELF",
-                          counterparty: "Household",
-                          occurred_at: state.now,
-                          timezone: "Asia/Kolkata",
-                        });
+                        if (admin)
+                          await act("/ingest/bee-simulated", {
+                            event_id: uuid(),
+                            utterance: customUtterance,
+                            speaker: "SELF",
+                            counterparty: "Household",
+                            occurred_at: state.now,
+                            timezone: "Asia/Kolkata",
+                          });
+                        else
+                          await act("/owner/promises", {
+                            utterance: customUtterance,
+                            timezone: "Asia/Kolkata",
+                          });
                         setCustomUtterance("");
                       });
                     }}
                   >
                     <input
+                      aria-label="A new promise, in your own words"
                       value={customUtterance}
                       onChange={(ev) => setCustomUtterance(ev.target.value)}
-                      placeholder="I’ll…"
+                      placeholder="“I’ll call my sister before 7 PM.”"
                       required
                       maxLength={4000}
                     />
+                    <SourceTag
+                      mode={admin ? "SIMULATED_VERIFIED" : "MCP_OWNER_INPUT"}
+                    />
                     <button
-                      className="button primary"
-                      disabled={role !== "admin" || busy}
+                      className="button primary small"
+                      disabled={busy || !state.consent}
                     >
-                      <Plus size={16} />
+                      <Plus size={15} aria-hidden />
                       Compile
                     </button>
                   </form>
-                </div>
-              </section>
-              <section className="panel detail-panel">
-                {selected ? (
-                  (() => {
-                    const c =
-                      state.contracts.find(
-                        (c) => c.contract_id === selected.contract_id,
-                      ) ?? selected;
-                    const Icon = icons[c.key] ?? CheckCheck;
-                    return (
-                      <>
-                        <div className="detail-icon">
-                          <Icon size={27} />
-                        </div>
-                        <span className="eyebrow">PHYSICAL STATE CONTRACT</span>
-                        <h2>{c.title}</h2>
-                        <Status status={c.status} />
-                        <blockquote>“{c.original_utterance}”</blockquote>
-                        <dl>
-                          <dt>Counterparty</dt>
-                          <dd>{c.counterparty.label}</dd>
-                          <dt>Due / trigger</dt>
-                          <dd>
-                            {c.due_at
-                              ? fmt(c.due_at) + " IST"
-                              : human(c.deadline_trigger ?? "On evidence")}
-                          </dd>
-                          <dt>Verification policy</dt>
-                          <dd>{human(c.verification_modality)}</dd>
-                          <dt>Evidence</dt>
-                          <dd>{c.evidence_ids.length} linked record(s)</dd>
-                          <dt>Source</dt>
-                          <dd>{human(c.source_mode)}</dd>
-                          <dt>Revision</dt>
-                          <dd>{c.revision}</dd>
-                        </dl>
-                        {c.custody_status && (
-                          <div className="info-box">
-                            Custody: {human(c.custody_status)}
-                          </div>
-                        )}
-                        {c.visibility && (
-                          <div className="info-box">
-                            Visibility: {human(c.visibility)}. A supporting
-                            observation is not final closure.
-                          </div>
-                        )}
-                        <h3>Durable schedule</h3>
-                        {c.scheduled_jobs.length ? (
-                          c.scheduled_jobs.map((j) => (
-                            <div className="schedule-row" key={j.kind}>
-                              <Clock3 size={14} />
-                              <strong>{j.kind}</strong>
-                              <time>{fmt(j.at)}</time>
-                              <small>{human(j.status)}</small>
+                </section>
+                <section
+                  className="panel ledger-detail"
+                  aria-label="Commitment detail"
+                >
+                  {selected ? (
+                    (() => {
+                      const c =
+                        state.contracts.find(
+                          (c) => c.contract_id === selected.contract_id,
+                        ) ?? selected;
+                      const Icon = icons[c.key] ?? CheckCheck;
+                      const linked = state.evidence.filter((ev) =>
+                        c.evidence_ids.includes(ev.evidence_id),
+                      );
+                      return (
+                        <div className="detail" key={c.contract_id}>
+                          <div className="detail-top">
+                            <span
+                              className={`contract-icon big ${c.key}`}
+                              aria-hidden
+                            >
+                              <Icon size={22} />
+                            </span>
+                            <div>
+                              <span className="eyebrow">
+                                Physical state contract · rev {c.revision}
+                              </span>
+                              <h2>{c.title}</h2>
                             </div>
-                          ))
-                        ) : (
-                          <p className="muted">
-                            Waiting for a physical trigger.
-                          </p>
-                        )}
-                        <div className="detail-actions">
-                          {c.status === "NEEDS_CONFIRMATION" && (
-                            <>
-                              <button
-                                className="button primary"
-                                onClick={() =>
-                                  void guarded(() =>
-                                    act(`/contracts/${c.contract_id}/confirm`, {
-                                      action: "accept",
-                                      revision: c.revision,
-                                    }),
-                                  )
-                                }
-                              >
-                                Accept promise
-                              </button>
+                          </div>
+                          <div className="detail-chips">
+                            <ContractChip c={c} evidence={state.evidence} />
+                            <SourceTag mode={contractSource(c)} />
+                          </div>
+                          <blockquote>“{c.original_utterance}”</blockquote>
+                          <dl className="facts">
+                            <dt>Counterparty</dt>
+                            <dd>{c.counterparty.label}</dd>
+                            <dt>Due / trigger</dt>
+                            <dd>
+                              {c.due_at
+                                ? fmt(c.due_at) + " IST"
+                                : human(c.deadline_trigger ?? "On evidence")}
+                            </dd>
+                            <dt>Verification</dt>
+                            <dd>{human(c.verification_modality)}</dd>
+                            <dt>Evidence</dt>
+                            <dd>
+                              {linked.length
+                                ? linked.map((ev) => (
+                                    <SourceTag
+                                      key={ev.evidence_id}
+                                      mode={ev.provenance}
+                                      title={human(ev.kind)}
+                                    />
+                                  ))
+                                : "None yet"}
+                            </dd>
+                          </dl>
+                          {c.proposed_amendment && (
+                            <div className="note amend">
+                              Another speaker proposed a new deadline:{" "}
+                              {fmt(c.proposed_amendment.due_at)} IST. Not
+                              applied; the original deadline stands.
+                            </div>
+                          )}
+                          {c.custody_status && (
+                            <div className="note">
+                              Custody: {human(c.custody_status)}
+                            </div>
+                          )}
+                          {c.visibility && (
+                            <div className="note">
+                              Visibility: {human(c.visibility)}. A supporting
+                              observation is not final closure.
+                            </div>
+                          )}
+                          {c.scheduled_jobs.length > 0 && (
+                            <div className="schedule">
+                              {c.scheduled_jobs.map((j) => (
+                                <div className="schedule-row" key={j.kind}>
+                                  <Clock3 size={13} aria-hidden />
+                                  <strong>{j.kind}</strong>
+                                  <time>{fmt(j.at)}</time>
+                                  <small>{human(j.status)}</small>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="detail-actions">
+                            {c.status === "NEEDS_CONFIRMATION" && (
+                              <>
+                                <button
+                                  className="button primary"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void guarded(() =>
+                                      act(
+                                        `/contracts/${c.contract_id}/confirm`,
+                                        {
+                                          action: "accept",
+                                          revision: c.revision,
+                                        },
+                                      ),
+                                    )
+                                  }
+                                >
+                                  Accept promise
+                                </button>
+                                <button
+                                  className="button"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void guarded(() =>
+                                      act(
+                                        `/contracts/${c.contract_id}/confirm`,
+                                        {
+                                          action: "reject",
+                                          revision: c.revision,
+                                        },
+                                      ),
+                                    )
+                                  }
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {c.key === "drinks" && c.status !== "VERIFIED" && (
                               <button
                                 className="button"
+                                disabled={busy}
                                 onClick={() =>
                                   void guarded(() =>
                                     act(`/contracts/${c.contract_id}/confirm`, {
-                                      action: "reject",
+                                      action: "confirm-drinks",
                                       revision: c.revision,
                                     }),
                                   )
                                 }
                               >
-                                Reject
+                                Confirm I have the drinks{" "}
+                                <Check size={14} aria-hidden />
                               </button>
-                            </>
-                          )}
-                          {c.key === "drinks" && c.status !== "VERIFIED" && (
-                            <button
-                              className="button"
-                              onClick={() =>
-                                void guarded(() =>
-                                  act(`/contracts/${c.contract_id}/confirm`, {
-                                    action: "confirm-drinks",
-                                    revision: c.revision,
-                                  }),
-                                )
-                              }
-                            >
-                              Confirm I have the drinks <Check size={14} />
-                            </button>
-                          )}
-                          {!["VERIFIED", "CANCELLED", "REJECTED"].includes(
-                            c.status,
-                          ) && (
-                            <button
-                              className="text-button"
-                              onClick={() =>
-                                void guarded(() =>
-                                  act(`/contracts/${c.contract_id}/confirm`, {
-                                    action: "cancel",
-                                    revision: c.revision,
-                                  }),
-                                )
-                              }
-                            >
-                              Cancel commitment
-                            </button>
-                          )}
+                            )}
+                            {c.key.startsWith("gen_") &&
+                              [
+                                "ACTIVE",
+                                "ENGAGED",
+                                "EVIDENCE_PENDING",
+                                "MISSED",
+                              ].includes(c.status) &&
+                              c.verification_modality !==
+                                "FIRE_TV_LIVE_POSE_CAMERA" && (
+                                <button
+                                  className="button"
+                                  disabled={busy}
+                                  title="Recorded as USER_CONFIRMED, not sensor proof"
+                                  onClick={() =>
+                                    void guarded(() =>
+                                      act(
+                                        `/contracts/${c.contract_id}/confirm`,
+                                        {
+                                          action: "confirm-done",
+                                          revision: c.revision,
+                                        },
+                                      ),
+                                    )
+                                  }
+                                >
+                                  Confirm done <CheckCheck size={14} />
+                                </button>
+                              )}
+                            {isOpen(c) && (
+                              <button
+                                className="text-button"
+                                disabled={busy}
+                                onClick={() =>
+                                  void guarded(() =>
+                                    act(`/contracts/${c.contract_id}/confirm`, {
+                                      action: "cancel",
+                                      revision: c.revision,
+                                    }),
+                                  )
+                                }
+                              >
+                                Cancel commitment
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </>
-                    );
-                  })()
-                ) : (
-                  <div className="empty-state">
-                    <Fingerprint size={35} />
-                    <h3>Look a little closer.</h3>
-                    <p>
-                      Select a commitment to inspect its origin,
-                      <br />
-                      evidence policy, and durable schedule.
-                    </p>
-                  </div>
-                )}
-              </section>
-            </div>
-          )}
-          {page === "studio" && (
-            <>
-              <div className="studio-layout">
-                <section className="studio-screen">
-                  <div className="studio-screen-top">
-                    <span>
-                      <span className="pulse-dot" />
+                      );
+                    })()
+                  ) : (
+                    <Empty icon={Fingerprint} title="Select a commitment.">
+                      <p>See its origin, evidence policy and schedule.</p>
+                    </Empty>
+                  )}
+                </section>
+              </div>
+            )}
+
+            {page === "studio" && (
+              <div className="studio">
+                <section
+                  className={`studio-screen ${studio?.gate === "UNLOCKED" ? "unlocked" : ""}`}
+                  aria-label="Camera"
+                >
+                  <div className="studio-overlay top">
+                    <span className="studio-state">
+                      <span className="pulse-dot" aria-hidden />
                       {studio?.status === "RUNNING"
                         ? live
                           ? "PROCESSING RING FRAMES"
                           : recordedDemo
                             ? "PROCESSING RECORDED DEMO FRAMES"
                             : "PROCESSING SYNTHETIC FRAMES"
-                        : "CAMERA STUDIO"}
+                        : studio
+                          ? human(studio.status).toUpperCase()
+                          : "CAMERA STUDIO"}
                     </span>
                     <span className="studio-source">
                       {live
@@ -1502,9 +1684,16 @@ function App() {
                           : "DEMO / SYNTHETIC"}
                     </span>
                   </div>
+                  {studio && (
+                    <span className="frame-wait" role="status">
+                      Waiting for the first processed frame…
+                    </span>
+                  )}
                   {studio ? (
                     <img
                       className="pose-feed"
+                      onLoad={(e) => (e.currentTarget.style.opacity = "1")}
+                      onError={(e) => (e.currentTarget.style.opacity = "0")}
                       src={
                         live
                           ? `/api/camera/frame?v=${frameTick}`
@@ -1522,20 +1711,12 @@ function App() {
                     />
                   ) : (
                     <div className="studio-intro">
-                      <div className="studio-intro-icon">
-                        <ScanLine size={60} />
-                      </div>
-                      <h2>
-                        Your living room.
-                        <br />
-                        Your proof.
-                      </h2>
+                      <ScanLine size={44} aria-hidden />
+                      <h2>Your living room. Your proof.</h2>
                       <p>
-                        Connect the promise to a complete movement.
-                        <br />
                         {live
                           ? "Choose a linked Ring camera. MediaPipe evaluates complete movements."
-                          : "This replay processes generated marker frames. Live Ring and human pose are not connected."}
+                          : "Play the recorded demo through MediaPipe, or process generated marker frames."}
                       </p>
                       {live && (
                         <label>
@@ -1558,18 +1739,27 @@ function App() {
                         </label>
                       )}
                       <button
-                        className="button mint"
+                        className="button"
                         onClick={openStudio}
-                        disabled={live && !cameraDevice}
+                        disabled={busy || (live && !cameraDevice)}
                       >
-                        <Video size={16} />
+                        <Video size={15} aria-hidden />
                         {live ? "Connect Ring camera" : "Open synthetic camera"}
                       </button>
                     </div>
                   )}
-                  <div className="studio-screen-bottom">
-                    <span>
-                      <LockKeyhole size={15} />
+                  {studio?.gate === "UNLOCKED" && (
+                    <div className="unlock-burst" aria-hidden>
+                      <LockKeyholeOpen size={34} />
+                    </div>
+                  )}
+                  <div className="studio-overlay bottom">
+                    <span className="gate">
+                      {studio?.gate === "UNLOCKED" ? (
+                        <LockKeyholeOpen size={14} aria-hidden />
+                      ) : (
+                        <LockKeyhole size={14} aria-hidden />
+                      )}
                       {studio?.gate === "UNLOCKED"
                         ? "IN-APP ENTERTAINMENT READY"
                         : studio?.gate === "USER_OVERRIDE"
@@ -1583,65 +1773,56 @@ function App() {
                     </span>
                   </div>
                 </section>
-                <aside className="panel workout-panel">
-                  <div className="eyebrow">A PROMISE TO YOURSELF</div>
-                  <h2>
-                    Show up.
-                    <br />
-                    Squat down.
-                  </h2>
-                  <p>
-                    Fifteen complete cycles before your evening entertainment.
-                    Your pace. Your choice.
-                  </p>
+                <aside className="panel workout" aria-label="Workout">
+                  <span className="eyebrow">A promise to yourself</span>
+                  <h2>{target} full squats</h2>
                   <div
                     className={`rep-ring ${studio?.gate === "UNLOCKED" ? "unlocked" : ""}`}
                     style={
                       {
-                        "--progress": `${((studio?.count ?? 0) / 15) * 100}%`,
+                        "--progress": `${Math.min(1, (studio?.count ?? 0) / target) * 100}%`,
                       } as React.CSSProperties
                     }
+                    role="img"
+                    aria-label={`${studio?.count ?? 0} of ${target} verified squats`}
                   >
                     <div>
-                      <strong>
+                      <strong key={studio?.count ?? 0}>
                         {(studio?.count ?? 0).toString().padStart(2, "0")}
                       </strong>
-                      <span>/ 15 VERIFIED CYCLES</span>
+                      <span>/ {target} VERIFIED CYCLES</span>
                     </div>
                   </div>
-                  <div className="workout-metrics">
+                  <dl className="workout-metrics">
                     <div>
-                      <small>KNEE ANGLE</small>
-                      <strong>
+                      <dt>Knee angle</dt>
+                      <dd>
                         {studio?.angle ?? "—"}
                         {studio ? "°" : ""}
-                      </strong>
+                      </dd>
                     </div>
                     <div>
-                      <small>PHASE</small>
-                      <strong>{human(studio?.phase ?? "Not started")}</strong>
+                      <dt>Phase</dt>
+                      <dd>{human(studio?.phase ?? "Not started")}</dd>
                     </div>
-                  </div>
+                  </dl>
                   {studio?.gate === "UNLOCKED" ? (
-                    <div className="success-box">
-                      <ShieldCheck size={22} />
+                    <div className="success" role="status">
+                      <ShieldCheck size={20} aria-hidden />
                       <div>
                         <strong>Promise kept. Evidence saved.</strong>
                         <p>
                           {live
-                            ? "15 camera-backed cycles verified."
-                            : "15 synthetic cycles verified."}{" "}
+                            ? `${target} camera-backed cycles verified.`
+                            : recordedDemo
+                              ? `${target} cycles verified from the RECORDED DEMO.`
+                              : `${target} synthetic cycles verified.`}{" "}
                           In-app gate unlocked.
                         </p>
                       </div>
                     </div>
                   ) : live ? (
-                    <div className="info-box">
-                      <p>
-                        Live camera verification runs on the server. Reconnect
-                        after the permitted Ring session ends; your verified
-                        count is preserved.
-                      </p>
+                    <div className="workout-buttons">
                       <button
                         className="button primary wide"
                         onClick={openStudio}
@@ -1651,6 +1832,7 @@ function App() {
                       </button>
                       <button
                         className="button wide"
+                        disabled={busy}
                         onClick={() =>
                           void guarded(async () => {
                             await api("/camera/stop", {});
@@ -1662,32 +1844,35 @@ function App() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      className="button primary wide"
-                      disabled={playing || busy || role !== "admin"}
-                      onClick={() => void workout()}
-                    >
-                      <Play size={15} />
-                      {playing
-                        ? "Processing marker frames…"
-                        : "Run synthetic workout"}
-                    </button>
-                  )}
-                  {!live && (
-                    <button
-                      className="button wide"
-                      disabled={
-                        playing || busy || studio?.status === "COMPLETED"
-                      }
-                      onClick={() => void playRecordedDemo()}
-                    >
-                      <Video size={15} />
-                      Play RECORDED DEMO through MediaPipe
-                    </button>
+                    <div className="workout-buttons">
+                      <button
+                        className="button primary wide"
+                        disabled={
+                          playing ||
+                          busy ||
+                          studio?.status === "COMPLETED" ||
+                          studio?.status === "RUNNING"
+                        }
+                        onClick={() => void playRecordedDemo()}
+                      >
+                        <Video size={15} aria-hidden />
+                        Play RECORDED DEMO through MediaPipe
+                      </button>
+                      <button
+                        className="button wide"
+                        disabled={playing || busy || !admin}
+                        onClick={() => void workout()}
+                      >
+                        <Play size={14} aria-hidden />
+                        {playing
+                          ? "Processing marker frames…"
+                          : "Run synthetic workout"}
+                      </button>
+                    </div>
                   )}
                   {playing && (
                     <button className="button wide" onClick={cancelReplay}>
-                      <Pause size={15} />
+                      <Pause size={15} aria-hidden />
                       Pause replay
                     </button>
                   )}
@@ -1695,6 +1880,7 @@ function App() {
                     <div className="workout-secondary">
                       <button
                         className="text-button"
+                        disabled={busy}
                         onClick={() =>
                           void guarded(() =>
                             act("/studio/control", {
@@ -1710,6 +1896,7 @@ function App() {
                       </button>
                       <button
                         className="text-button"
+                        disabled={busy}
                         onClick={() =>
                           void guarded(() =>
                             act("/studio/control", {
@@ -1722,155 +1909,162 @@ function App() {
                       </button>
                     </div>
                   )}
-                  <p className="workout-disclaimer">
-                    This is voluntary movement recognition, not medical
-                    guidance. Override opens the in-app gate and keeps the
-                    physical promise unverified. No other apps are locked.
-                  </p>
+                  <details className="disclosure">
+                    <summary>How verification works</summary>
+                    <p>
+                      Frames are decoded into pose landmarks and checked for
+                      full cycles with timestamps and quality gates. RECORDED
+                      DEMO is a pinned synthetic video, never LIVE RING. This is
+                      a web preview, not Fire TV runtime proof.
+                    </p>
+                    <p>
+                      Voluntary movement recognition, not medical guidance.
+                      Override opens the in-app gate and keeps the physical
+                      promise unverified. No other apps are locked.
+                    </p>
+                  </details>
                 </aside>
               </div>
-              <div className="studio-note">
-                <ShieldCheck size={20} />
-                <div>
-                  <strong>Proof, with an honest boundary.</strong>
-                  <p>
-                    Marker pixels are decoded into landmarks and checked for
-                    full cycles. Live human pose needs the optional MediaPipe
-                    worker, a calibrated camera, and device validation. This
-                    screen is a web preview, not Fire TV runtime proof.
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-          {page === "incidents" && (
-            <>
-              {incident ? (
-                <div className="incident-layout">
-                  <section className="panel incident-main">
-                    <div className="panel-heading">
+            )}
+
+            {page === "incidents" &&
+              (incident ? (
+                <div className="incident">
+                  <section
+                    className="panel incident-main"
+                    aria-label="Incident review"
+                  >
+                    <div className="panel-head">
                       <div>
-                        <span className="eyebrow">HUMAN REVIEW REQUIRED</span>
+                        <span className="eyebrow">Human review required</span>
                         <h2>A package moved. Was it authorized?</h2>
                       </div>
                       <Status status={incident.status} />
                     </div>
-                    <div className="incident-image">
-                      <img
-                        src={
-                          "/api/evidence/" + incident.packet.removal_evidence_id
-                        }
-                        alt="Synthetic removal evidence"
-                      />
-                      <span>
-                        DEMO / SYNTHETIC · {fmt(incident.detected_at)} IST
-                      </span>
-                    </div>
-                    {incident.packet.source_clip_evidence_id && (
-                      <div className="incident-video">
-                        <video
-                          controls
-                          preload="metadata"
-                          aria-label="15-second synthetic removal clip"
+                    <div className="incident-media">
+                      <figure>
+                        <img
                           src={
                             "/api/evidence/" +
-                            incident.packet.source_clip_evidence_id
+                            incident.packet.removal_evidence_id
                           }
+                          alt="Synthetic removal evidence"
                         />
-                        <p>
-                          15-second generated source clip · DEMO / SYNTHETIC ·
-                          no live Ring recording
-                        </p>
-                      </div>
-                    )}
-                    <div className="incident-copy">
-                      <h3>Observation, without accusation.</h3>
-                      <p>
-                        The tracked parcel moved from the porch toward the
-                        street. We cannot infer identity or intent. The person
-                        crop below is a synthetic marker, never a facial
-                        identity match.
-                      </p>
-                      <div className="quality-notice">
-                        <Video size={19} />
-                        <div>
-                          <strong>
-                            {incident.clip_actual_duration_seconds
-                              ? "Synthetic video preserved"
-                              : "Evidence incomplete"}
-                          </strong>
-                          <p>
-                            {incident.clip_actual_duration_seconds}s clip
-                            available. Synthetic source and annotated artifacts
-                            are preserved. No live Ring recording is claimed.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="incident-actions">
-                        {[
-                          "AWAITING_HUMAN_DECISION",
-                          "EVIDENCE_PREPARED",
-                        ].includes(incident.status) && (
-                          <button
-                            className="button primary"
-                            onClick={() => incidentAction("authorize-pickup")}
-                          >
-                            <Users size={16} />
-                            Confirm authorized pickup
-                          </button>
-                        )}
-                        {incident.status === "AWAITING_HUMAN_DECISION" && (
-                          <button
-                            className="button"
-                            onClick={() => incidentAction("prepare-report")}
-                          >
-                            <FileCheck2 size={16} />
-                            Review evidence / Prepare report
-                          </button>
-                        )}
-                        {incident.status === "EVIDENCE_PREPARED" && (
-                          <button
-                            className="button"
-                            onClick={() => setShowApproval(true)}
-                          >
-                            Review simulated report approval
-                            <ArrowRight size={15} />
-                          </button>
-                        )}
-                        {incident.status === "REPORT_APPROVED" && (
-                          <button
-                            className="button primary"
-                            onClick={() => incidentAction("dispatch-report")}
-                          >
-                            Send to demo receiver only
-                          </button>
-                        )}
-                        {["EVIDENCE_PREPARED", "REPORT_APPROVED"].includes(
-                          incident.status,
-                        ) && (
-                          <button
-                            className="text-button"
-                            onClick={() => incidentAction("cancel-report")}
-                          >
-                            Cancel report review
-                          </button>
-                        )}
-                      </div>
-                      {incident.receipt && (
-                        <div className="warning-banner">
-                          {incident.receipt.label}
-                          <br />
-                          {incident.receipt.receipt_id}
-                        </div>
+                        <figcaption>
+                          <SourceTag mode="SIMULATED_VERIFIED" />
+                          {fmt(incident.detected_at)} IST
+                        </figcaption>
+                      </figure>
+                      {incident.packet.source_clip_evidence_id && (
+                        <figure>
+                          <video
+                            controls
+                            preload="metadata"
+                            aria-label="15-second synthetic removal clip"
+                            src={
+                              "/api/evidence/" +
+                              incident.packet.source_clip_evidence_id
+                            }
+                          />
+                          <figcaption>
+                            <SourceTag mode="SIMULATED_VERIFIED" />
+                            Generated clip · no live Ring recording
+                          </figcaption>
+                        </figure>
                       )}
                     </div>
-                  </section>
-                  <section className="panel evidence-panel">
-                    <div className="panel-heading">
-                      <h2>Evidence packet</h2>
-                      <Fingerprint size={18} />
+                    <p className="incident-copy">
+                      The tracked parcel moved from the porch toward the street.
+                      Observation, not accusation: identity and intent are not
+                      inferred.
+                    </p>
+                    <p className="quality">
+                      <Video size={15} aria-hidden />
+                      <span>
+                        {incident.clip_actual_duration_seconds
+                          ? `${incident.clip_actual_duration_seconds}s clip available. Synthetic source and annotated artifacts are preserved.`
+                          : "Evidence incomplete. No clip was preserved."}
+                      </span>
+                    </p>
+                    <div className="incident-actions">
+                      {[
+                        "AWAITING_HUMAN_DECISION",
+                        "EVIDENCE_PREPARED",
+                      ].includes(incident.status) && (
+                        <button
+                          className="button primary"
+                          disabled={busy}
+                          onClick={() => incidentAction("authorize-pickup")}
+                        >
+                          <Users size={15} aria-hidden />
+                          Confirm authorized pickup
+                        </button>
+                      )}
+                      {incident.status === "AWAITING_HUMAN_DECISION" && (
+                        <button
+                          className="button"
+                          disabled={busy}
+                          onClick={() => incidentAction("prepare-report")}
+                        >
+                          <FileCheck2 size={15} aria-hidden />
+                          Review evidence / Prepare report
+                        </button>
+                      )}
+                      {incident.status === "EVIDENCE_PREPARED" && (
+                        <button
+                          className="button"
+                          disabled={busy}
+                          onClick={() => setShowApproval(true)}
+                        >
+                          Review simulated report approval
+                          <ArrowRight size={15} aria-hidden />
+                        </button>
+                      )}
+                      {incident.status === "REPORT_APPROVED" && (
+                        <button
+                          className="button primary"
+                          disabled={busy}
+                          onClick={() => incidentAction("dispatch-report")}
+                        >
+                          Send to demo receiver only
+                        </button>
+                      )}
+                      {["EVIDENCE_PREPARED", "REPORT_APPROVED"].includes(
+                        incident.status,
+                      ) && (
+                        <button
+                          className="text-button"
+                          disabled={busy}
+                          onClick={() => incidentAction("cancel-report")}
+                        >
+                          Cancel report review
+                        </button>
+                      )}
                     </div>
-                    <div className="evidence-content">
+                    {incident.receipt && (
+                      <div className="banner warning receipt" role="status">
+                        <ShieldCheck size={15} aria-hidden />
+                        <span>
+                          <strong>{incident.receipt.label}</strong>
+                          <code>{incident.receipt.receipt_id}</code>
+                        </span>
+                      </div>
+                    )}
+                  </section>
+                  <section
+                    className="panel packet"
+                    aria-label="Evidence packet"
+                  >
+                    <div className="panel-head">
+                      <h2>Evidence packet</h2>
+                      <button
+                        className="text-button"
+                        onClick={() => navigate("evidence")}
+                      >
+                        All evidence <ArrowRight size={14} aria-hidden />
+                      </button>
+                    </div>
+                    <div className="packet-body">
                       <div className="person-crop">
                         <img
                           src={
@@ -1884,278 +2078,280 @@ function App() {
                           <small>Synthetic · no facial identification</small>
                         </div>
                       </div>
-                      <dl>
+                      <dl className="facts">
                         <dt>Detected</dt>
-                        <dd>{fmt(incident.detected_at)} IST · virtual time</dd>
+                        <dd>{fmt(incident.detected_at)} IST · virtual</dd>
                         <dt>Location</dt>
-                        <dd>Synthetic porch · no real address</dd>
-                        <dt>Source</dt>
-                        <dd>Calibrated generated pixels</dd>
+                        <dd>Synthetic porch</dd>
                         <dt>Coverage</dt>
                         <dd>
-                          {incident.clip_actual_duration_seconds}-second
-                          synthetic clip
+                          {incident.clip_actual_duration_seconds}s synthetic
+                          clip
                         </dd>
                         <dt>Receiver</dt>
                         <dd>DEMO_RECEIVER_ONLY</dd>
                         <dt>Official dispatches</dt>
-                        <dd>0 · export / simulated dispatch only</dd>
+                        <dd>0 · simulated only</dd>
                       </dl>
-                      <span className="eyebrow">SHA-256 MANIFEST</span>
+                      <span className="eyebrow">SHA-256 manifest</span>
                       <code className="hash">{incident.manifest_hash}</code>
-                      <p className="muted">
-                        A digest detects tampering. It does not establish legal
+                      <p className="muted-text small">
+                        A digest detects tampering; it does not establish legal
                         admissibility.
                       </p>
                       <a className="button wide" href="/api/export" download>
-                        <Download size={16} />
+                        <Download size={15} aria-hidden />
                         Export verified manifest
                       </a>
-                      <h3>Linked evidence</h3>
-                      {state.evidence.map((ev) => (
-                        <a
-                          className="evidence-link"
-                          key={ev.evidence_id}
-                          href={"/api/evidence/" + ev.evidence_id}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <Fingerprint size={14} />
-                          <div>
-                            <strong>{human(ev.kind)}</strong>
-                            <small>{ev.sha256_original.slice(0, 22)}…</small>
-                          </div>
-                          <ArrowRight size={14} />
-                        </a>
-                      ))}
                     </div>
                   </section>
                 </div>
               ) : (
-                <section className="panel">
-                  <div className="empty-state large">
-                    <ShieldCheck size={42} />
-                    <h2>No incidents to review.</h2>
+                <section className="panel fill">
+                  <Empty icon={ShieldCheck} title="No incidents to review.">
                     <p>
-                      A quiet porch is a good porch. Run the deposit and removal
-                      <br />
-                      scenarios to see evidence preservation and human review.
+                      A quiet porch. Run the deposit and removal scenes to see
+                      evidence preservation and human review.
                     </p>
-                    <button
-                      className="button primary"
-                      onClick={() => navigate("replay")}
-                    >
-                      Open judge replay
-                      <ArrowRight size={15} />
-                    </button>
+                    <div className="row">
+                      {admin && (
+                        <button
+                          className="button small"
+                          onClick={() => navigate("replay")}
+                        >
+                          Open judge replay <ArrowRight size={14} />
+                        </button>
+                      )}
+                      <button
+                        className="button small"
+                        onClick={() => navigate("evidence")}
+                      >
+                        All evidence <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </Empty>
+                </section>
+              ))}
+
+            {page === "evidence" && (
+              <section className="panel fill evidence-list">
+                <div className="panel-head">
+                  <h2>
+                    Private evidence{" "}
+                    <span className="count">{state.evidence.length}</span>
+                  </h2>
+                  <a className="button small" href="/api/export" download>
+                    <Download size={14} aria-hidden />
+                    Export verified manifest
+                  </a>
+                </div>
+                <div className="scroll">
+                  {state.evidence.length === 0 ? (
+                    <Empty icon={FileCheck2} title="No evidence collected yet.">
+                      <p>
+                        Promises close only after their evidence policy is
+                        satisfied.
+                      </p>
+                    </Empty>
+                  ) : (
+                    [...state.evidence].reverse().map((item) => (
+                      <article className="evidence-row" key={item.evidence_id}>
+                        <FileCheck2 size={18} aria-hidden />
+                        <div>
+                          <strong>{human(item.kind)}</strong>
+                          <small>
+                            {fmt(item.captured_at)} IST ·{" "}
+                            <code>{item.sha256_original.slice(0, 24)}…</code>
+                          </small>
+                        </div>
+                        <SourceTag mode={item.provenance} />
+                        <a
+                          className="text-button"
+                          href={`/api/evidence/${item.evidence_id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open <ArrowRight size={13} aria-hidden />
+                        </a>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </section>
+            )}
+
+            {page === "settings" && (
+              <div className="settings">
+                <section className="panel" aria-label="Connections">
+                  <div className="panel-head">
+                    <h2>Connections</h2>
+                    <Signal size={16} aria-hidden />
+                  </div>
+                  <p className="muted-text small pad">
+                    Adapter code is not the same as a verified device.
+                  </p>
+                  <div className="scroll">
+                    {integrations.map((it) => (
+                      <div className="integration" key={it.name}>
+                        <span className="integration-icon" aria-hidden>
+                          {it.name === "Fire TV" ? (
+                            <Tv size={16} />
+                          ) : it.name === "Ring" ? (
+                            <Video size={16} />
+                          ) : it.name === "Bee" ? (
+                            <AudioLines size={16} />
+                          ) : (
+                            <Radio size={16} />
+                          )}
+                        </span>
+                        <div>
+                          <strong>{it.name}</strong>
+                          <p>{it.reason}</p>
+                        </div>
+                        <Status status={it.status} />
+                      </div>
+                    ))}
                   </div>
                 </section>
-              )}
-            </>
-          )}
-          {page === "evidence" && (
-            <section className="panel">
-              <div className="panel-heading">
-                <div>
-                  <h2>Private evidence packet</h2>
-                  <p>
-                    Original and derived artifacts retain their source,
-                    provenance and SHA-256 hashes.
-                  </p>
-                </div>
-                <a className="button" href="/api/export" download>
-                  <Download size={16} />
-                  Export verified manifest
-                </a>
-              </div>
-              {state.evidence.length === 0 ? (
-                <div className="empty-state">
-                  <FileCheck2 size={36} />
-                  <h3>No evidence collected yet.</h3>
-                  <p>
-                    Promises close only after their evidence policy is
-                    satisfied.
-                  </p>
-                </div>
-              ) : (
-                state.evidence.map((item) => (
-                  <article className="integration-row" key={item.evidence_id}>
-                    <FileCheck2 size={24} />
-                    <div>
-                      <strong>{human(item.kind)}</strong>
-                      <p>
-                        {human(item.source_mode)} · {human(item.provenance)} ·{" "}
-                        {fmt(item.captured_at)} IST
-                      </p>
-                      <code style={{ overflowWrap: "anywhere" }}>
-                        {item.sha256_original}
-                      </code>
+                <div className="settings-stack">
+                  <section className="panel consent" aria-label="Consent">
+                    <div className="panel-head">
+                      <h2>Consent</h2>
+                      <Status status={state.consent ? "ACTIVE" : "PAUSED"} />
                     </div>
-                    <a
-                      className="button"
-                      href={`/api/evidence/${item.evidence_id}`}
-                      target="_blank"
-                      rel="noreferrer"
+                    <p>
+                      {live
+                        ? "Your live household begins with collection disabled."
+                        : "All replay data is synthetic."}{" "}
+                      Pausing stops compilation, camera processing and new
+                      watchdog work.
+                    </p>
+                    <button
+                      className={`button ${state.consent ? "" : "primary"}`}
+                      disabled={busy}
+                      onClick={() =>
+                        void guarded(() =>
+                          act("/consent", { enabled: !state.consent }),
+                        )
+                      }
                     >
-                      Open artifact
-                    </a>
-                  </article>
-                ))
-              )}
-            </section>
-          )}
-          {page === "settings" && (
-            <div className="settings-layout">
-              <section className="panel">
-                <div className="panel-heading">
-                  <div>
-                    <h2>Connections, with receipts.</h2>
-                    <p>Adapter code is not the same as a verified device.</p>
-                  </div>
-                  <Signal size={18} />
-                </div>
-                {integrations.map((it) => (
-                  <div className="integration-row" key={it.name}>
-                    <div className="integration-icon">
-                      {it.name === "Fire TV" ? (
-                        <Tv />
-                      ) : it.name === "Ring" ? (
-                        <Video />
-                      ) : it.name === "Bee" ? (
-                        <AudioLines />
+                      {state.consent ? (
+                        <Pause size={15} aria-hidden />
                       ) : (
-                        <Radio />
-                      )}
-                    </div>
-                    <div>
-                      <strong>{it.name}</strong>
-                      <p>{it.reason}</p>
-                    </div>
-                    <Status status={it.status} />
-                  </div>
-                ))}
-              </section>
-              <section className="panel privacy-panel">
-                <div className="detail-icon">
-                  <ShieldCheck size={26} />
+                        <Play size={15} aria-hidden />
+                      )}{" "}
+                      {state.consent
+                        ? "Pause all collection"
+                        : live
+                          ? "Enable household collection"
+                          : "Restore demo consent"}
+                    </button>
+                    <ul className="facts-list">
+                      <li>
+                        <LockKeyhole size={14} aria-hidden /> Household-scoped
+                        access
+                      </li>
+                      <li>
+                        <Fingerprint size={14} aria-hidden /> SHA-256 artifact
+                        integrity
+                      </li>
+                      <li>
+                        <Users size={14} aria-hidden /> Human approval before
+                        consequences
+                      </li>
+                      <li>
+                        <Eye size={14} aria-hidden /> No secret-entry form in
+                        the browser
+                      </li>
+                    </ul>
+                  </section>
+                  <PushOptIn act={act} busy={busy} />
                 </div>
-                <span className="eyebrow">YOU’RE IN CONTROL</span>
-                <h2>
-                  Zero reminder prompts.
-                  <br />
-                  Never zero consent.
-                </h2>
-                <p>
-                  {live
-                    ? "Your live household begins with collection disabled."
-                    : "All replay data is synthetic."}{" "}
-                  Pause collection to stop compilation, camera processing, and
-                  new watchdog work.
-                </p>
-                <button
-                  className={`button ${state.consent ? "" : "primary"}`}
-                  onClick={() =>
-                    void guarded(() =>
-                      act("/consent", { enabled: !state.consent }),
-                    )
-                  }
-                >
-                  {state.consent ? <Pause size={16} /> : <Play size={16} />}{" "}
-                  {state.consent
-                    ? "Pause all collection"
-                    : live
-                      ? "Enable household collection"
-                      : "Restore demo consent"}
-                </button>
-                <div className="privacy-facts">
-                  <div>
-                    <LockKeyhole size={17} />
-                    <span>Household-scoped access</span>
-                  </div>
-                  <div>
-                    <Fingerprint size={17} />
-                    <span>SHA-256 artifact integrity</span>
-                  </div>
-                  <div>
-                    <Clock3 size={17} />
-                    <span>Owner-set evidence retention (1–30 days)</span>
-                  </div>
-                  <div>
-                    <Users size={17} />
-                    <span>Human approval before consequences</span>
-                  </div>
-                </div>
-                <p className="muted">
-                  Live collection is blocked until accounts, permissions, and
-                  platform checks are supplied. No secret-entry form is shipped
-                  in the browser.
-                </p>
-              </section>
-              <PushOptIn act={act} busy={busy} />
-              <PrivacyControls act={act} busy={busy} />
-            </div>
-          )}
-          <footer className="footer">
-            <span>
-              <Fingerprint size={13} />
-              DONE/IRL
-              <span className="footer-divider" />
-              APIs lie. Reality doesn’t.
-            </span>
-            <span>
-              Synthetic judge workspace
-              <span className="footer-divider" />
-              Evidence before closure
-            </span>
-          </footer>
+                <PrivacyControls act={act} busy={busy} />
+              </div>
+            )}
+          </div>
         </main>
       </div>
-      {showNotifications && (
-        <div className="notification-drawer">
-          <div className="panel-heading">
-            <h2>Your private inbox</h2>
-            <button
-              className="icon-button"
-              aria-label="Close notifications"
-              onClick={() => setShowNotifications(false)}
-            >
-              <X size={18} />
-            </button>
-          </div>
-          <p className="drawer-note">
-            Companion inbox · native push and earbud whispers are not connected.
-          </p>
-          {[...state.alerts].reverse().map((a) => (
-            <button
-              className="notification-card"
-              key={a.alert_id}
-              onClick={() => {
-                const c = state.contracts.find(
-                  (c) => c.contract_id === a.contract_id,
-                );
-                if (c) goContract(c);
-                setShowNotifications(false);
-              }}
-            >
-              <span className="eyebrow">
-                {human(a.kind)} · {fmt(a.at)}
-              </span>
-              <p>{a.message}</p>
-              <span>
-                Open commitment
-                <ArrowRight size={13} />
-              </span>
-            </button>
-          ))}
-          {!state.alerts.length && (
-            <div className="empty-state">
-              <Bell size={30} />
-              <p>You’re all caught up.</p>
-            </div>
-          )}
-        </div>
+      {!tv && (
+        <nav className="bottom-nav" aria-label="Primary">
+          {navPages.map((id) => {
+            const Icon = pageIcons[id];
+            const active =
+              page === id || (id === "incidents" && page === "evidence");
+            return (
+              <button
+                key={id}
+                className={active ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+                aria-label={pageLabel(id)}
+                onClick={() => navigate(id)}
+              >
+                <Icon size={19} aria-hidden />
+                <span aria-hidden>
+                  {id === "overview" && !admin ? "Today" : short[id]}
+                </span>
+                {id === "incidents" && incident && <i aria-hidden />}
+              </button>
+            );
+          })}
+        </nav>
       )}
-      {showApproval && (
+      {showNotifications && (
+        <>
+          <div
+            className="scrim"
+            aria-hidden
+            onClick={() => setShowNotifications(false)}
+          />
+          <aside
+            className="drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
+          >
+            <div className="panel-head">
+              <h2>Your private inbox</h2>
+              <button
+                className="icon-button"
+                aria-label="Close notifications"
+                onClick={() => setShowNotifications(false)}
+                autoFocus
+              >
+                <X size={17} aria-hidden />
+              </button>
+            </div>
+            <p className="muted-text small pad">
+              Companion inbox · native push and earbud whispers are not
+              connected.
+            </p>
+            <div className="scroll">
+              {[...state.alerts].reverse().map((a) => (
+                <button
+                  className="notification"
+                  key={a.alert_id}
+                  onClick={() => {
+                    const c = state.contracts.find(
+                      (c) => c.contract_id === a.contract_id,
+                    );
+                    if (c) goContract(c);
+                    setShowNotifications(false);
+                  }}
+                >
+                  <span className="kind" data-kind={a.kind}>
+                    {human(a.kind)} · {fmt(a.at)}
+                  </span>
+                  <p>{a.message}</p>
+                </button>
+              ))}
+              {!state.alerts.length && (
+                <Empty icon={MessageSquareText} title="You’re all caught up." />
+              )}
+            </div>
+          </aside>
+        </>
+      )}
+      {showApproval && incident && (
         <div className="modal-backdrop">
           <div
             className="modal"
@@ -2168,20 +2364,22 @@ function App() {
               aria-label="Close approval"
               onClick={() => setShowApproval(false)}
             >
-              <X size={18} />
+              <X size={17} aria-hidden />
             </button>
-            <FileCheck2 size={32} />
-            <span className="eyebrow">EXPLICIT OWNER APPROVAL</span>
+            <span className="modal-icon" aria-hidden>
+              <FlaskConical size={22} />
+            </span>
+            <span className="eyebrow">Explicit owner approval</span>
             <h2>Review the exact packet.</h2>
             <p>
               This approves a synthetic report to{" "}
               <strong>DEMO_RECEIVER_ONLY</strong>. It contacts no police service
               and generates no official case number.
             </p>
-            <code className="hash">{incident?.manifest_hash}</code>
-            <p>
-              Coverage: {incident?.clip_actual_duration_seconds}-second
-              synthetic clip. No live Ring footage.
+            <code className="hash">{incident.manifest_hash}</code>
+            <p className="muted-text small">
+              Coverage: {incident.clip_actual_duration_seconds}-second synthetic
+              clip. No live Ring footage.
             </p>
             <label>
               Type APPROVE SIMULATED REPORT
@@ -2189,6 +2387,7 @@ function App() {
                 value={confirmation}
                 onChange={(e) => setConfirmation(e.target.value)}
                 autoFocus
+                autoComplete="off"
               />
             </label>
             <button
@@ -2208,87 +2407,6 @@ function App() {
         </div>
       )}
     </div>
-  );
-}
-
-function Brand() {
-  return (
-    <div className="brand">
-      <span className="brand-symbol">
-        <CheckCheck size={22} strokeWidth={2.4} />
-      </span>
-      <strong>
-        DONE<span>/</span>IRL
-      </strong>
-      <span className="brand-period" />
-    </div>
-  );
-}
-function Status({ status }: { status: string }) {
-  const cls = [
-    "VERIFIED",
-    "AUTHORIZED_TRANSFER",
-    "SIMULATED_VERIFIED",
-  ].includes(status)
-    ? "good"
-    : ["DISPUTED", "MISSED", "AWAITING_HUMAN_DECISION", "BLOCKED"].includes(
-          status,
-        )
-      ? "attention"
-      : "";
-  return (
-    <span className={"status " + cls}>
-      <span />
-      {human(status)}
-    </span>
-  );
-}
-function Stat({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  color,
-}: {
-  icon: typeof Package;
-  label: string;
-  value: string;
-  detail: string;
-  color: string;
-}) {
-  return (
-    <div className="stat">
-      <div className="stat-top">
-        <span>{label}</span>
-        <div className={"stat-icon " + color}>
-          <Icon size={17} />
-        </div>
-      </div>
-      <strong className="stat-value">{value}</strong>
-      <div className="stat-detail">{detail}</div>
-    </div>
-  );
-}
-function ContractRow({ c, onClick }: { c: Contract; onClick: () => void }) {
-  const Icon = icons[c.key] ?? CheckCheck;
-  return (
-    <button className="contract-row" onClick={onClick}>
-      <span className={"contract-icon " + c.key}>
-        <Icon size={18} />
-      </span>
-      <div className="contract-info">
-        <strong>{c.title}</strong>
-        <small>
-          {c.counterparty.label}
-          <span>·</span>
-          {c.due_at
-            ? fmt(c.due_at) + " IST"
-            : human(c.deadline_trigger ?? "On evidence")}
-        </small>
-      </div>
-      <Status status={c.status} />
-      <ChevronRight size={15} />
-    </button>
   );
 }
 

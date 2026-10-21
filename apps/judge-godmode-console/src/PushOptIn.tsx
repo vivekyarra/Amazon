@@ -73,23 +73,34 @@ export function PushOptIn({ act, busy }: { act: Act; busy: boolean }) {
   };
 
   return (
-    <section className="panel" aria-labelledby="push-heading">
-      <h2 id="push-heading">
-        <BellRing size={18} aria-hidden /> Phone notifications
-      </h2>
-      <p>{label[status]}</p>
-      <p className="muted">
-        Lock-screen text is generic for porch and delivery incidents; evidence
-        opens only after sign-in. &ldquo;Accepted by push service&rdquo; is
-        recorded, never &ldquo;seen on device&rdquo;.
-      </p>
+    <section className="panel push" aria-labelledby="push-heading">
+      <div className="panel-head">
+        <h2 id="push-heading">
+          <BellRing size={16} aria-hidden /> Phone notifications
+        </h2>
+        <details className="info">
+          <summary aria-label="About phone notifications">?</summary>
+          <p>
+            Lock-screen text is generic for porch and delivery incidents;
+            evidence opens only after sign-in. &ldquo;Accepted by push
+            service&rdquo; is recorded, never &ldquo;seen on device&rdquo;.
+          </p>
+        </details>
+      </div>
+      <p role="status">{label[status]}</p>
       {status === "enabled" ? (
-        <button type="button" disabled={busy} onClick={disable}>
+        <button
+          type="button"
+          className="button"
+          disabled={busy}
+          onClick={() => void disable().catch(() => setStatus("failed"))}
+        >
           Turn off on this device
         </button>
       ) : (
         <button
           type="button"
+          className="button"
           disabled={busy || !supported || status === "checking"}
           onClick={enable}
         >

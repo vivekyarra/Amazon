@@ -45,16 +45,34 @@ function speak(text: string, enabled: boolean) {
   }
 }
 
-export default function AlexaSimulator({ state }: { state: State }) {
+// The conversation survives moving between the replay console and the Alexa+ page.
+const memory: { turns: Turn[]; log: RpcLogEntry[]; id: number } = {
+  turns: [],
+  log: [],
+  id: 0,
+};
+
+export default function AlexaSimulator({
+  state,
+  compact = false,
+}: {
+  state: State;
+  compact?: boolean;
+}) {
   const [input, setInput] = useState("");
-  const [turns, setTurns] = useState<Turn[]>([]);
-  const [log, setLog] = useState<RpcLogEntry[]>([]);
+  const [turns, setTurns] = useState<Turn[]>(memory.turns);
+  const [log, setLog] = useState<RpcLogEntry[]>(memory.log);
+  useEffect(() => {
+    memory.turns = turns;
+    memory.log = log;
+  }, [turns, log]);
   const [busy, setBusy] = useState(false);
   const [voiceOut, setVoiceOut] = useState(true);
   const [listening, setListening] = useState(false);
   const [micNote, setMicNote] = useState("");
   const recognizer = useRef<Recognition | null>(null);
-  const turnId = useRef(0);
+  const turnId = useRef(memory.id);
+  useEffect(() => () => void (memory.id = turnId.current), []);
   const turnsEnd = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = turnsEnd.current;
@@ -144,23 +162,24 @@ export default function AlexaSimulator({ state }: { state: State }) {
 
   return (
     <section
-      className="panel alexa-sim"
+      className={`panel alexa-sim ${compact ? "compact" : ""}`}
       aria-label="Simulated Alexa+ experience"
     >
-      <div className="panel-heading">
-        <div>
-          <h2>
-            <AudioLines size={15} /> Simulated Alexa+
-          </h2>
-          <p>
-            Deterministic intent router (no LLM) calling the real MCP server at{" "}
-            <code>/mcp/</code> with your judge session. Answers come only from
-            tool results.
-          </p>
-        </div>
+      <div className="panel-head">
+        <h2>
+          <AudioLines size={15} aria-hidden /> Simulated Alexa+
+        </h2>
         <span className="alexa-badge" data-testid="alexa-sim-badge">
           {BADGE}
         </span>
+        <details className="info">
+          <summary aria-label="How simulated Alexa+ works">?</summary>
+          <p>
+            Deterministic intent router (no LLM) calling the real MCP server at{" "}
+            <code>/mcp/</code> with your session. Answers come only from tool
+            results; nothing is sent to an Alexa device.
+          </p>
+        </details>
       </div>
       <div className="alexa-grid">
         <div className="alexa-convo">
@@ -272,12 +291,12 @@ export default function AlexaSimulator({ state }: { state: State }) {
               <Send size={13} /> Ask
             </button>
           </form>
-          <p className="alexa-note">
-            {micNote ||
-              (Ctor
-                ? "Voice input uses your browser's speech recognition; spoken replies use speechSynthesis."
-                : "Voice input is unavailable in this browser; type instead.")}
-          </p>
+          {(micNote || !Ctor) && (
+            <p className="alexa-note" role="status">
+              {micNote ||
+                "Voice input is unavailable in this browser; type instead."}
+            </p>
+          )}
         </div>
         <aside className="alexa-rail" aria-label="MCP JSON-RPC log">
           <div className="alexa-rail-head">

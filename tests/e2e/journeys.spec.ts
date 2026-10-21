@@ -30,9 +30,10 @@ test("canonical full day updates shared ledger, keeps uncertainty and verifies 1
   await page
     .getByRole("button", { name: "Run the full day", exact: true })
     .click();
+  // Six scenes replay before the studio opens; a cold data dir renders clips on first run.
   await expect(
     page.getByRole("heading", { name: "Reality-Lock studio." }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 20000 });
   await expect(page.getByText("Promise kept. Evidence saved.")).toBeVisible({
     timeout: 55000,
   });
