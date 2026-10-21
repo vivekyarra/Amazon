@@ -7,7 +7,7 @@ Fill-in-ready text for the owner's Devpost form. Items marked **OWNER** need the
 - **Name:** DONE/IRL
 - **Tagline:** APIs lie. Reality doesn't.
 - **Primary track:** Alexa+ (self-hosted MCP server, Streamable HTTP `2025-11-25`, plus a clearly labelled simulated Alexa+ experience in the web app).
-- **Mini challenges:** AWS Builder (live AWS stack, below). Open Source — **OWNER** approval needed to open the Agent Skill PR.
+- **Mini challenges:** AWS Builder (live AWS stack, below). Open Source — Agent Skill PR https://github.com/AmazonAppDev/devices-agent-skills/pull/16.
 - **Repository:** https://github.com/vivekyarra/Amazon (public, MIT).
 - **Live demo:** https://100-49-183-59.sslip.io — judge credentials go in the private testing-instructions field (**OWNER** pastes from `judge-credentials.txt`, never into the repo).
 - **Video:** **OWNER** uploads the under-three-minute English video to YouTube/Vimeo (public).
@@ -36,8 +36,10 @@ Python FastAPI orchestrator with the official MCP SDK; encrypted SQLite WAL ledg
 
 CloudFormation, EC2, Systems Manager, DynamoDB, S3, KMS, EventBridge Scheduler, SQS, Secrets Manager, CloudWatch. Per-promise T-60/T-25/deadline schedules are real EventBridge `at()` schedules targeting an encrypted SQS queue that wakes the reconciler; evidence and snapshots replicate to private SSE-KMS S3; contracts, agents, incidents and audit records project into DynamoDB. Bedrock Nova was attempted and returned "Operation not allowed" (see friction log). Evidence: `docs/evidence/aws-deployment.json`, `docs/evidence/aws-mcp-scheduler.json`.
 
-## Open Source mini challenge (after OWNER approval)
+## Open Source mini challenge
 
+- Contribution URL: https://github.com/AmazonAppDev/devices-agent-skills/pull/16
+- Fork: https://github.com/vivekyarra/devices-agent-skills/tree/add-evidence-backed-commitments
 - Contribution: PR adding `skills/evidence-backed-commitments` to `AmazonAppDev/devices-agent-skills` (source: `packages/agent-skills/evidence-backed-commitments`, MIT).
 - What it does: an Agent Skill that teaches coding agents to build assistants that never mark a task done without evidence — lifecycle state machines, a verification-policy matrix, MCP tool design for physical-world actions, Ring/Bee/Fire TV/Alexa+ constraints, plus a zero-dependency commitment compiler and a contract auditor.
 - GitHub username: vivekyarra.

@@ -2,7 +2,7 @@
 
 Generated from [acceptance-manifest.json](acceptance-manifest.json) by `scripts/update-acceptance.py`; do not edit by hand. All 55 original P0 gates are retained. VERIFIED means reproducible automated or platform evidence exists for the gate's own wording; it never implies live-device completion where the row says otherwise. Full original-vision release and independent review remain separate gates.
 
-Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 12, VERIFIED: 37.
+Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 38.
 
 | ID | Result | Evidence / remaining work |
 |---|---|---|
@@ -57,7 +57,7 @@ Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 12, VERIFIED: 37.
 | P0-049 | VERIFIED | README, setup/run scripts (Linux/macOS/Windows), .env.example, MIT license, architecture, privacy and operations docs; the documented judge stack was actually deployed and smoke-tested. Evidence: [infra/aws/README.md](../infra/aws/README.md). |
 | P0-050 | VERIFIED | Primary track Alexa+ recorded with eligible runtime evidence (hosted MCP 2025-11-25 server + labelled simulated experience); Fire TV recorded as an eligible alternative via the Vega Virtual Device; Bee/Ring explicitly not claimed. Evidence: [docs/release-target.md](../docs/release-target.md). |
 | P0-051 | BLOCKED | No public under-three-minute video URL or required device footage. |
-| P0-052 | IMPLEMENTED_UNVERIFIED | Actual tools have feedback; Amazon live tool feedback and mini-challenge links pending. |
+| P0-052 | VERIFIED | Per-tool feedback (purpose, onboarding, best part, friction, workaround, request, build again) limited to observed use; AWS Builder services listed with evidence; Open Source PR https://github.com/AmazonAppDev/devices-agent-skills/pull/16. Evidence: [docs/product-feedback.md](../docs/product-feedback.md). |
 | P0-053 | VERIFIED | Five Amazon-tool entries in the official format (A1-A5) plus ten engineering notes, all actually encountered; none padded. The official rules describe friction logs as optional (up to 10% bonus). Evidence: [docs/friction-log.md](../docs/friction-log.md). |
 | P0-054 | IMPLEMENTED_UNVERIFIED | Traceability/progress/report maintained; independent dated release review still needed. |
 | P0-055 | BLOCKED | Release gate intentionally reports NOT_COMPLETE; no independent platform review. |

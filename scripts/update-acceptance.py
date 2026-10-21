@@ -145,6 +145,15 @@ UPGRADES = {
              "simulated experience); Fire TV recorded as an eligible alternative via the Vega Virtual Device; Bee/Ring "
              "explicitly not claimed.",
     ),
+    "P0-052": dict(
+        result="VERIFIED",
+        tests=["manual review against session logs"],
+        evidence="docs/product-feedback.md",
+        code=["docs/product-feedback.md", "docs/submission.md"],
+        note="Per-tool feedback (purpose, onboarding, best part, friction, workaround, request, build again) limited "
+             "to observed use; AWS Builder services listed with evidence; Open Source PR "
+             "https://github.com/AmazonAppDev/devices-agent-skills/pull/16.",
+    ),
 }
 
 

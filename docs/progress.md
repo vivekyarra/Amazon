@@ -26,7 +26,7 @@
 1. `BEE_TOKEN` in an ignored `.env`, then `uv run python scripts/bee-live-probe.py` while speaking promises (P0-008, Bee evidence).
 2. Fresh Ring Playground token, then `uv run --extra ring-video python scripts/ring-live-probe.py` (P0-018/019/038).
 3. A consented recording of the owner doing 15 squats (strengthens P0-039 with human footage).
-4. Approve the public PR for the Agent Skill (Open Source mini challenge).
+4. ~~Approve the Agent Skill PR~~ — opened https://github.com/AmazonAppDev/devices-agent-skills/pull/16.
 5. Upload the under-three-minute demo video to YouTube/Vimeo (P0-051) and complete Devpost fields.
 
 Continuation details: [continuation.md](continuation.md).
