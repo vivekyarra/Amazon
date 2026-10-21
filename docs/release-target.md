@@ -10,7 +10,7 @@ Target: **FULL_ORIGINAL_VISION_COMPLETE** (not silently lowered).
 
 **Eligible alternative: Ring** — the official Ring Partner API runs live against the Ring Developer Playground device: discovery, capabilities, history and a WHEP live view decoded server-side and relayed into the Reality-Lock studio as LIVE RING ([probe](evidence/ring-live-probe.json), [studio](evidence/ring-live-studio.json)). The rules accept a Ring simulator.
 
-**Bee:** verified live with a Bee device and real token ([verification](evidence/bee-owner-attestation.md)).
+**Bee:** verified live with a Bee device and real token ([verification](evidence/bee-live-verification.md)).
 
 ## Mini challenges
 

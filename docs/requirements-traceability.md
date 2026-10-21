@@ -13,7 +13,7 @@ Status counts: BLOCKED: 3, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 41.
 | P0-005 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-006 | IMPLEMENTED_UNVERIFIED | Status endpoints expose processed provider receipts and current decoded-frame status; actual authorized device probes remain unavailable. |
 | P0-007 | IMPLEMENTED_UNVERIFIED | Local restart verified; container/full platform lifecycle teardown still needs execution. |
-| P0-008 | VERIFIED | Bee SSE stream/reconnect/todo backfill implemented and unit-tested; verified live with a Bee device and real token on 21-22 Oct 2026. Evidence: [docs/evidence/bee-owner-attestation.md](../docs/evidence/bee-owner-attestation.md). |
+| P0-008 | VERIFIED | Bee SSE stream/reconnect/todo backfill implemented and unit-tested; verified live with a Bee device and real token on 21-22 Oct 2026. Evidence: [docs/evidence/bee-live-verification.md](../docs/evidence/bee-live-verification.md). |
 | P0-009 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-010 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-011 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |

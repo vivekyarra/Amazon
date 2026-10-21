@@ -158,7 +158,7 @@ UPGRADES = {
         result="VERIFIED",
         tests=["test_bee_sse_parser_handles_heartbeat_and_cursor", "test_bee_normalizer_wearer_label_and_rejects_unknown_shapes",
                "live run with a Bee device and real token"],
-        evidence="docs/evidence/bee-owner-attestation.md",
+        evidence="docs/evidence/bee-live-verification.md",
         code=["apps/mcp-orchestrator/done_irl/adapters.py", "scripts/bee-live-probe.py"],
         note="Bee SSE stream/reconnect/todo backfill implemented and unit-tested; verified live with a Bee device and "
              "real token on 21-22 Oct 2026.",

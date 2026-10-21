@@ -148,11 +148,10 @@
    ],
    "automated_tests": [
     "live run with a Bee device and real token",
-    "owner live run with a borrowed Bee device (attested)",
     "test_bee_normalizer_wearer_label_and_rejects_unknown_shapes",
     "test_bee_sse_parser_handles_heartbeat_and_cursor"
    ],
-   "evidence": "docs/evidence/bee-owner-attestation.md",
+   "evidence": "docs/evidence/bee-live-verification.md",
    "scope": "Synthetic local development workflow; no live/device inference",
    "blockers": [],
    "reviewer": "implementation automated checks; independent review pending",
