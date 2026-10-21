@@ -176,7 +176,7 @@ def open_studio(state, camera_id, fixture, model_sha256):
 
     if not state["consent"]:
         raise ApiError(409, "CONSENT_REQUIRED", "Enable camera consent first.")
-    e.contract(state, "squats")
+    e.pose_contract(state)
     current = state["studio"]
     if current and current["status"] in {"COMPLETED", "OVERRIDDEN"}:
         raise ApiError(409, "STUDIO_FINISHED", "This REALITY-LOCK session already finished; reset the demo.")

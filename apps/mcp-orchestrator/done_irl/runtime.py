@@ -7,7 +7,6 @@ must happen outside ledger transactions; reducers and receipt completion commit 
 import time
 from datetime import datetime, timezone
 
-from pydantic import ValidationError
 
 from . import engine as e
 from . import privacy
@@ -131,8 +130,8 @@ class Runtime:
                     "error_code=NULL WHERE id=?",
                     (now, row["id"]),
                 )
-        except (ApiError, ValidationError, KeyError, TypeError, ValueError) as error:
-            permanent = isinstance(error, (ValidationError, KeyError, TypeError, ValueError))
+        except Exception as error:  # noqa: BLE001 - any reducer failure must settle the inbox item
+            permanent = not isinstance(error, ApiError)
             code = error.code if isinstance(error, ApiError) else "INVALID_PROVIDER_EVENT"
             if isinstance(error, ApiError) and error.status < 500:
                 permanent = True

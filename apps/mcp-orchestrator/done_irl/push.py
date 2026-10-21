@@ -26,6 +26,9 @@ COPY = {
     "DAILY_BRIEFING": ("Your day", True),
 }
 PRIVATE_KINDS = {"DELIVERY_MISMATCH", "PORCH_REMOVAL", "DEPOSIT_OBSERVED"}
+# Browser push services only (prevents using the server as a request relay to arbitrary hosts).
+PUSH_HOSTS = ("fcm.googleapis.com", "updates.push.services.mozilla.com", "web.push.apple.com",
+              ".notify.windows.com", ".push.apple.com", "push.services.mozilla.com")
 
 
 class PushNotifier:
@@ -40,7 +43,7 @@ class PushNotifier:
             with os.fdopen(fd, "wb") as f:
                 f.write(pem)
         self.private = serialization.load_pem_private_key(self.key_path.read_bytes(), password=None)
-        self.subject = subject or os.getenv("VAPID_SUBJECT", "https://github.com/vivekyarra/Amazon")
+        self.subject = subject or os.getenv("VAPID_SUBJECT", "mailto:done-irl@users.noreply.github.com")
         self.sent = 0
         self.failed = 0
 
@@ -53,8 +56,22 @@ class PushNotifier:
     # ---- ledger helpers (pure; run inside the caller's transaction) ----
     @staticmethod
     def subscribe(s, endpoint, p256dh, auth, now):
-        if not endpoint.startswith("https://"):
-            raise ApiError(422, "PUSH_ENDPOINT_INVALID", "Push endpoints must be HTTPS URLs from the browser.")
+        from urllib.parse import urlsplit
+
+        parts = urlsplit(endpoint)
+        host = (parts.hostname or "").lower()
+        if parts.scheme != "https" or parts.port not in (None, 443) or parts.username or not any(
+            host == h or (h.startswith(".") and host.endswith(h)) for h in PUSH_HOSTS
+        ):
+            raise ApiError(422, "PUSH_ENDPOINT_INVALID", "Use the push endpoint issued by the browser's push service.")
+        try:
+            point = base64.urlsafe_b64decode(p256dh + "=" * (-len(p256dh) % 4))
+            secret = base64.urlsafe_b64decode(auth + "=" * (-len(auth) % 4))
+            ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), point)
+        except (ValueError, TypeError):
+            raise ApiError(422, "PUSH_KEYS_INVALID", "Subscription keys are not a valid P-256 key/auth pair.")
+        if len(point) != 65 or len(secret) != 16:
+            raise ApiError(422, "PUSH_KEYS_INVALID", "Subscription keys are not a valid P-256 key/auth pair.")
         subs = s.setdefault("push_subscriptions", [])
         subs[:] = [x for x in subs if x["endpoint"] != endpoint]
         if len(subs) >= MAX_SUBSCRIPTIONS:
@@ -93,13 +110,14 @@ class PushNotifier:
         return out
 
     def send(self, sub, payload):
+        from py_vapid import Vapid
         from pywebpush import WebPushException, webpush
 
         try:
             webpush(
                 subscription_info={"endpoint": sub["endpoint"], "keys": sub["keys"]},
                 data=json.dumps(payload),
-                vapid_private_key=self._vapid_pem(),
+                vapid_private_key=Vapid.from_pem(self.key_path.read_bytes()),
                 vapid_claims={"sub": self.subject},
                 ttl=3600,
                 timeout=10,
@@ -110,9 +128,9 @@ class PushNotifier:
             self.failed += 1
             code = getattr(error.response, "status_code", None)
             return "SUBSCRIPTION_GONE" if code in {404, 410} else f"FAILED_{code or 'NETWORK'}"
-
-    def _vapid_pem(self):
-        return self.key_path.read_text()
+        except Exception as error:  # noqa: BLE001 - one bad subscription must not stall delivery
+            self.failed += 1
+            return "FAILED_" + type(error).__name__
 
     def deliver(self, store):
         """Attempt every pending alert for every household once; record results durably."""

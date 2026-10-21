@@ -82,7 +82,7 @@ async def test_bee_sse_parser_handles_heartbeat_and_cursor():
     assert utt_id == "bee:utt:c-1:7" and utt["utterance"] == "I will call my sister at 6 pm"
     assert utt["speaker"] == "UNKNOWN"  # wearer label not configured -> owner must confirm
     assert utt["occurred_at"].startswith("2026-10-20T")
-    assert todo_id == "bee:todo:99" and todo["source_kind"] == "BEE_TODO" and todo["due_at"]
+    assert todo_id.startswith("bee:todo:99:") and todo["source_kind"] == "BEE_TODO" and todo["due_at"]
     assert adapter.cursor == "43" and adapter.ignored == 1
     await adapter.client.aclose()
 
@@ -94,7 +94,8 @@ def test_bee_normalizer_wearer_label_and_rejects_unknown_shapes():
     assert normalize_bee_event("new-utterance", data, self_speakers="me")["speaker"] == "SELF"
     assert normalize_bee_event("new-utterance", {"utterance": "flat string"}) is None
     assert normalize_bee_event("new-utterance", {"utterance": {"text": "no id"}}) is None
-    assert normalize_bee_event("todo-created", {"todo": {"id": 3, "text": "x", "completed": True}}) is None
+    done = normalize_bee_event("todo-created", {"todo": {"id": 3, "text": "x", "completed": True}})
+    assert done["source_kind"] == "BEE_TODO_COMPLETED"  # ticked off in Bee -> owner confirmation still required
     assert normalize_bee_event("journal-text", {"text": "hello"}) is None
 
 

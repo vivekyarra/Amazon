@@ -143,6 +143,7 @@ def register_read_tools(mcp, *, principal, initial, integrations):
             "incident_ids": [i["incident_id"] for i in s["incidents"] if i.get("contract_id") == contract_id],
             "server_clock": s["now"],
             "verified": c["status"] == "VERIFIED",
+            "verification_provenance": c.get("verification_provenance"),
         }
 
     @mcp.tool(annotations=mcp_types.ToolAnnotations(readOnlyHint=True, idempotentHint=True))
@@ -196,7 +197,9 @@ def register_read_tools(mcp, *, principal, initial, integrations):
             "status": c["status"],
             "verification_modality": c.get("verification_modality"),
             "prompt": (
-                "Already verified by recorded evidence."
+                ("Closed by the owner's own confirmation (USER_CONFIRMED), not by sensor evidence."
+                 if c.get("verification_provenance") == "USER_CONFIRMED"
+                 else "Already verified by recorded evidence.")
                 if c["status"] == "VERIFIED"
                 else f"'{c['title']}' is not yet verified. Open the authenticated companion to "
                 "provide accepted evidence; a spoken 'yes' is not proof."
