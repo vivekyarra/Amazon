@@ -670,7 +670,7 @@ def tick(s, now):
                 )
                 if job["kind"] == "DEADLINE":
                     alert(s, c, "CONFIRMATION_REQUEST",
-                          f"You said '{c['title']}' was done. Confirm it in DONE/IRL so it can close.")
+                          f"You said '{c['title']}' was done. Confirm it in Muni so it can close.")
             elif job["kind"] == "DEADLINE":
                 revise(
                     s,

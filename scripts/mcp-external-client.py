@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""External MCP client proof for DONE/IRL.
+"""External MCP client proof for Muni.
 
 Starts the real FastAPI/uvicorn server on a free localhost port (isolated temporary DATA_DIR,
 random demo-admin password that is never printed), then drives it over real HTTP with the
@@ -353,7 +353,7 @@ def main():
     import mcp
 
     doc = {
-        "title": "DONE/IRL MCP external-client transcript (simulated Alexa+ flow)",
+        "title": "Muni MCP external-client transcript (simulated Alexa+ flow)",
         "honesty": "Official MCP Python SDK client over real localhost HTTP against the real server. "
         "This is NOT an Alexa device or Alexa+ account connection. Utterances are typed owner text "
         "labeled MCP_OWNER_INPUT, not Bee captures. Camera stages are synthetic judge-replay fixtures "

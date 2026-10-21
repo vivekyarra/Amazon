@@ -1,4 +1,4 @@
-# Types text on the DONE/IRL on-screen D-pad keyboard using only official inputd-cli
+# Types text on the Muni on-screen D-pad keyboard using only official inputd-cli
 # D-pad presses (KEY_UP/DOWN/LEFT/RIGHT/ENTER) on the Vega Virtual Device.
 # Assumes the keyboard was just opened (focus on '1', row 0 col 0).
 # usage: python3 tvtype.py --text STR | --password  (reads the demo-admin line from

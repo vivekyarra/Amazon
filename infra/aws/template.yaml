@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: DONE/IRL single-active-reducer deployment with encrypted AWS coordination and private evidence.
+Description: Muni single-active-reducer deployment with encrypted AWS coordination and private evidence.
 Parameters:
   VpcId:
     Type: AWS::EC2::VPC::Id
@@ -276,7 +276,7 @@ Resources:
           docker pull '${ImageUri}'
           cat > /etc/systemd/system/done-irl.service <<'UNIT'
           [Unit]
-          Description=DONE/IRL single active durable reducer
+          Description=Muni single active durable reducer
           Requires=docker.service
           After=docker.service network-online.target
           [Service]

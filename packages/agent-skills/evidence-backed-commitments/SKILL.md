@@ -7,7 +7,7 @@ description: Build assistants that turn spoken promises into verifiable "physica
 
 This skill helps an agent design and review assistant features where **a reminder being sent is not
 the task being done**. It packages the rules, state machines and a zero-dependency commitment compiler
-extracted from DONE/IRL (an Alexa+ MCP / Bee / Ring / Fire TV project). Use it when the user is building:
+extracted from Muni (an Alexa+ MCP / Bee / Ring / Fire TV project). Use it when the user is building:
 
 - reminders, todos or "promise tracking" from speech (Bee, Alexa+, transcripts);
 - MCP tools whose effects touch the physical world (cameras, deliveries, doors, reports);

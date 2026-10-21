@@ -1,4 +1,4 @@
-// DONE/IRL backend client for the Vega HUD.
+// Muni backend client for the Vega HUD.
 // No credentials are embedded: the operator types them on the TV login screen.
 
 export const DEFAULT_BACKEND = 'https://100-49-183-59.sslip.io';

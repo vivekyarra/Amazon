@@ -1,10 +1,10 @@
-# DONE/IRL Fire TV HUD (Vega OS)
+# Muni Fire TV HUD (Vega OS)
 
 React Native for Vega app for Fire TV on Vega OS. It was generated from the official
 Vega SDK `helloWorld` template (React Native 0.83, `@amazon-devices/react-native-kepler` 4.x),
 package id `com.doneirl.hud`, interactive component `com.doneirl.hud.main`.
 
-It reads live state from the DONE/IRL backend over HTTPS. The default backend is
+It reads live state from the Muni backend over HTTPS. The default backend is
 `https://100-49-183-59.sslip.io`, the judge deployment running in DEMO mode. You can
 change the backend on the sign-in screen.
 

@@ -1,6 +1,6 @@
-/* DONE/IRL companion service worker: shows Web Push alerts and opens the authenticated app. */
+/* Muni companion service worker: shows Web Push alerts and opens the authenticated app. */
 self.addEventListener("push", (event) => {
-  let data = { title: "DONE/IRL", body: "Open DONE/IRL to review.", url: "/" };
+  let data = { title: "Muni", body: "Open Muni to review.", url: "/" };
   try {
     data = { ...data, ...event.data.json() };
   } catch (_) {

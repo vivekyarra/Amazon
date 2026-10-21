@@ -10,7 +10,7 @@ Target: **FULL_ORIGINAL_VISION_COMPLETE** (not silently lowered).
 
 **Eligible alternative: Ring** — the official Ring Partner API runs live against the Ring Developer Playground device: discovery, capabilities, history and a WHEP live view decoded server-side and relayed into the Reality-Lock studio as LIVE RING ([probe](evidence/ring-live-probe.json), [studio](evidence/ring-live-studio.json)). The rules accept a Ring simulator.
 
-**Eligible alternative: Bee** — the Bee developer API runs live with a real Bee device: the SSE stream (`new-utterance`, `todo-created`) and todo backfill feed spoken promises straight into DONE/IRL contracts ([verification](evidence/bee-live-verification.md)).
+**Eligible alternative: Bee** — the Bee developer API runs live with a real Bee device: the SSE stream (`new-utterance`, `todo-created`) and todo backfill feed spoken promises straight into Muni contracts ([verification](evidence/bee-live-verification.md)).
 
 ## Mini challenges
 

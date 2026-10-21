@@ -2,7 +2,7 @@
 
 ## Amazon developer tools (official friction-log format)
 
-Each entry below was actually encountered on 20 October 2026 while building DONE/IRL. Format: task · steps · expected vs actual · severity · workaround · request.
+Each entry below was actually encountered on 20 October 2026 while building Muni. Format: task · steps · expected vs actual · severity · workaround · request.
 
 A1. **Bee API stream event shapes are undocumented.** *Task:* ingest live Bee utterances and todos. *Steps:* read https://docs.bee.computer/docs/api; it lists `GET /v1/stream` event types (`new-utterance`, `todo-created`, ...) but no payload schema. *Expected:* a JSON schema/sample per event type. *Actual:* the original adapter guessed a flat `{"utterance": "..."}` shape and would have rejected every real event; the real shape (`{utterance:{id,text,speaker,spoken_at}, conversation_uuid}`, `{todo:{id,text,completed,alarmAt}}`) had to be read from the official `bee-cli` source (`sources/commands/stream/index.ts`). *Severity:* High for integrators. *Workaround:* normalizer mirroring bee-cli plus tests; unknown shapes are ignored, never guessed. *Request:* publish per-event JSON schemas, sample payloads and timestamp units.
 

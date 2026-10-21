@@ -3,7 +3,7 @@
 Usage: BEE_TOKEN=... uv run python scripts/bee-live-probe.py [--seconds 120] [--out docs/evidence/bee-live-probe.json]
 
 The report keeps only HTTP statuses, event types, JSON key paths, value types, counts and whether
-DONE/IRL's normalizer accepted each event. It never writes transcript text, todo text, names,
+Muni's normalizer accepted each event. It never writes transcript text, todo text, names,
 locations or the token. Run it while speaking a few promises near the Bee device to exercise the stream.
 """
 

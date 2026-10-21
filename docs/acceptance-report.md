@@ -3,7 +3,7 @@
 Dated 20 October 2026. Produced from `scripts/verify-release.py`, the [acceptance manifest](acceptance-manifest.json) and the evidence linked below. This is an engineering self-assessment; the spec's independent release review (P0-055) has **not** happened.
 
 ```text
-DONE/IRL Release Report
+Muni Release Report
 -----------------------
 Target: FULL_ORIGINAL_VISION_COMPLETE (unchanged; see release-target.md)
 Verdict: NOT_COMPLETE

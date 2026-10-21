@@ -187,7 +187,7 @@ public final class MainActivity extends Activity {
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         input.setImeOptions(EditorInfo.IME_ACTION_GO);
         input.setText(base);
-        AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Your DONE/IRL backend").setMessage("Use a private HTTPS service. Debug builds also allow a local development HTTP server. Sign in with owner or judge credentials on the next screen.")
+        AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Your Muni backend").setMessage("Use a private HTTPS service. Debug builds also allow a local development HTTP server. Sign in with owner or judge credentials on the next screen.")
             .setView(input).setPositiveButton("Connect", (d, which) -> connectTo(input.getText().toString()))
             .setNegativeButton("Cancel", null).create();
         // Remote keyboards submit with Go/Enter; the Connect button stays reachable with D-pad Down.

@@ -4,7 +4,7 @@ Fill-in-ready text for the owner's Devpost form. Items marked **OWNER** need the
 
 ## Basics
 
-- **Name:** DONE/IRL
+- **Name:** Muni
 - **Tagline:** APIs lie. Reality doesn't.
 - **Primary track:** Alexa+ (self-hosted MCP server, Streamable HTTP `2025-11-25`, plus a clearly labelled simulated Alexa+ experience in the web app).
 - **Mini challenges:** AWS Builder (live AWS stack, below). Open Source — Agent Skill PR https://github.com/AmazonAppDev/devices-agent-skills/pull/16.
@@ -14,7 +14,7 @@ Fill-in-ready text for the owner's Devpost form. Items marked **OWNER** need the
 
 ## Description
 
-Assistants remember what you said, then treat a reminder, a courier's "delivered" or a model's `completed=true` as if it were reality. DONE/IRL is a commitment daemon for the home that refuses to call anything done until evidence says so.
+Assistants remember what you said, then treat a reminder, a courier's "delivered" or a model's `completed=true` as if it were reality. Muni is a commitment daemon for the home that refuses to call anything done until evidence says so.
 
 You never say "set a reminder". Spoken promises — "I'll call Mom tonight", "I'll pay the electricity bill by Friday", "I'll take out the bins every Monday", a family member's "can you pick up groceries?" — compile into durable *physical state contracts* with a counterparty, a deadline or trigger (arriving home, before TV), a recurrence and a verification method. A scheduler nudges quietly at T-60, escalates at T-25 only if you are not demonstrably on it, and records a miss honestly. Saying "I already called her" moves the promise to *evidence pending*, never to done.
 
@@ -56,7 +56,7 @@ The repository's first commit is dated 20 October 2026 and all code was written 
 
 | Time | Shot |
 |---|---|
-| 0:00–0:12 | Hook: "Today's assistants know what you said. DONE/IRL proves what happened." Live URL on screen. |
+| 0:00–0:12 | Hook: "Today's assistants know what you said. Muni proves what happened." Live URL on screen. |
 | 0:12–0:35 | Everyday promises spoken/typed → contracts appear with deadlines, triggers, recurrence; Alexa+ panel "what did I promise today?" with MCP log. |
 | 0:35–0:58 | Courier claim → real-footage deposit vs fake-out; custody stays active; watchdog. |
 | 0:58–1:15 | T-60 silent / T-25 active (phone push), meeting verified only by evidence. |
@@ -64,4 +64,4 @@ The repository's first commit is dated 20 October 2026 and all code was written 
 | 1:40–1:55 | Arrival with drinks not visible → private check, no false accusation. |
 | 1:55–2:35 | TV app (emulator/Vega) with D-pad → Reality-Lock: MediaPipe squats 14 locked → 15 unlocked. |
 | 2:35–2:55 | AWS architecture + source labels + "never fake done" safeguards. |
-| 2:55–3:00 | "DONE/IRL. APIs lie. Reality doesn't." |
+| 2:55–3:00 | "Muni. APIs lie. Reality doesn't." |

@@ -1,6 +1,6 @@
-# DONE/IRL
+# Muni
 
-**APIs lie. Reality doesn’t.** DONE/IRL is a commitment daemon for the home. It hears the promises you make in passing, turns each one into a durable *physical state contract*, watches for real evidence, nudges you early (T-60 quietly, T-25 only if you are not on it), and refuses to call anything **done** until the evidence says so.
+**Promises, kept. Proven by reality.** Muni is a commitment keeper for the home. It hears the promises you make in passing, turns each one into a durable *physical state contract*, watches for real evidence, nudges you early (T-60 quietly, T-25 only if you are not on it), and refuses to call anything **done** until the evidence says so.
 
 - **Everyday promises, no reminder commands.** "I'll pay the electricity bill by Friday", "I'm going to call Mom tonight", "I'll take out the bins every Monday", "Can you pick up groceries?" become typed contracts with deadlines or triggers (arriving home, before TV), recurring series, and a private 08:00 briefing. Saying "I already called her" is a lead, not proof: the contract waits for your confirmation (`USER_CONFIRMED`) or sensor evidence.
 - **Alexa+ (MCP).** A self-hosted Streamable HTTP MCP server (`2025-11-25`) with 11 tools, plus a clearly labelled *simulated Alexa+* voice panel that calls those tools over real JSON-RPC.

@@ -436,7 +436,7 @@ export default function AlexaSimulator({
       </div>
       {!compact && (
         <p className="alexa-footnote">
-          Web experience calling the DONE/IRL MCP server
+          Web experience calling the Muni MCP server
         </p>
       )}
     </section>

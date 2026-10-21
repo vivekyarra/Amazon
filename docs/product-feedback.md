@@ -1,12 +1,12 @@
 # Product feedback — observed use only
 
-Written from what actually happened while building DONE/IRL (October 2026). Tools that have not yet been exercised against a live account say so explicitly; nothing here is inferred from documentation alone. Friction entries with full repro steps: [friction-log.md](friction-log.md).
+Written from what actually happened while building Muni (October 2026). Tools that have not yet been exercised against a live account say so explicitly; nothing here is inferred from documentation alone. Friction entries with full repro steps: [friction-log.md](friction-log.md).
 
 ## Alexa+ — MCP Streamable HTTP (primary track)
 
 | Field | Feedback |
 |---|---|
-| Purpose | DONE/IRL's orchestrator is a self-hosted MCP server (`apps/mcp-orchestrator/done_irl/api.py`, `mcp_ext.py`) exposing 11 tools: the five original actions (`compile_ambient_commitment`, `spawn_watchdog_subagent`, `evaluate_deadline_escalation`, `dispatch_police_evidence_dossier`, `bridge_ring_camera_to_firetv`) plus read-only state tools. A labelled simulated Alexa+ panel calls them over real JSON-RPC. |
+| Purpose | Muni's orchestrator is a self-hosted MCP server (`apps/mcp-orchestrator/done_irl/api.py`, `mcp_ext.py`) exposing 11 tools: the five original actions (`compile_ambient_commitment`, `spawn_watchdog_subagent`, `evaluate_deadline_escalation`, `dispatch_police_evidence_dossier`, `bridge_ring_camera_to_firetv`) plus read-only state tools. A labelled simulated Alexa+ panel calls them over real JSON-RPC. |
 | Zero-to-hello-world | Under an hour with the official Python SDK (FastMCP, stateless JSON responses) mounted in FastAPI. Hosted HTTPS took longer because of Host validation (below). |
 | Best part | Streamable HTTP is just HTTP: the same authenticated household API backs REST, the browser panel and any MCP client; `2025-11-25` negotiation and tool discovery worked with the official SDK client and the MCP Inspector CLI. |
 | Friction | The SDK's DNS-rebinding defaults allow only localhost, so the first public deployment answered `421 Invalid Host header` (friction A5). No public way to connect a self-hosted server to a real Alexa+ device for testing. |
@@ -56,7 +56,7 @@ Being evaluated in WSL2 (KVM available). Feedback will be recorded here only aft
 
 ## AWS (AWS Builder mini challenge)
 
-| Service | How DONE/IRL uses it (live in stack `done-irl-judge`) |
+| Service | How Muni uses it (live in stack `done-irl-judge`) |
 |---|---|
 | CloudFormation | `infra/aws/judge-demo.yaml` provisions everything below; `cfn-lint` in CI. |
 | EC2 + SSM | Single active reducer building an exact public commit; SSM Run Command redeploys (`scripts/judge-redeploy.sh`), no SSH. |

@@ -1,4 +1,4 @@
-# Vega OS device test report: DONE/IRL Fire TV HUD
+# Vega OS device test report: Muni Fire TV HUD
 
 **Runtime label: Vega Virtual Device (official simulator). This was not a physical Fire TV
 device.**

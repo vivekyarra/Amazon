@@ -1,4 +1,4 @@
-// Alexa+ web experience — deterministic agentic router over the DONE/IRL MCP server.
+// Alexa+ web experience — deterministic agentic router over the Muni MCP server.
 // No LLM and no Alexa device: typed or browser-recognized speech is matched to intents with
 // fixed rules, and each intent is answered only from real JSON-RPC tool results returned by
 // /mcp (same origin, authenticated by the judge session cookie).

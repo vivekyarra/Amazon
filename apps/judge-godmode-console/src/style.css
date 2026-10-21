@@ -1,4 +1,4 @@
-/* DONE/IRL console — design tokens, app shell and views. Dark, TV/video friendly. */
+/* Muni console — design tokens, app shell and views. Dark, TV/video friendly. */
 @property --ring {
   syntax: "<percentage>";
   inherits: false;

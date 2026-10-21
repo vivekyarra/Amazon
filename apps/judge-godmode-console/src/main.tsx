@@ -595,9 +595,7 @@ function App() {
         <div className="login-card">
           <Brand />
           <h1>Life makes promises. Reality keeps score.</h1>
-          <p className="login-lede">
-            Sign in to your private DONE/IRL workspace.
-          </p>
+          <p className="login-lede">Sign in to your private Muni workspace.</p>
           <form onSubmit={login}>
             <label>
               Workspace account

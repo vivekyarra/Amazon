@@ -47,7 +47,7 @@ export const human = (s: string) => s.toLowerCase().replaceAll("_", " ");
 const rewrites: [RegExp, string][] = [
   [
     /Judge console offers a labeled SIMULATED Alexa\+ experience over the real MCP server\./,
-    "The Alexa+ web experience calls the DONE/IRL MCP server.",
+    "The Alexa+ web experience calls the Muni MCP server.",
   ],
   [
     /Generated (\d+)-second synthetic clip\./,
@@ -269,9 +269,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       <span className="brand-symbol" aria-hidden>
         <CheckCheck size={compact ? 16 : 18} strokeWidth={2.6} />
       </span>
-      <strong>
-        DONE<span>/</span>IRL
-      </strong>
+      <strong>Muni</strong>
     </div>
   );
 }

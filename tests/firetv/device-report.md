@@ -52,7 +52,7 @@ The machine-readable log is `docs/evidence/firetv/run-results.json`.
 | Check | Observed |
 |---|---|
 | Install / cold launch | `Success`; `am start -W` `Status: ok`, TotalTime 7944 ms in the final run (3.8–8.9 s across runs; software GPU) |
-| Leanback registration | `cmd package query-activities -c LEANBACK_LAUNCHER` lists `dev.doneirl.tv.debug/.MainActivity` with label DONE/IRL and banner. Home screenshot not kept because it shows third-party content |
+| Leanback registration | `cmd package query-activities -c LEANBACK_LAUNCHER` lists `dev.doneirl.tv.debug/.MainActivity` with label Muni and banner. Home screenshot not kept because it shows third-party content |
 | Connection | dialog opens on first run; URL typed, Enter/Go on the remote keyboard connects (debug build permits local HTTP) |
 | Sign-in | D-pad to username → Back closes IME → Down to password → typed (length verified) → Down → Enter: signed in as the demo household |
 | Live backend state | after `/api/admin/reset` and scenarios 1–6: 5 contracts, 1 incident; TV views show the same state (Incident review shows “A package moved. Was it authorized?”, awaiting human decision) |

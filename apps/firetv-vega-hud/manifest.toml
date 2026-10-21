@@ -1,7 +1,7 @@
 schema-version = 1
 
 [package]
-title = "DONE/IRL Command HUD"
+title = "Muni"
 version = "0.1.0"
 id = "com.doneirl.hud"
 

@@ -56,7 +56,7 @@ def test_only_new_alerts_are_pushed_with_generic_incident_copy(app, post, monkey
     kinds = {p["title"] for p in sent}
     assert any("Delivery needs review" in t for t in kinds)
     mismatch = next(p for p in sent if "Delivery" in p["title"])
-    assert mismatch["body"] == "Open DONE/IRL to review."  # no incident detail on the lock screen
+    assert mismatch["body"] == "Open Muni to review."  # no incident detail on the lock screen
     prep = next(p for p in sent if "Coming up" in p["title"])
     assert prep["silent"] is True and "teacher" in prep["body"].lower()
     s = app.state.store.read("demo")
@@ -118,11 +118,11 @@ def test_real_vapid_signing_and_encryption_reach_the_push_service(tmp_path, monk
 
     monkeypatch.setattr(pywebpush.requests, "post", fake_post)
     pusher = PushNotifier(tmp_path)
-    status = pusher.send(SUB, {"title": "DONE/IRL", "body": "x"})
+    status = pusher.send(SUB, {"title": "Muni", "body": "x"})
     assert status == "ACCEPTED_BY_PUSH_SERVICE"
     assert seen["url"] == SUB["endpoint"]
     assert seen["headers"]["Authorization"].startswith("vapid t=") and seen["headers"]["Content-Encoding"] == "aes128gcm"
-    assert b"DONE/IRL" not in seen["body"]  # payload is encrypted
+    assert b"Muni" not in seen["body"]  # payload is encrypted
 
 
 def test_unreachable_endpoint_is_recorded_not_raised(tmp_path, monkeypatch):

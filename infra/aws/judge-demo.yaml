@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  DONE/IRL public judge deployment. One EC2 reducer in DEMO_MODE (synthetic, clearly labeled scenarios)
+  Muni public judge deployment. One EC2 reducer in DEMO_MODE (synthetic, clearly labeled scenarios)
   behind Caddy automatic HTTPS (Let's Encrypt, <elastic-ip>.sslip.io), with live DynamoDB/S3/KMS/
   EventBridge Scheduler/SQS coordination.
 Parameters:
@@ -174,7 +174,7 @@ Resources:
   ServiceGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: DONE/IRL public HTTPS (and ACME HTTP challenge) through Caddy only; no SSH
+      GroupDescription: Muni public HTTPS (and ACME HTTP challenge) through Caddy only; no SSH
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
@@ -256,7 +256,7 @@ Resources:
           docker build -q --build-arg ENABLE_LIVE_RUNTIME=true -f /srv/done-irl/src/infra/local/Dockerfile -t 'done-irl:${GitCommit}' /srv/done-irl/src
           cat > /etc/systemd/system/done-irl.service <<'UNIT'
           [Unit]
-          Description=DONE/IRL judge reducer (DEMO_MODE, single active writer)
+          Description=Muni judge reducer (DEMO_MODE, single active writer)
           Requires=docker.service
           After=docker.service network-online.target
           [Service]
@@ -274,7 +274,7 @@ Resources:
           printf '%s {\n  encode zstd gzip\n  reverse_proxy done-irl:8080 {\n    flush_interval -1\n  }\n}\n' "$PUBLIC_HOST" > /srv/done-irl/Caddyfile
           cat > /etc/systemd/system/done-irl-https.service <<'UNIT'
           [Unit]
-          Description=DONE/IRL HTTPS terminator (Caddy, automatic Let's Encrypt)
+          Description=Muni HTTPS terminator (Caddy, automatic Let's Encrypt)
           Requires=docker.service done-irl.service
           After=done-irl.service
           [Service]

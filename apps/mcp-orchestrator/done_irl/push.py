@@ -88,12 +88,12 @@ class PushNotifier:
 
     @staticmethod
     def message(alert, title=None):
-        heading, silent = COPY.get(alert["kind"], ("DONE/IRL update", False))
+        heading, silent = COPY.get(alert["kind"], ("Muni update", False))
         if alert["kind"] == "DAILY_BRIEFING":
             body = alert["message"][:240]
         else:
-            body = "Open DONE/IRL to review." if alert["kind"] in PRIVATE_KINDS or not title else title
-        return {"title": "DONE/IRL · " + heading, "body": body, "silent": silent,
+            body = "Open Muni to review." if alert["kind"] in PRIVATE_KINDS or not title else title
+        return {"title": "Muni · " + heading, "body": body, "silent": silent,
                 "url": alert.get("action") or "/", "tag": alert["alert_id"]}
 
     def pending(self, s):

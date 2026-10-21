@@ -99,7 +99,7 @@ def create_app(data_dir=None, passwords=None):
         if any(not os.getenv(name) for name in required):
             raise RuntimeError("AWS synchronization configuration is incomplete.")
     mcp = FastMCP(
-        "DONE/IRL",
+        "Muni",
         stateless_http=True,
         json_response=True,
         streamable_http_path="/",
@@ -329,7 +329,7 @@ def create_app(data_dir=None, passwords=None):
                 await recorded_demo.shutdown()
                 await bee.client.aclose()
 
-    app = FastAPI(title="DONE/IRL", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Muni", version="0.1.0", lifespan=lifespan)
     app.state.store = store
     app.state.runtime = runtime
     app.state.camera = camera
@@ -985,7 +985,7 @@ def create_app(data_dir=None, passwords=None):
             )
         cv2.putText(
             frame,
-            "DONE/IRL - camera frame",
+            "Muni - camera frame",
             (18, 35),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,

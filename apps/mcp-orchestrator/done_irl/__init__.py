@@ -1,1 +1,1 @@
-"""DONE/IRL's shared orchestration and verification service."""
+"""Muni's shared orchestration and verification service."""

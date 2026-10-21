@@ -143,7 +143,7 @@ def annotate(frame, points, studio=None):
     cv2.rectangle(image, (0, 0), (w, 34), (20, 20, 20), -1)
     cv2.putText(
         image,
-        "DONE/IRL - Reality-Lock studio",
+        "Muni - Reality-Lock studio",
         (10, 23),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.5,

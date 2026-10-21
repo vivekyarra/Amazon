@@ -204,7 +204,7 @@ export const App = () => {
   if (screen === 'login') {
     return (
       <View style={st.root}>
-        <Text style={st.brand}>DONE/IRL</Text>
+        <Text style={st.brand}>Muni</Text>
         <Text style={st.sub}>Fire TV command HUD - Vega OS</Text>
         <View style={st.loginBox}>
           <FocusButton
@@ -241,7 +241,7 @@ export const App = () => {
   const header = (
     <View style={st.header}>
       <View style={st.headerMain}>
-        <Text style={st.brandSmall}>DONE/IRL</Text>
+        <Text style={st.brandSmall}>Muni</Text>
         <Text style={st.meta}>
           {(clientRef.current && clientRef.current.user) || '?'} ({clientRef.current && clientRef.current.role}) -{' '}
           {state && state.household_id} - {state && state.source_mode} - clock {state && state.clock_mode}{' '}
@@ -525,7 +525,7 @@ export const App = () => {
         <View style={st.card}>
           <Text style={st.h2}>Entertainment unlocked</Text>
           <Text style={st.body}>
-            The in-app gate is open because the backend reports gate {studio && studio.gate}. DONE/IRL does not control other apps.
+            The in-app gate is open because the backend reports gate {studio && studio.gate}. Muni does not control other apps.
           </Text>
           <FocusButton label="Back to studio" preferred onPress={() => setShowEntertainment(false)} />
         </View>

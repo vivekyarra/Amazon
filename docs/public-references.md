@@ -4,7 +4,7 @@ Implementation follows the [official Ring developer documentation](https://devel
 
 The public repository [Srustika-18/squat-counter](https://github.com/Srustika-18/squat-counter/tree/9b64cbf1c1f6bfdbfd87a158911dc624d5573c14) was inspected as a reference and provides the **14.52-second video.mp4** used for a limited positive human-pose model check. No counter implementation was copied. The sample is labeled `PUBLIC_LICENSED_RECORDED`, never consented household footage or a live Ring source. Its SHA-256 and actual result are in [the model-check evidence](evidence/mediapipe-public-reference.json). `scripts/check-public-pose.py` downloads only the pinned reference/model, checks both hashes, runs actual MediaPipe and requires a limited positive result. The footage does not meet the fifteen-rep acceptance fixture.
 
-The repository's MIT license is reproduced below for attribution. The original media remains in ignored local artifacts rather than being republished as an original DONE/IRL asset.
+The repository's MIT license is reproduced below for attribution. The original media remains in ignored local artifacts rather than being republished as an original Muni asset.
 
 > MIT License
 >
