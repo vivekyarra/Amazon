@@ -15,9 +15,9 @@
 | Real-scene vision | VERIFIED on licensed recorded footage | 10/10 clips correct (`scene-vision.json`); not Ring |
 | Pose / Reality-Lock | VERIFIED (generated fixture) | real MediaPipe: 15/15 unlock, 14 locked, half/frozen/looped rejected |
 | Fire OS APK on TV runtime | VERIFIED on Android TV emulator | 33/33 D-pad checks, restart persistence; not a physical Fire TV |
-| Vega OS app | IN_PROGRESS | Vega SDK + Virtual Device build in WSL (KVM available) |
+| Vega OS app | VERIFIED on Vega Virtual Device | React Native for Vega HUD, all four views by D-pad against the live HTTPS backend ([report](../tests/firetv/vega-device-report.md)) |
 | Privacy/consent | VERIFIED | exclusions, masks, retention, disconnect, deletion tests |
-| Companion Web Push | IMPLEMENTED + tested | VAPID push, generic lock-screen copy; not yet observed on a real phone |
+| Companion Web Push | IMPLEMENTED + tested | VAPID signing/encryption verified end to end against a stubbed push service; endpoint allowlist; not yet observed on a real phone |
 | Ring live | BLOCKED (ready) | `scripts/ring-live-probe.py` waits for a Playground token |
 | Open-source Agent Skill | PR OPEN | `packages/agent-skills/evidence-backed-commitments` → https://github.com/AmazonAppDev/devices-agent-skills/pull/16 |
 

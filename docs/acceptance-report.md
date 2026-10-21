@@ -9,9 +9,9 @@ Target: FULL_ORIGINAL_VISION_COMPLETE (unchanged; see release-target.md)
 Verdict: NOT_COMPLETE
 Commit: feat/completion head at time of writing (see git log); CI run 39425459386 green on f7d996c
 Primary track: Alexa+ — self-hosted MCP Streamable HTTP (2025-11-25) live on hosted HTTPS + labelled simulated Alexa+ web experience
-P0 verified: 34/55 (9 BLOCKED, 12 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
-Automated tests: backend pytest 176 passed (full suite incl. real-video scene/pose, Windows 11); CI 4/4 jobs green; Playwright journeys in CI
-Fire TV device/simulator: Android TV API 30 emulator, Fire OS APK, 33/33 D-pad checks (tests/firetv/device-report.md); physical Fire TV untested; Vega Virtual Device in progress
+P0 verified: 38/55 (6 BLOCKED, 11 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
+Automated tests: backend pytest 211 passed (incl. real-video scene/pose and 27 QA regressions); Playwright 5/5; CI 5/5 jobs green incl. Android TV emulator D-pad journey
+Fire TV device/simulator: Vega OS app on the official Vega Virtual Device (tests/firetv/vega-device-report.md) and Fire OS APK on an Android TV API 30 emulator (33/33, in CI); physical Fire TV untested
 Bee: BLOCKED (adapter + redacted probe ready; no BEE_TOKEN run yet); canonical day uses SIMULATED_VERIFIED fixtures
 Alexa+/MCP: LIVE_VERIFIED MCP server (hosted initialize + tool call); Alexa+ device NOT_CONNECTED; simulated experience SIMULATED_VERIFIED
 Ring: BLOCKED live (adapter, webhook HMAC, WHEP decode, redacted probe ready); recorded real-scene vision verified on licensed footage
@@ -27,9 +27,9 @@ Submission: NOT_READY (public video and Devpost entry need the owner's accounts)
 
 1. Live Bee data through a real device/account (P0-008) — needs the owner's `BEE_TOKEN`.
 2. Live Ring camera / simulator API run, WHEP video into the TV (P0-018, P0-019, P0-038) — needs a Playground token and an authorized device.
-3. Fire OS **device** or **Vega Virtual Device** run (P0-036, P0-047 device test in CI).
+3. Physical Fire TV device run (simulator/emulator runs done: P0-036, P0-047).
 4. Recorded-Ring threshold path (P0-032) and Ring-backed watchdog reconciliation (P0-022) beyond recorded stock footage.
-5. Public under-three-minute video and Devpost submission (P0-048, P0-050, P0-051), Open Source PR link (P0-052).
+5. Public under-three-minute video upload and Devpost submission (P0-048, P0-051). Open Source PR: https://github.com/AmazonAppDev/devices-agent-skills/pull/16.
 6. Remaining engineering hardening rows (P0-004, P0-006, P0-007, P0-027, P0-029, P0-044, P0-045, P0-054) need live-provider faults or device views to be exercised.
 7. Independent release review (P0-055).
 
