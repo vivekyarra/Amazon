@@ -117,7 +117,7 @@ def revise(s, c, status, reason, evidence_id=None):
             "BEE_CONVERSATION_AUDIT": {"AUTHORIZED_PARTICIPATION", "USER_CONFIRMATION"},
             "AUTHORIZED_MANUAL_CONFIRMATION": {"USER_CONFIRMATION"},
             "RING_THRESHOLD_OBJECT_SCAN": {"USER_CONFIRMATION"},
-            "FIRE_TV_LIVE_POSE_CAMERA": {"POSE_15_CYCLES"},
+            "FIRE_TV_LIVE_POSE_CAMERA": {"POSE_15_CYCLES", "POSE_CYCLES"},
         }
         policy = (
             by_modality.get(c["verification_modality"], set())
@@ -131,6 +131,9 @@ def revise(s, c, status, reason, evidence_id=None):
     c.update(status=status, revision=c["revision"] + 1, updated_at=s["now"])
     if evidence_id:
         c["evidence_ids"].append(evidence_id)
+    if status == "VERIFIED":
+        # Spec 4.3: an owner tap (USER_CONFIRMED) is never presented as sensor proof.
+        c["verification_provenance"] = record["provenance"]
     if status == "VERIFIED":
         roll_recurrence(s, c)
     emit(
@@ -288,7 +291,7 @@ def compile_bee(s, bee: BeeInput):
 
     try:
         zone = ZoneInfo(bee.timezone)
-    except ZoneInfoNotFoundError:
+    except (ZoneInfoNotFoundError, ValueError):
         raise ApiError(422, "INVALID_TIMEZONE", "Use a valid IANA timezone.")
     existing = [
         e
@@ -306,7 +309,7 @@ def compile_bee(s, bee: BeeInput):
     if nl.INJECTION.search(text):
         emit(s, "commitment.rejected_input", {"source_event_id": bee.event_id, "decision": "POLICY_TEXT_IGNORED"})
         return []
-    if bee.source_kind == "BEE_TODO":
+    if bee.source_kind in {"BEE_TODO", "BEE_TODO_COMPLETED"}:
         return _compile_bee_todo(s, bee, zone)
     claim = nl.completion_claim(bee.utterance)
     if claim and bee.speaker == "SELF":
@@ -316,8 +319,8 @@ def compile_bee(s, bee: BeeInput):
         r"\b(i(?:'ll| will| promise)|i promised|i need to|i should|can you|please|bring)\b", text
     ) and not nl.PROMISE.search(text):
         return []
-    if re.search(r"\b(i will not|i won't|i cannot|i can't|do not|don't)\b", text) and not re.search(
-        r"don't (?:let me )?forget", text
+    if re.search(r"\b(i will not|i won't|i'll not|i cannot|i can't|do not|don't|did not|didn't)\b", text) and not (
+        nl.NOT_FORGET.search(text)
     ):
         emit(
             s,
@@ -369,7 +372,7 @@ def compile_bee(s, bee: BeeInput):
         if re.search(pattern, text):
             due = None
             if hm:
-                match = re.search(r"(?:at|before|by)\s+(\d{1,2})(?::(\d\d))?\s*(am|pm)", text)
+                match = re.search(r"(?:at|before|by)\s+(1[0-2]|0?[1-9])(?:[:.]([0-5]\d))?\s*(am|pm)", text)
                 hh, mm = map(int, hm.split(":"))
                 if match:
                     hh = int(match[1]) % 12 + (12 if match[3] == "pm" else 0)
@@ -380,7 +383,7 @@ def compile_bee(s, bee: BeeInput):
                     .astimezone(timezone.utc)
                     .isoformat()
                 )
-            created.append(_upsert(s, bee, key, title, person, modality, due, trigger, uncertain))
+            created.append(_upsert(s, bee, key, title, person, modality, due, trigger, uncertain)[0])
     if not created:
         now_local = bee.occurred_at.astimezone(zone)
         for cand in nl.parse(bee.utterance, now_local, request=bee.speaker != "SELF"):
@@ -392,7 +395,7 @@ def compile_bee(s, bee: BeeInput):
                 )
                 continue
             due = cand["due_local"].astimezone(timezone.utc).isoformat() if cand["due_local"] else None
-            cid = _upsert(
+            cid, writable = _upsert(
                 s,
                 bee,
                 cand["key"],
@@ -403,6 +406,9 @@ def compile_bee(s, bee: BeeInput):
                 cand["trigger"],
                 bee.speaker != "SELF" or cand["hedged"],
             )
+            created.append(cid)
+            if not writable:
+                continue
             c = next(c for c in s["contracts"] if c["contract_id"] == cid)
             c.setdefault("commitment_origin", "GENERAL_PARSER")
             c.update(
@@ -415,72 +421,101 @@ def compile_bee(s, bee: BeeInput):
             )
             if cand["modality"] == "AUTHORIZED_MANUAL_CONFIRMATION":
                 c["verification_note"] = "No sensor can prove this task; completion is recorded as USER_CONFIRMED."
-            created.append(cid)
     for cid in created:
         next(c for c in s["contracts"] if c["contract_id"] == cid)["timezone"] = bee.timezone
     return created
 
 
 def _compile_bee_todo(s, bee, zone):
-    """A todo Bee itself extracted is the wearer's own list item: track it, keep Bee's alarm."""
+    """A todo Bee itself extracted is the wearer's own list item: track it, keep Bee's alarm.
+
+    The contract key is bound to the Bee todo id, so edits amend it; a todo the wearer ticks off in
+    Bee closes it as USER_CONFIRMED (the owner's own action), never as sensor proof.
+    """
+    todo_id = bee.event_id.split(":")[2] if bee.event_id.startswith("bee:todo:") else None
+    key = "gen_beetodo_" + re.sub(r"[^A-Za-z0-9_-]", "", todo_id)[:40] if todo_id else None
+    if bee.source_kind == "BEE_TODO_COMPLETED":
+        c = next((c for c in s["contracts"] if key and c["key"] == key), None)
+        if not c or c["status"] in TERMINAL or c["verification_modality"] == "FIRE_TV_LIVE_POSE_CAMERA":
+            return []
+        c["completion_claim"] = dict(source_event_id=bee.event_id, utterance="Marked done in Bee", at=s["now"])
+        if c["status"] in {"ACTIVE", "ENGAGED"}:
+            revise(s, c, "EVIDENCE_PENDING", "Marked done in the Bee app; confirm to close (USER_CONFIRMED).")
+        return [c["contract_id"]]
     text = bee.utterance.strip()
     phrased = "I need to " + text[:1].lower() + text[1:]
     cands = [c for c in nl.parse(phrased, bee.occurred_at.astimezone(zone)) if not c.get("negated")]
     if not cands:
         return []
-    created = []
-    for cand in cands[:1]:
-        due = cand["due_local"].astimezone(timezone.utc).isoformat() if cand["due_local"] else None
-        if not due and bee.due_at:
-            due = bee.due_at.astimezone(timezone.utc).isoformat()
-        cid = _upsert(s, bee, cand["key"], cand["title"], cand["counterparty"], cand["modality"], due,
-                      cand["trigger"], False)
+    cand = cands[0]
+    due = cand["due_local"].astimezone(timezone.utc).isoformat() if cand["due_local"] else None
+    if bee.due_at:
+        due = bee.due_at.astimezone(timezone.utc).isoformat()
+    cid, writable = _upsert(s, bee, key or cand["key"], cand["title"], cand["counterparty"], cand["modality"], due,
+                            cand["trigger"], bee.speaker != "SELF")
+    if writable:
         c = next(c for c in s["contracts"] if c["contract_id"] == cid)
         c.update(
-            commitment_origin="BEE_TODO",
+            commitment_origin="BEE_TODO" if bee.speaker == "SELF" else "UNVERIFIED_TODO_INPUT",
             type=cand["type"],
             item_class=cand["item_class"],
             target_reps=cand["reps"],
             deadline_assumption=None if bee.due_at else cand["assumption"],
             original_utterance=bee.utterance,
             timezone=bee.timezone,
+            recurrence=cand.get("recurrence"),
         )
         if cand["modality"] == "AUTHORIZED_MANUAL_CONFIRMATION":
             c["verification_note"] = "No sensor can prove this task; completion is recorded as USER_CONFIRMED."
-        created.append(cid)
-    return created
+    return [cid]
 
 
 def _upsert(s, bee, key, title, person, modality, due, trigger, uncertain):
+    """Create or amend a contract. Returns (contract_id, writable)."""
     existing_c = next((c for c in s["contracts"] if c["key"] == key), None)
-    if existing_c and due and existing_c["due_at"] != due and existing_c["status"] not in TERMINAL:
-        existing_c["due_at"] = due
-        existing_c["revision"] += 1
-        existing_c["scheduled_jobs"] = [
-            dict(
-                kind=t,
-                at=(datetime.fromisoformat(due) - timedelta(minutes=m)).isoformat(),
-                status="PENDING",
-            )
-            for t, m in [("T60", 60), ("T25", 25), ("DEADLINE", 0)]
-        ]
-        if not any(a.get("contract_id") == existing_c["contract_id"] for a in s["subagents"]):
-            s["subagents"].append(
+    if existing_c and existing_c["status"] in TERMINAL:
+        # A promise repeated after it was resolved is a new obligation (e.g. trash again tomorrow).
+        day = bee.occurred_at.date().isoformat()
+        key = f"{key}@{day}"
+        if any(c["key"] == key for c in s["contracts"]):
+            key = f"{key}#{digest(bee.event_id)[:6]}"
+        existing_c = next((c for c in s["contracts"] if c["key"] == key), None)
+    if existing_c:
+        accepted = existing_c["status"] not in {"NEEDS_CONFIRMATION", "DISCOVERED"}
+        if bee.speaker != "SELF" and accepted:
+            existing_c["proposed_amendment"] = dict(due_at=due, source_event_id=bee.event_id, at=s["now"])
+            emit(s, "commitment.amendment_proposed",
+                 dict(contract_id=existing_c["contract_id"], reason="Another speaker; owner confirmation required"))
+            return existing_c["contract_id"], False
+        if due and existing_c["due_at"] != due:
+            existing_c["due_at"] = due
+            existing_c["revision"] += 1
+            existing_c["scheduled_jobs"] = [
                 dict(
-                    subagent_id="social_" + key,
-                    kind="SocialGraphAuditor",
-                    contract_id=existing_c["contract_id"],
-                    status="WATCHING",
-                    last_observation_at=s["now"],
+                    kind=t,
+                    at=(datetime.fromisoformat(due) - timedelta(minutes=m)).isoformat(),
+                    status="PENDING",
                 )
+                for t, m in [("T60", 60), ("T25", 25), ("DEADLINE", 0)]
+            ]
+            if not any(a.get("contract_id") == existing_c["contract_id"] for a in s["subagents"]):
+                s["subagents"].append(
+                    dict(
+                        subagent_id="social_" + key,
+                        kind="SocialGraphAuditor",
+                        contract_id=existing_c["contract_id"],
+                        status="WATCHING",
+                        last_observation_at=s["now"],
+                    )
+                )
+            emit(
+                s,
+                "commitment.updated",
+                dict(contract_id=existing_c["contract_id"], reason="Authorized deadline amendment"),
             )
-        emit(
-            s,
-            "commitment.updated",
-            dict(contract_id=existing_c["contract_id"], reason="Authorized deadline amendment"),
-        )
-        return existing_c["contract_id"]
-    return create_contract(s, key, title, bee.utterance, person, modality, due, trigger, uncertain)["contract_id"]
+        return existing_c["contract_id"], bee.speaker == "SELF"
+    c = create_contract(s, key, title, bee.utterance, person, modality, due, trigger, uncertain)
+    return c["contract_id"], True
 
 
 def _completion_claim(s, bee, claim):
@@ -490,7 +525,10 @@ def _completion_claim(s, bee, claim):
     for c in s["contracts"]:
         if not c["key"].startswith("gen_") or c["status"] not in {"ACTIVE", "ENGAGED", "MISSED"}:
             continue
-        overlap = len(words & nl.tokens(c["title"] + " " + c["counterparty"]["label"]))
+        target = nl.tokens(c["title"] + " " + c["counterparty"]["label"])
+        if not nl.specific(words) & nl.specific(target):
+            continue
+        overlap = len(words & target)
         if overlap > score:
             best, score = c, overlap
     if not best or score < 2:
@@ -503,15 +541,31 @@ def _completion_claim(s, bee, claim):
         emit(s, "commitment.updated", dict(contract_id=best["contract_id"], reason="Late completion claim recorded"))
 
 
+ROLLABLE = {"ACTIVE", "ENGAGED", "EVIDENCE_PENDING", "MISSED", "VERIFIED"}
+
+
 def roll_recurrence(s, c):
-    """Create the next occurrence of a recurring promise exactly once (after proof or deadline)."""
+    """Create the next occurrence of an accepted recurring promise exactly once (after proof or deadline).
+
+    Never-accepted, rejected or cancelled series stop. After downtime the series jumps to the next
+    future occurrence instead of replaying every missed day. Steps are taken in local days (DST-safe).
+    """
     series = c.get("recurrence")
-    if not series or not c.get("due_at") or c.get("next_occurrence_id"):
+    if not series or not c.get("due_at") or c.get("next_occurrence_id") or c["status"] not in ROLLABLE:
         return None
-    step = timedelta(days=1 if series["freq"] == "DAILY" else 7)
-    due = datetime.fromisoformat(c["due_at"]) + step
+    zone = ZoneInfo(c.get("timezone") or ZONE)
+    local = datetime.fromisoformat(c["due_at"]).astimezone(zone)
+    now = datetime.fromisoformat(s["now"])
+    for _ in range(400):
+        local = nl.next_occurrence(series, local).replace(tzinfo=zone)
+        if local > now:
+            break
+    due = local.astimezone(timezone.utc)
     base = c.get("series_key") or c["key"]
-    key = f"{base}~{due.astimezone(ZoneInfo(c.get('timezone') or ZONE)).date().isoformat()}"
+    key = f"{base}~{local.date().isoformat()}"
+    if any(x["key"] == key for x in s["contracts"]):
+        c["next_occurrence_id"] = next(x["contract_id"] for x in s["contracts"] if x["key"] == key)
+        return None
     nxt = create_contract(
         s, key, c["title"], c["original_utterance"], c["counterparty"]["label"], c["verification_modality"],
         due.isoformat(), c.get("deadline_trigger"), False,
@@ -531,11 +585,9 @@ def morning_briefing(s, current):
     zone = ZoneInfo(s.get("timezone") or ZONE)
     local = current.astimezone(zone)
     today = local.date().isoformat()
-    if s.get("last_briefing_date") == today:
+    if s.get("last_briefing_date") == today or not 8 <= local.hour < 11:
         return
     s["last_briefing_date"] = today
-    if not 8 <= local.hour < 11:
-        return
     open_ = [c for c in s["contracts"] if c["status"] in {"ACTIVE", "ENGAGED", "EVIDENCE_PENDING", "MISSED",
                                                            "NEEDS_CONFIRMATION", "DISPUTED"}]
     if not open_:
@@ -583,7 +635,7 @@ def alert(s, c, kind, message, action=None):
         message=message,
         action=action or "/?contract=" + c["contract_id"],
         at=s["now"],
-        source_mode=MODE,
+        source_mode=s.get("source_mode", MODE),
         provider="AUTHENTICATED_COMPANION",
         delivery_status="STORED_FOR_COMPANION",
         device_delivery_verified=False,
@@ -616,6 +668,9 @@ def tick(s, now):
                     "commitment.engagement_evaluated",
                     dict(contract_id=c["contract_id"], tier=job["kind"], decision="AWAITING_OWNER_CONFIRMATION"),
                 )
+                if job["kind"] == "DEADLINE":
+                    alert(s, c, "CONFIRMATION_REQUEST",
+                          f"You said '{c['title']}' was done. Confirm it in DONE/IRL so it can close.")
             elif job["kind"] == "DEADLINE":
                 revise(
                     s,
@@ -651,7 +706,7 @@ def tick(s, now):
                 )
         if c.get("recurrence") and any(
             j["kind"] == "DEADLINE" and j["status"] in {"EXECUTED", "SKIPPED"} for j in c["scheduled_jobs"]
-        ) and c["status"] != "CANCELLED":
+        ):
             roll_recurrence(s, c)
 
 
@@ -670,8 +725,23 @@ def verify_social(s, db, household, key):
     revise(s, c, "VERIFIED", "Matching authorized participation evidence; simulated source.", ev)
 
 
+def pose_contract(s):
+    """The promise Reality-Lock verifies: the canonical squats or any open pose-camera promise."""
+    c = next((c for c in s["contracts"] if c["key"] == "squats"), None)
+    if c:
+        return c
+    c = next(
+        (c for c in s["contracts"]
+         if c["verification_modality"] == "FIRE_TV_LIVE_POSE_CAMERA" and c["status"] not in TERMINAL),
+        None,
+    )
+    if not c:
+        raise ApiError(409, "PREREQUISITE", "No pending pose-verified promise (e.g. 'I'll do 15 squats before TV').")
+    return c
+
+
 def studio_start(s, source="SYNTHETIC_MARKER_FRAMES", source_mode=MODE):
-    c = contract(s, "squats")
+    c = pose_contract(s)
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Camera processing is paused.")
     if s["studio"]:
@@ -682,6 +752,7 @@ def studio_start(s, source="SYNTHETIC_MARKER_FRAMES", source_mode=MODE):
         source_mode=source_mode,
         source=source,
         status="RUNNING",
+        target_reps=int(c.get("target_reps") or 15),
         count=0,
         phase="STANDING",
         stable=0,
@@ -714,12 +785,13 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 source_mode=session["source_mode"],
             ),
         )
-        if session["count"] == 15 and session["gate"] != "UNLOCKED":
-            c = contract(s, "squats")
+        target = int(session.get("target_reps") or 15)
+        if session["count"] == target and session["gate"] != "UNLOCKED":
+            c = next(c for c in s["contracts"] if c["contract_id"] == session["contract_id"])
             live = session["source"] == "LIVE_RING_WHEP"
             recorded = session["source"] == RECORDED_DEMO_SOURCE
             body = dict(
-                count=15,
+                count=target,
                 source=session["source"],
                 session_id=session["session_id"],
                 verified_reps=session.get("verified_reps", []),
@@ -732,7 +804,7 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 db,
                 household,
                 c,
-                "POSE_15_CYCLES",
+                "POSE_15_CYCLES" if target == 15 else "POSE_CYCLES",
                 body,
                 provenance="LIVE_SENSOR" if live else "RECORDED_DEMO" if recorded else "SYNTHETIC_SENSOR",
                 sensor={
@@ -753,11 +825,11 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 s,
                 c,
                 "VERIFIED",
-                "15 complete MediaPipe cycles from decoded Ring WHEP frames."
+                f"{target} complete MediaPipe cycles from decoded Ring WHEP frames."
                 if live
-                else "15 complete MediaPipe cycles from a RECORDED DEMO video fixture, not a live Ring camera."
+                else f"{target} complete MediaPipe cycles from a RECORDED DEMO video fixture, not a live Ring camera."
                 if recorded
-                else "15 complete cycles from synthetic marker pixel extraction, not live human verification.",
+                else f"{target} complete cycles from synthetic marker pixel extraction, not live human verification.",
                 ev,
             )
             session.update(gate="UNLOCKED", status="COMPLETED")

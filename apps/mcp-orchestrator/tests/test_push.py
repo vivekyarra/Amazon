@@ -1,9 +1,28 @@
 """Web Push companion delivery: owner-only subscriptions, generic lock-screen copy, honest status."""
 
+import base64
+import os
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+
 from done_irl import engine as e
 from done_irl.push import PushNotifier
 
-SUB = {"endpoint": "https://push.example.test/send/abc123", "keys": {"p256dh": "B" * 87, "auth": "A" * 22}}
+
+def _b64(raw):
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+
+_CLIENT = ec.generate_private_key(ec.SECP256R1())
+SUB = {
+    "endpoint": "https://fcm.googleapis.com/fcm/send/abc123",
+    "keys": {
+        "p256dh": _b64(_CLIENT.public_key().public_bytes(serialization.Encoding.X962,
+                                                         serialization.PublicFormat.UncompressedPoint)),
+        "auth": _b64(os.urandom(16)),
+    },
+}
 
 
 def test_vapid_public_key_is_stable_and_private_file_persists(tmp_path):
@@ -16,6 +35,8 @@ def test_vapid_public_key_is_stable_and_private_file_persists(tmp_path):
 def test_subscription_requires_auth_and_https(app, client, post):
     assert client.get("/api/push/config").json()["public_key"]
     post("/push/subscribe", {**SUB, "endpoint": "http://insecure.example.test/x"}, status=422)
+    post("/push/subscribe", {**SUB, "endpoint": "https://169.254.169.254/latest/meta-data"}, status=422)
+    post("/push/subscribe", {**SUB, "keys": {"p256dh": "B" * 87, "auth": "A" * 22}}, status=422)
     r = post("/push/subscribe", SUB)
     assert r["result"]["subscriptions"] == 1
     client.cookies.clear()
@@ -78,3 +99,37 @@ def test_revoked_consent_stops_push(app, post, monkeypatch, tmp_path):
     pusher.deliver(app.state.store)
     assert sent == []
     assert e.MODE == "SIMULATED_VERIFIED"
+
+
+def test_real_vapid_signing_and_encryption_reach_the_push_service(tmp_path, monkeypatch):
+    """Regression: the VAPID key format previously failed before any HTTP call."""
+    import pywebpush
+
+    seen = {}
+
+    class Response:
+        status_code = 201
+        text = ""
+        headers = {}
+
+    def fake_post(url, data=None, headers=None, timeout=None, **_):
+        seen.update(url=url, headers=headers, body=data)
+        return Response()
+
+    monkeypatch.setattr(pywebpush.requests, "post", fake_post)
+    pusher = PushNotifier(tmp_path)
+    status = pusher.send(SUB, {"title": "DONE/IRL", "body": "x"})
+    assert status == "ACCEPTED_BY_PUSH_SERVICE"
+    assert seen["url"] == SUB["endpoint"]
+    assert seen["headers"]["Authorization"].startswith("vapid t=") and seen["headers"]["Content-Encoding"] == "aes128gcm"
+    assert b"DONE/IRL" not in seen["body"]  # payload is encrypted
+
+
+def test_unreachable_endpoint_is_recorded_not_raised(tmp_path, monkeypatch):
+    import pywebpush
+
+    def boom(*a, **k):
+        raise pywebpush.requests.ConnectionError("down")
+
+    monkeypatch.setattr(pywebpush.requests, "post", boom)
+    assert PushNotifier(tmp_path).send(SUB, {"title": "t", "body": "b"}).startswith("FAILED_")

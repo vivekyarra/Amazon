@@ -17,7 +17,7 @@ class BeeInput(StrictModel):
     occurred_at: AwareDatetime
     timezone: str = "Asia/Kolkata"
     # Bee's own extracted todo (todo-created) carries its alarm as an explicit deadline.
-    source_kind: Literal["UTTERANCE", "BEE_TODO"] = "UTTERANCE"
+    source_kind: Literal["UTTERANCE", "BEE_TODO", "BEE_TODO_COMPLETED"] = "UTTERANCE"
     due_at: AwareDatetime | None = None
 
 

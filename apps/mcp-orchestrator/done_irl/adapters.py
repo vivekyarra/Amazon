@@ -1,6 +1,7 @@
 """Backend-only external adapters. No credentials are ever sent to a browser."""
 
 import asyncio
+import hashlib
 import json
 import os
 import time
@@ -87,10 +88,15 @@ class RingAdapter:
 
 def _epoch(value):
     """Bee timestamps are epoch numbers (seconds or milliseconds, per bee-cli normalizeEpochMs)."""
-    if not isinstance(value, (int, float)) or value <= 0:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value <= 0:
         return None
     seconds = value / 1000 if value > 10_000_000_000 else value
-    return datetime.fromtimestamp(seconds, timezone.utc)
+    if not 946_684_800 <= seconds <= 4_102_444_800:  # 2000-01-01 .. 2100-01-01
+        return None
+    try:
+        return datetime.fromtimestamp(seconds, timezone.utc)
+    except (OverflowError, OSError, ValueError):
+        return None
 
 
 def normalize_bee_event(event_type, data, received_at=None, self_speakers=None, tz="Asia/Kolkata"):
@@ -127,17 +133,18 @@ def normalize_bee_event(event_type, data, received_at=None, self_speakers=None, 
         t = data.get("todo")
         if not isinstance(t, dict) or t.get("id") is None or not isinstance(t.get("text"), str):
             return None
-        if t.get("completed"):
-            return None
         due = _epoch(t.get("alarmAt") or t.get("alarm_at"))
+        version = hashlib.sha256(
+            json.dumps([t["text"], bool(t.get("completed")), t.get("alarmAt") or t.get("alarm_at")]).encode()
+        ).hexdigest()[:8]
         return dict(
-            event_id=f"bee:todo:{t['id']}"[:120],
+            event_id=f"bee:todo:{t['id']}:{version}"[:120],
             utterance=t["text"].strip()[:4000],
             speaker="SELF",
             counterparty="Self",
             occurred_at=received_at.isoformat(),
             timezone=tz,
-            source_kind="BEE_TODO",
+            source_kind="BEE_TODO_COMPLETED" if t.get("completed") else "BEE_TODO",
             due_at=due.isoformat() if due else None,
         )
     return None
@@ -203,8 +210,11 @@ class BeeAdapter:
                 elif line.startswith("data:"):
                     data.append(line[5:].lstrip())
                 elif not line and data:
-                    payload = json.loads("\n".join(data))
-                    normalized = normalize_bee_event(event_type, payload)
+                    try:
+                        payload = json.loads("\n".join(data))
+                        normalized = normalize_bee_event(event_type, payload)
+                    except (ValueError, TypeError, OverflowError):
+                        normalized = None
                     if normalized:
                         await handle(normalized, normalized["event_id"])
                     else:
@@ -224,7 +234,9 @@ class BeeAdapter:
                 await self.stream_once(handle)
                 delay = 1
                 await asyncio.sleep(delay)  # Bound normal EOF reconnects as well as failure retries.
-            except (httpx.HTTPError, ApiError, ValueError) as error:
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:  # noqa: BLE001 - a poison event must not kill ingestion
                 self.last_error = getattr(error, "code", type(error).__name__)
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, 60)

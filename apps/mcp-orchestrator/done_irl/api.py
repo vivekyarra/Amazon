@@ -726,7 +726,7 @@ def create_app(data_dir=None, passwords=None):
                 raise ApiError(
                     409, "CAMERA_ALREADY_OPEN", "Close or recover the current camera session first."
                 )
-            e.contract(s, "squats")
+            e.pose_contract(s)
             operation = {"id": uuid.uuid4().hex, "device_id": body.device_id, "status": "PENDING"}
             s["camera_request"] = operation
             e.emit(s, "studio.camera_requested", operation.copy())
@@ -1158,9 +1158,9 @@ def create_app(data_dir=None, passwords=None):
     @mcp.tool()
     def compile_ambient_commitment(utterance_json: dict, speaker_context: dict) -> dict:
         """Compile owner-provided speech/text with explicit provenance; never claim Bee capture or physical completion."""
-        bee = BeeInput.model_validate(
-            {**utterance_json, "speaker": speaker_context.get("speaker", "UNKNOWN")}
-        )
+        # MCP callers supply text only: they cannot claim Bee provenance or inject deadlines.
+        clean = {k: v for k, v in utterance_json.items() if k not in {"source_kind", "due_at", "speaker"}}
+        bee = BeeInput.model_validate({**clean, "speaker": speaker_context.get("speaker", "UNKNOWN")})
 
         def op(s, db, p):
             s["_event_source"] = {
