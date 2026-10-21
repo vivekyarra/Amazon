@@ -8,7 +8,7 @@
 |---|---|---|
 | Durable ledger, reducers, six canonical scenes, all branches | VERIFIED (synthetic) | backend suite (176+ tests), browser journeys, three-run determinism |
 | Everyday commitments ("real buddy") | IMPLEMENTED + tested | any spoken promise → typed contract with deadline/trigger, T-60/T-25/deadline jobs, recurring series, spoken completion → `EVIDENCE_PENDING`, owner `USER_CONFIRMED` closure, 08:00 private briefing (`test_everyday.py`) |
-| Bee live adapter | BLOCKED (ready) | real stream shapes per official bee-cli; `scripts/bee-live-probe.py` waits for a `BEE_TOKEN` |
+| Bee live adapter | LIVE (owner-attested) | owner ran it with a borrowed Bee device and real token ([attestation](evidence/bee-owner-attestation.md)) |
 | MCP Streamable HTTP (Alexa+ route) | LIVE on hosted HTTPS | 11 tools, `2025-11-25`, compliance tests, external SDK client + Inspector CLI, hosted `initialize` + tool call |
 | Simulated Alexa+ experience | SIMULATED_VERIFIED | console voice/typed panel calling `/mcp/`, labelled simulated |
 | AWS runtime | LIVE_VERIFIED | `done-irl-judge` stack: DynamoDB, S3 SSE-KMS, EventBridge Scheduler→SQS, CloudWatch; HTTPS judge URL |
@@ -18,7 +18,7 @@
 | Vega OS app | VERIFIED on Vega Virtual Device | React Native for Vega HUD, all four views by D-pad against the live HTTPS backend ([report](../tests/firetv/vega-device-report.md)) |
 | Privacy/consent | VERIFIED | exclusions, masks, retention, disconnect, deletion tests |
 | Companion Web Push | IMPLEMENTED + tested | VAPID signing/encryption verified end to end against a stubbed push service; endpoint allowlist; not yet observed on a real phone |
-| Ring live | BLOCKED (ready) | `scripts/ring-live-probe.py` waits for a Playground token |
+| Ring live | LIVE_VERIFIED | Ring Playground device: discovery, capabilities, WHEP 720p decode, live Reality-Lock relay ([probe](evidence/ring-live-probe.json), [studio](evidence/ring-live-studio.json)) |
 | Open-source Agent Skill | PR OPEN | `packages/agent-skills/evidence-backed-commitments` → https://github.com/AmazonAppDev/devices-agent-skills/pull/16 |
 
 ## Owner actions that unblock remaining gates

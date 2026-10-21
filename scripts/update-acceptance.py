@@ -154,6 +154,35 @@ UPGRADES = {
              "to observed use; AWS Builder services listed with evidence; Open Source PR "
              "https://github.com/AmazonAppDev/devices-agent-skills/pull/16.",
     ),
+    "P0-008": dict(
+        result="VERIFIED",
+        tests=["test_bee_sse_parser_handles_heartbeat_and_cursor", "test_bee_normalizer_wearer_label_and_rejects_unknown_shapes",
+               "owner live run with a borrowed Bee device (attested)"],
+        evidence="docs/evidence/bee-owner-attestation.md",
+        code=["apps/mcp-orchestrator/done_irl/adapters.py", "scripts/bee-live-probe.py"],
+        note="Bee SSE stream/reconnect/todo backfill implemented and unit-tested; live run performed by the owner with a "
+             "borrowed Bee device and real token (owner-attested; no artifact retained because the token belongs to a "
+             "third party).",
+    ),
+    "P0-018": dict(
+        result="VERIFIED",
+        tests=["scripts/ring-live-probe.py (live Playground)", "test_official_ring_raw_body_signature_and_delayed_retry",
+               "test_forged_webhook_no_state_change", "test_real_webrtc_codec_loopback_is_explicit_synthetic_transport"],
+        evidence="docs/evidence/ring-live-probe.json",
+        code=["apps/mcp-orchestrator/done_irl/adapters.py", "apps/mcp-orchestrator/done_irl/camera.py",
+              "apps/mcp-orchestrator/done_irl/webhooks.py"],
+        note="Live Ring Partner API (Developer Playground): device discovery, capability check, event history, WHEP "
+             "receive-only session (176 distinct 720p H.264 frames) and DELETE cleanup; webhook HMAC verified in tests.",
+    ),
+    "P0-038": dict(
+        result="VERIFIED",
+        tests=["scripts live studio run against the Ring Playground device", "test_F17_recorded_demo_api_streams_15_reps_and_unlocks_after_15th"],
+        evidence="docs/evidence/ring-live-studio.json",
+        code=["apps/mcp-orchestrator/done_irl/camera.py", "apps/mcp-orchestrator/done_irl/camera_reducers.py"],
+        note="Live Ring WHEP frames decoded server-side, MediaPipe pose per frame, annotated JPEG relay (46 distinct "
+             "frames) labelled LIVE RING / LIVE_VERIFIED; recorded workout path labelled separately. The TV apps render "
+             "the same relay; a live-Ring TV recording was not captured within the 30-minute token.",
+    ),
 }
 
 

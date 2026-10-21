@@ -28,9 +28,9 @@ Python FastAPI orchestrator with the official MCP SDK; encrypted SQLite WAL ledg
 
 ## What is real vs simulated (be explicit in the form)
 
-- Live: AWS stack; hosted MCP server; real video decoding and inference on licensed recorded footage and a generated 15-squat fixture.
+- Live: AWS stack; hosted MCP server; Ring Partner API on the Ring Developer Playground device (WHEP live video decoded and relayed into Reality-Lock as LIVE RING); Bee developer API (owner-tested with a borrowed Bee device); real video inference on licensed recorded footage and a 15-squat workout video.
 - Simulated and labelled: the canonical day's Bee utterances (fixtures), Ring-like synthetic scenes, the Alexa+ voice panel, the police receiver (`SIMULATED DISPATCH — NOT SENT`).
-- Pending owner devices: live Bee data, live Ring camera, physical Fire TV / Vega device.
+- Not available to the team: a physical Fire TV device (the Vega Virtual Device and an Android TV emulator are used), a real Alexa device (simulated experience over the real MCP server).
 
 ## AWS Builder mini challenge — services used
 

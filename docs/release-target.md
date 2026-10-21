@@ -8,7 +8,9 @@ Target: **FULL_ORIGINAL_VISION_COMPLETE** (not silently lowered).
 
 **Eligible alternative: Fire TV** — the Vega OS app runs on the official Vega Virtual Device and the Fire OS APK on an Android TV emulator ([Vega report](../tests/firetv/vega-device-report.md)); the rules accept the Fire TV/Vega simulator in the demo video.
 
-Bee and Ring tracks are **not** claimed: the team has no Bee wearable or Apple Watch running Bee (the Bee track requires one), and no live Ring Developer Playground run has been performed.
+**Eligible alternative: Ring** — the official Ring Partner API runs live against the Ring Developer Playground device: discovery, capabilities, history and a WHEP live view decoded server-side and relayed into the Reality-Lock studio as LIVE RING ([probe](evidence/ring-live-probe.json), [studio](evidence/ring-live-studio.json)). The rules accept a Ring simulator.
+
+**Bee:** the live integration was run by the owner with a borrowed Bee device ([attestation](evidence/bee-owner-attestation.md)). The Bee track is not recommended as primary because its demo video must show live Bee data and the device is no longer available.
 
 ## Mini challenges
 

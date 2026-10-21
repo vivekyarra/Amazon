@@ -9,12 +9,12 @@ Target: FULL_ORIGINAL_VISION_COMPLETE (unchanged; see release-target.md)
 Verdict: NOT_COMPLETE
 Commit: feat/completion head at time of writing (see git log); CI run 39425459386 green on f7d996c
 Primary track: Alexa+ — self-hosted MCP Streamable HTTP (2025-11-25) live on hosted HTTPS + labelled simulated Alexa+ web experience
-P0 verified: 38/55 (6 BLOCKED, 11 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
+P0 verified: 41/55 (3 BLOCKED, 11 IMPLEMENTED_UNVERIFIED) — requirements-traceability.md
 Automated tests: backend pytest 211 passed (incl. real-video scene/pose and 27 QA regressions); Playwright 5/5; CI 5/5 jobs green incl. Android TV emulator D-pad journey
 Fire TV device/simulator: Vega OS app on the official Vega Virtual Device (tests/firetv/vega-device-report.md) and Fire OS APK on an Android TV API 30 emulator (33/33, in CI); physical Fire TV untested
-Bee: BLOCKED (adapter + redacted probe ready; no BEE_TOKEN run yet); canonical day uses SIMULATED_VERIFIED fixtures
+Bee: LIVE_VERIFIED (owner-attested run with a borrowed Bee device; no artifact retained); canonical judge day uses scripted Bee fixtures
 Alexa+/MCP: LIVE_VERIFIED MCP server (hosted initialize + tool call); Alexa+ device NOT_CONNECTED; simulated experience SIMULATED_VERIFIED
-Ring: BLOCKED live (adapter, webhook HMAC, WHEP decode, redacted probe ready); recorded real-scene vision verified on licensed footage
+Ring: LIVE_VERIFIED on the Ring Developer Playground device (discovery, capabilities, history, WHEP 720p decode, live Reality-Lock relay); real-scene vision verified on licensed footage
 AWS: LIVE_VERIFIED (DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager, CloudWatch, EC2/SSM)
 Incident reporting: DEMO_MOCK (SIMULATED DISPATCH — NOT SENT TO POLICE); export available
 6-scenario full replay: PASS (local, CI and hosted AWS)
@@ -25,8 +25,8 @@ Submission: NOT_READY (public video and Devpost entry need the owner's accounts)
 
 ## Remaining known blockers (literal)
 
-1. Live Bee data through a real device/account (P0-008) — needs the owner's `BEE_TOKEN`.
-2. Live Ring camera / simulator API run, WHEP video into the TV (P0-018, P0-019, P0-038) — needs a Playground token and an authorized device.
+1. Bee: owner-attested only (no retained artifact); re-run `scripts/bee-live-probe.py` with a token to add one.
+2. Ring: live source switching under token expiry (P0-019) and history-based watchdog reconciliation (P0-022) not exercised live; Playground tokens last ~30 minutes.
 3. Physical Fire TV device run (simulator/emulator runs done: P0-036, P0-047).
 4. Recorded-Ring threshold path (P0-032) and Ring-backed watchdog reconciliation (P0-022) beyond recorded stock footage.
 5. Public under-three-minute video upload and Devpost submission (P0-048, P0-051). Open Source PR: https://github.com/AmazonAppDev/devices-agent-skills/pull/16.

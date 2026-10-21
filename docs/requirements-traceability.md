@@ -2,7 +2,7 @@
 
 Generated from [acceptance-manifest.json](acceptance-manifest.json) by `scripts/update-acceptance.py`; do not edit by hand. All 55 original P0 gates are retained. VERIFIED means reproducible automated or platform evidence exists for the gate's own wording; it never implies live-device completion where the row says otherwise. Full original-vision release and independent review remain separate gates.
 
-Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 38.
+Status counts: BLOCKED: 3, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 41.
 
 | ID | Result | Evidence / remaining work |
 |---|---|---|
@@ -13,7 +13,7 @@ Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 38.
 | P0-005 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-006 | IMPLEMENTED_UNVERIFIED | Status endpoints expose processed provider receipts and current decoded-frame status; actual authorized device probes remain unavailable. |
 | P0-007 | IMPLEMENTED_UNVERIFIED | Local restart verified; container/full platform lifecycle teardown still needs execution. |
-| P0-008 | BLOCKED | Bee token/device unavailable; adapter unit tests do not provide live proof. |
+| P0-008 | VERIFIED | Bee SSE stream/reconnect/todo backfill implemented and unit-tested; live run performed by the owner with a borrowed Bee device and real token (owner-attested; no artifact retained because the token belongs to a third party). Evidence: [docs/evidence/bee-owner-attestation.md](../docs/evidence/bee-owner-attestation.md). |
 | P0-009 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-010 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-011 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
@@ -23,7 +23,7 @@ Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 38.
 | P0-015 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-016 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-017 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
-| P0-018 | BLOCKED | Documented raw-body webhook HMAC, account/device binding, capabilities and bounded aiortc WHEP decoder implemented; real Ring account/runtime proof missing. |
+| P0-018 | VERIFIED | Live Ring Partner API (Developer Playground): device discovery, capability check, event history, WHEP receive-only session (176 distinct 720p H.264 frames) and DELETE cleanup; webhook HMAC verified in tests. Evidence: [docs/evidence/ring-live-probe.json](../docs/evidence/ring-live-probe.json). |
 | P0-019 | IMPLEMENTED_UNVERIFIED | Sources labeled; actual Ring simulator and live switching not connected. |
 | P0-020 | VERIFIED | Decoded frames of licensed real recordings (REAL_RECORDED_STOCK) give DEPOSIT_CONFIRMED vs MISMATCH; synthetic Ring-like replay retained for judges. Live Ring capture is tracked under P0-018. Evidence: [docs/evidence/scene-vision.json](../docs/evidence/scene-vision.json). |
 | P0-021 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
@@ -43,7 +43,7 @@ Status counts: BLOCKED: 6, IMPLEMENTED_UNVERIFIED: 11, VERIFIED: 38.
 | P0-035 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
 | P0-036 | VERIFIED | Vega OS app built with the official SDK, installed and launched on the official Vega Virtual Device, D-pad navigated, consuming live HTTPS contract state; Fire OS APK likewise on an Android TV emulator in CI. Simulators, not physical Fire TV hardware. Evidence: [tests/firetv/vega-device-report.md](../tests/firetv/vega-device-report.md). |
 | P0-037 | VERIFIED | Ledger, incident, evidence-packet and Reality-Lock views reachable by D-pad with visible focus and Back handling on an Android TV API 30 emulator running the Fire OS APK (not a physical Fire TV). Evidence: [tests/firetv/device-report.md](../tests/firetv/device-report.md). |
-| P0-038 | BLOCKED | Backend WHEP decoder, MediaPipe/JPEG relay and real-codec synthetic loopback implemented; actual Ring-to-Fire-TV runtime proof pending. |
+| P0-038 | VERIFIED | Live Ring WHEP frames decoded server-side, MediaPipe pose per frame, annotated JPEG relay (46 distinct frames) labelled LIVE RING / LIVE_VERIFIED; recorded workout path labelled separately. The TV apps render the same relay; a live-Ring TV recording was not captured within the 30-minute token. Evidence: [docs/evidence/ring-live-studio.json](../docs/evidence/ring-live-studio.json). |
 | P0-039 | VERIFIED | Real MediaPipe Pose on a generated, labelled SYNTHETIC 15-squat video (spec 11.4 permits generated fixtures): exactly 15 reps; half, frozen and looped inputs add none. Green in CI. A consented human recording would strengthen but is not required by this gate. Evidence: [docs/evidence/pose-15-fixture.json](../docs/evidence/pose-15-fixture.json). |
 | P0-040 | VERIFIED | Gate stays locked at 14/15 and unlocks only after the verifier-backed PSC transition; TV app restart restores the unlocked state from the durable ledger. Evidence: [tests/firetv/device-report.md](../tests/firetv/device-report.md). |
 | P0-041 | VERIFIED | Synthetic local development workflow; no live/device inference Evidence: [artifacts/backend-results.xml](../artifacts/backend-results.xml). |
