@@ -8,7 +8,7 @@ Target: **FULL_ORIGINAL_VISION_COMPLETE** (not silently lowered).
 
 **Eligible alternative: Fire TV** — the Vega OS app runs on the official Vega Virtual Device and the Fire OS APK on an Android TV emulator ([Vega report](../tests/firetv/vega-device-report.md)); the rules accept the Fire TV/Vega simulator in the demo video.
 
-Bee and Ring tracks are **not** claimed: live Bee data and a live Ring simulator/device run are still pending.
+Bee and Ring tracks are **not** claimed: the team has no Bee wearable or Apple Watch running Bee (the Bee track requires one), and no live Ring Developer Playground run has been performed.
 
 ## Mini challenges
 
