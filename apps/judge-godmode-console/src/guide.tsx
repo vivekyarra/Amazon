@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   AlertTriangle,
+  ArrowRight,
   AudioLines,
   CheckCheck,
   CircleDashed,
@@ -16,7 +17,7 @@ import type {
   Contract,
   Evidence,
 } from "../../../packages/physical-contract-schema";
-import { human, userConfirmed } from "./ui";
+import { fmt, human, isOpen, userConfirmed } from "./ui";
 
 /** Verification policies in product words (the raw modality stays in the MCP payloads). */
 const modalityWords: Record<string, string> = {
@@ -292,6 +293,167 @@ export function StartHere({
         Shortcuts: <kbd>1</kbd>–<kbd>6</kbd> switch views · <kbd>Esc</kbd>{" "}
         closes panels
       </p>
+    </div>
+  );
+}
+
+type Go = "overview" | "contracts" | "studio" | "alexa" | "incidents";
+const CHECK = ["NEEDS_CONFIRMATION", "EVIDENCE_PENDING", "DISPUTED"];
+
+/** One line on why a contract sits where it does on today's summary. */
+function reason(c: Contract, evidence: Evidence[]) {
+  if (c.status === "VERIFIED") {
+    if (userConfirmed(c, evidence)) return "you confirmed it";
+    const kind = evidence.find((e) =>
+      c.evidence_ids.includes(e.evidence_id),
+    )?.kind;
+    return kind ? human(kind) : "evidence matched";
+  }
+  if (c.status === "MISSED")
+    return c.due_at ? `no proof by ${fmt(c.due_at)}` : "no proof in time";
+  if (c.status === "DISPUTED") return "package moved, your call";
+  if (c.status === "NEEDS_CONFIRMATION") return "accept or reject it";
+  if (c.status === "EVIDENCE_PENDING") return "evidence awaits review";
+  return "still open";
+}
+
+/** After the day runs: what is proven, what needs the owner, what was missed, and what to do next. */
+export function TodaySummary({
+  contracts,
+  evidence,
+  incidentPending,
+  onOpen,
+  onGo,
+}: {
+  contracts: Contract[];
+  evidence: Evidence[];
+  incidentPending: boolean;
+  onOpen: (c: Contract) => void;
+  onGo: (page: Go) => void;
+}) {
+  const groups: [Tone, string, Contract[]][] = [
+    ["good", "Proven", contracts.filter((c) => c.status === "VERIFIED")],
+    ["check", "Needs you", contracts.filter((c) => CHECK.includes(c.status))],
+    ["missed", "Missed", contracts.filter((c) => c.status === "MISSED")],
+  ];
+  const squats = contracts.find(
+    (c) => c.verification_modality === "FIRE_TV_LIVE_POSE_CAMERA" && isOpen(c),
+  );
+  const next: [string, string, Go] = incidentPending
+    ? [
+        "A package moved. Decide whether it was authorized.",
+        "Review the incident",
+        "incidents",
+      ]
+    : squats
+      ? [
+          "Squats unlock the evening, counted by the camera.",
+          "Open the studio",
+          "studio",
+        ]
+      : contracts.some((c) => c.status === "NEEDS_CONFIRMATION")
+        ? [
+            "A promise is waiting for you to accept it.",
+            "Open the ledger",
+            "contracts",
+          ]
+        : [
+            "Ask what is still open; answers come from MCP tools.",
+            "Ask Alexa+",
+            "alexa",
+          ];
+  return (
+    <section className="today" aria-label="What happened today">
+      {groups.map(([tone, label, list]) => {
+        const Icon = toneIcon[tone];
+        return (
+          <div className={`today-tile ${tone}`} key={label}>
+            <span className="today-label">
+              <Icon size={13} aria-hidden strokeWidth={2.4} />
+              {label}
+              <b>{list.length}</b>
+            </span>
+            {list.length ? (
+              list.slice(0, 2).map((c) => (
+                <button
+                  className="today-item"
+                  key={c.contract_id}
+                  onClick={() => onOpen(c)}
+                >
+                  <strong>{c.title}</strong>
+                  <small>{reason(c, evidence)}</small>
+                </button>
+              ))
+            ) : (
+              <small className="today-none">None</small>
+            )}
+          </div>
+        );
+      })}
+      <div className="today-tile next">
+        <span className="today-label">Next step</span>
+        <p>{next[0]}</p>
+        <button className="button small primary" onClick={() => onGo(next[2])}>
+          {next[1]} <ArrowRight size={13} aria-hidden />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+const incidentNext: Record<string, [string, string]> = {
+  AUTHORIZED_TRANSFER: [
+    "Pickup confirmed by you",
+    "The parcel promise closed as your confirmation, not sensor proof. PorchWatchdog stood down.",
+  ],
+  EVIDENCE_PREPARED: [
+    "Report prepared",
+    "Next: review the exact packet and approve it, or cancel the review.",
+  ],
+  REPORT_APPROVED: [
+    "Approved by you",
+    "Next: send it to the demo receiver. Nothing is sent to police.",
+  ],
+  SIMULATED_DISPATCH: [
+    "Delivered to the demo receiver",
+    "No official case was created. The hashed packet stays exportable.",
+  ],
+};
+
+/** What happens after the owner's decision on a porch incident. */
+export function IncidentNext({
+  status,
+  onGo,
+}: {
+  status: string;
+  onGo: (page: Go) => void;
+}) {
+  const copy = incidentNext[status];
+  if (!copy) return null;
+  const done =
+    status === "AUTHORIZED_TRANSFER" || status === "SIMULATED_DISPATCH";
+  return (
+    <div className={`next-card ${done ? "done" : ""}`} role="status">
+      {done ? (
+        <CheckCheck size={16} aria-hidden strokeWidth={2.4} />
+      ) : (
+        <CircleDashed size={16} aria-hidden strokeWidth={2.4} />
+      )}
+      <div>
+        <strong>{copy[0]}</strong>
+        <p>{copy[1]}</p>
+        <div className="next-links">
+          <button className="button small" onClick={() => onGo("contracts")}>
+            Open the ledger
+          </button>
+          <button className="button small" onClick={() => onGo("overview")}>
+            Back to Mission control
+          </button>
+          <button className="button small" onClick={() => onGo("alexa")}>
+            <AudioLines size={13} aria-hidden /> Ask Alexa+ about it
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

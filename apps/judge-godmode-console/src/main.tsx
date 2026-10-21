@@ -55,7 +55,14 @@ import { PrivacyControls } from "./PrivacyControls";
 import { PushOptIn } from "./PushOptIn";
 import AlexaSimulator, { resetAlexaMemory } from "./AlexaSimulator";
 import { Buddy } from "./Buddy";
-import { AddPromise, StartHere, Verdict, modalityText } from "./guide";
+import {
+  AddPromise,
+  IncidentNext,
+  StartHere,
+  TodaySummary,
+  Verdict,
+  modalityText,
+} from "./guide";
 import {
   Brand,
   ContractChip,
@@ -1121,9 +1128,22 @@ function App() {
                   </div>
                   {state.contracts.length ? (
                     <>
-                      <div className="card-grid">
+                      <div
+                        className={`card-grid ${state.scenario >= 2 ? "with-today" : ""}`}
+                      >
                         {state.contracts.map(contractCard)}
                       </div>
+                      {state.scenario >= 2 && (
+                        <TodaySummary
+                          contracts={state.contracts}
+                          evidence={state.evidence}
+                          incidentPending={
+                            incident?.status === "AWAITING_HUMAN_DECISION"
+                          }
+                          onOpen={goContract}
+                          onGo={(p) => navigate(p)}
+                        />
+                      )}
                       {addPromise("compact")}
                     </>
                   ) : (
@@ -1896,7 +1916,7 @@ function App() {
                       <p>
                         {live
                           ? "Choose a linked Ring camera. MediaPipe evaluates complete movements."
-                          : "Play the recorded workout, or run the marker-tracked workout."}
+                          : "Recommended: play the recorded workout. Every full squat is counted from the video by pose landmarks."}
                       </p>
                       {live && (
                         <label>
@@ -1918,14 +1938,25 @@ function App() {
                           </select>
                         </label>
                       )}
-                      <button
-                        className="button"
-                        onClick={openStudio}
-                        disabled={busy || (live && !cameraDevice)}
-                      >
-                        <Video size={15} aria-hidden />
-                        {live ? "Connect Ring camera" : "Open camera feed"}
-                      </button>
+                      {live ? (
+                        <button
+                          className="button"
+                          onClick={openStudio}
+                          disabled={busy || !cameraDevice}
+                        >
+                          <Video size={15} aria-hidden />
+                          Connect Ring camera
+                        </button>
+                      ) : (
+                        <button
+                          className="button primary"
+                          disabled={playing || busy}
+                          onClick={() => void playRecordedDemo()}
+                        >
+                          <Video size={15} aria-hidden />
+                          Play recorded workout
+                        </button>
+                      )}
                     </div>
                   )}
                   {studio?.gate === "UNLOCKED" && (
@@ -2023,19 +2054,21 @@ function App() {
                     </div>
                   ) : (
                     <div className="workout-buttons">
-                      <button
-                        className="button primary wide"
-                        disabled={
-                          playing ||
-                          busy ||
-                          studio?.status === "COMPLETED" ||
-                          studio?.status === "RUNNING"
-                        }
-                        onClick={() => void playRecordedDemo()}
-                      >
-                        <Video size={15} aria-hidden />
-                        Play recorded workout
-                      </button>
+                      {studio && (
+                        <button
+                          className="button primary wide"
+                          disabled={
+                            playing ||
+                            busy ||
+                            studio?.status === "COMPLETED" ||
+                            studio?.status === "RUNNING"
+                          }
+                          onClick={() => void playRecordedDemo()}
+                        >
+                          <Video size={15} aria-hidden />
+                          Play recorded workout
+                        </button>
+                      )}
                       <button
                         className="button wide"
                         disabled={playing || busy || !admin}
@@ -2216,6 +2249,18 @@ function App() {
                         </button>
                       )}
                     </div>
+                    <IncidentNext
+                      status={incident.status}
+                      onGo={(p) =>
+                        p === "contracts"
+                          ? navigate(
+                              "contracts",
+                              state.contracts.find((c) => c.key === "parcel") ??
+                                null,
+                            )
+                          : navigate(p)
+                      }
+                    />
                     {incident.receipt && (
                       <div className="banner receipt" role="status">
                         <ShieldCheck size={15} aria-hidden />
