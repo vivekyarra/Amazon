@@ -1,12 +1,14 @@
 # Implementation progress
 
-20 October 2026 (evening IST). Release target: **FULL_ORIGINAL_VISION_COMPLETE** (unchanged). Verdict: **NOT COMPLETE** — see [acceptance report](acceptance-report.md) and `scripts/verify-release.py`.
+20 October 2026 (evening IST); release audit 22 October 2026: **42/55 VERIFIED**, 7 IMPLEMENTED_UNVERIFIED, 6 BLOCKED ([traceability](requirements-traceability.md)). Release target: **FULL_ORIGINAL_VISION_COMPLETE** (unchanged). Verdict: **NOT COMPLETE** — see [acceptance report](acceptance-report.md) and `scripts/verify-release.py`.
 
 ## What exists and was observed working
 
 | Area | Status | Proof |
 |---|---|---|
-| Durable ledger, reducers, six canonical scenes, all branches | VERIFIED (synthetic) | backend suite (176+ tests), browser journeys, three-run determinism |
+| Durable ledger, reducers, six canonical scenes, all branches | VERIFIED (synthetic) | backend suite (265 tests), browser journeys, three-run determinism |
+| Fixture matrix F01–F24 | VERIFIED (synthetic / recorded stock / emulator) | every golden assertion machine-checked ([fixture-matrix.md](evidence/fixture-matrix.md)) |
+| API write contract and degraded paths | VERIFIED | all 28 POST ledger writes authenticated, authorized, idempotent, validated and audited; Ring/Bee/worker/storage/webhook/duplicate faults degrade safely ([matrix](evidence/write-and-degradation-matrix.md)) |
 | Everyday commitments ("real buddy") | IMPLEMENTED + tested | any spoken promise → typed contract with deadline/trigger, T-60/T-25/deadline jobs, recurring series, spoken completion → `EVIDENCE_PENDING`, owner `USER_CONFIRMED` closure, 08:00 private briefing (`test_everyday.py`) |
 | Bee live adapter | BLOCKED (ready) | real stream shapes per official bee-cli; `scripts/bee-live-probe.py` waits for a `BEE_TOKEN` |
 | MCP Streamable HTTP (Alexa+ route) | LIVE on hosted HTTPS | 11 tools, `2025-11-25`, compliance tests, external SDK client + Inspector CLI, hosted `initialize` + tool call |

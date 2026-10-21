@@ -145,6 +145,68 @@ UPGRADES = {
              "simulated experience); Fire TV recorded as an eligible alternative via the Vega Virtual Device; Bee/Ring "
              "explicitly not claimed.",
     ),
+    "P0-004": dict(
+        result="VERIFIED",
+        verified_at="2026-10-22",
+        tests=["test_P0_004_every_post_route_is_classified",
+               "test_P0_004_write_is_authenticated_authorized_idempotent_validated_and_audited (28 routes)",
+               "test_P0_004_exempt_routes_keep_their_replacement_contract",
+               "test_P0_004_mcp_tool_writes_are_authenticated_idempotent_and_audited",
+               "test_no_anonymous_reads_writes_mcp", "test_idempotency_exact_response_and_conflict"],
+        evidence="docs/evidence/write-and-degradation-matrix.md",
+        code=["apps/mcp-orchestrator/done_irl/api.py", "apps/mcp-orchestrator/done_irl/privacy.py",
+              "apps/mcp-orchestrator/done_irl/models.py", "apps/mcp-orchestrator/tests/test_fixtures_matrix.py"],
+        note="Every POST route is enumerated from the app and must be classified. All 28 ledger writes: 401 without "
+             "a session, 403 for non-admin on judge routes, 400 without Idempotency-Key, 422 on unknown fields, "
+             "an appended traced ledger event (specific or command.audited), identical replay and 409 on key reuse. "
+             "Login/logout/Ring webhook keep documented replacement contracts (credential exchange; session "
+             "revocation; HMAC + device binding + event-id dedupe). MCP tool writes share the audited path.",
+    ),
+    "P0-044": dict(
+        result="VERIFIED",
+        verified_at="2026-10-22",
+        tests=["test_scenarios.py (F01-F18, F20, F21)", "test_pose_recorded.py (F17, F18)", "test_fixtures_matrix.py (F01-F23)",
+               "test_security.py (F22, F23)", "tests/e2e/tv-remote.spec.ts (F24)",
+               "scripts/firetv-emulator-check.py in CI firetv-emulator job (F24)"],
+        evidence="docs/evidence/fixture-matrix.md",
+        code=["packages/testing-fixtures/manifest.json", "apps/mcp-orchestrator/tests/test_fixtures_matrix.py",
+              "tests/e2e/tv-remote.spec.ts", "scripts/firetv-emulator-check.py", ".github/workflows/ci.yml"],
+        note="All 24 fixtures map to passing machine-checked golden assertions (docs/evidence/fixture-matrix.md). "
+             "Sources are SYNTHETIC, REAL_RECORDED_STOCK or mocked transport; F17/F18 use a generated humanoid video "
+             "through real MediaPipe (spec 11.4); F24 runs on an Android TV emulator and Chromium, not a physical Fire TV.",
+    ),
+    "P0-045": dict(
+        result="VERIFIED",
+        verified_at="2026-10-22",
+        tests=["test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label",
+               "test_ring_expired_token_does_not_become_live_or_simulated", "test_bee_401_redacted",
+               "test_P0_007_P0_045_bee_stream_failure_backs_off_then_reconnects_with_cursor",
+               "test_inbox_restart_lease_recovery_and_exactly_once_reducer", "test_P0_007_startup_failure_recovery_and_teardown",
+               "test_forged_webhook_no_state_change", "test_P0_045_unauthorized_and_cross_household_webhooks_change_nothing",
+               "test_P0_045_storage_failure_mid_write_rolls_back_and_reports_retryable", "test_s3_failure_keeps_outbox_for_retry",
+               "test_F21_duplicate_removal_and_duplicate_provider_event_produce_one_of_each"],
+        evidence="docs/evidence/write-and-degradation-matrix.md",
+        code=["apps/mcp-orchestrator/done_irl/camera.py", "apps/mcp-orchestrator/done_irl/adapters.py",
+              "apps/mcp-orchestrator/done_irl/runtime.py", "apps/mcp-orchestrator/done_irl/webhooks.py",
+              "apps/mcp-orchestrator/done_irl/store.py", "apps/mcp-orchestrator/done_irl/aws_runtime.py"],
+        note="Each named fault (Ring/Bee failure, worker crash, expired tokens, unauthorized webhook, storage failure, "
+             "replay duplication) has a test proving safe degradation: no fabricated LIVE state, gaps recorded, "
+             "rollback/retry, exactly-once reduction. Faults are injected with mocked transports, Moto and patched "
+             "storage; no real provider or AWS outage was observed.",
+    ),
+    "P0-054": dict(
+        result="VERIFIED",
+        verified_at="2026-10-22",
+        tests=["test_P0_054_traceability_and_reports_match_manifest", "python scripts/update-acceptance.py --check"],
+        evidence="docs/acceptance-report.md",
+        code=["docs/requirements-traceability.md", "docs/progress.md", "docs/integration-status.md",
+              "docs/acceptance-report.md", "scripts/update-acceptance.py"],
+        note="Traceability is generated from the manifest and checked in CI; the acceptance report and progress counts "
+             "are asserted against the manifest; all four documents were audited on 2026-10-22 and list every "
+             "remaining limitation. 23 rows cite the CI backend JUnit artifact (artifacts/backend-results.xml, "
+             "uploaded per run) rather than a committed file. This is a self-audit: the independent release review "
+             "is P0-055 (BLOCKED).",
+    ),
     "P0-052": dict(
         result="VERIFIED",
         tests=["manual review against session logs"],
@@ -167,7 +229,7 @@ def apply():
         for path in u["code"]:
             if not (root / path).is_file():
                 raise SystemExit(f"{r['requirement_id']}: code path missing: {path}")
-        r.update(verification_result=u["result"], evidence=u["evidence"], verified_at=TODAY,
+        r.update(verification_result=u["result"], evidence=u["evidence"], verified_at=u.get("verified_at", TODAY),
                  reviewer="implementation automated checks; independent review pending", blockers=[])
         r["automated_tests"] = sorted(set(r.get("automated_tests") or []) | set(u["tests"]))
         r["code_paths"] = sorted(set(r.get("code_paths") or []) | set(u["code"]))

@@ -20,7 +20,7 @@ Docker is optional. The image was built and tested with all six scenarios, fifte
 
 ## Fire OS client
 
-See `apps/firetv-command-hud/README.md`. APK compilation, install/launch, D-pad behavior, lifecycle and video playback are separate evidence gates. Device runtime proof is still needed.
+See `apps/firetv-command-hud/README.md`. The APK builds in CI and runs on an Android TV API 30 emulator in CI (`scripts/firetv-emulator-check.py`, [report](../tests/firetv/device-report.md)); the Vega OS app ran on the Vega Virtual Device ([report](../tests/firetv/vega-device-report.md)). A physical Fire TV run and in-app video playback are still unverified.
 
 ## Runtime observability
 
@@ -28,11 +28,15 @@ Health responses disclose storage/mode without secrets. The judge event inspecto
 
 For rollback, stop the server, take a consistent SQLite backup (SQLite backup API, not an arbitrary copy during writes), preserve the encrypted volume and deploy the previous source commit. No migrations beyond CREATE TABLE IF NOT EXISTS exist yet. Restore into a separate protected DATA_DIR and validate health/ledger before routing users.
 
+## Lifecycle workflows
+
+Startup, failure, reconnect, resume and teardown are mapped to their documentation and tests in [write-and-degradation-matrix.md](evidence/write-and-degradation-matrix.md#p0-007-lifecycle).
+
 ## Before real AWS/live deployment
 
-Provisioning DynamoDB/SQS/EventBridge/S3/IAM, encrypted media retention, signed user-scoped media URLs, backup deletion, real-time scheduler workers, token rotation/account linking, webhook signature contracts, Ring WHEP decoding/relay, camera calibration, consent revocation propagation, retry/DLQ and resource limits remain open. No cloud deployment or official report receiver has been created. Do not add AWS mini-challenge claims until actual AWS usage is demonstrated.
+Provisioning DynamoDB/SQS/EventBridge/S3/IAM, encrypted media retention, signed user-scoped media URLs, backup deletion, real-time scheduler workers, token rotation/account linking, webhook signature contracts, Ring WHEP decoding/relay, camera calibration, consent revocation propagation, retry/DLQ and resource limits remain open. The judge stack `done-irl-judge` is deployed ([evidence](evidence/aws-deployment.json)); no official report receiver exists. The items above remain open for a production household deployment.
 
 
 ## Updated live/AWS pilot
 
-The original synthetic deployment remains the default. A guarded live pilot, WHEP/MediaPipe relay and optional AWS runtime are now implemented; use [infra/aws/README.md](../infra/aws/README.md) for the current template, security configuration, backup/restore, retention, teardown and limitations. No actual AWS deployment is claimed. New encrypted storage is not compatible with rolling back to the old plaintext implementation without an explicit migration plan. Keep the original key and consistent backups; never replace a missing encryption key with a new random key.
+The original synthetic deployment remains the default. A guarded live pilot, WHEP/MediaPipe relay and optional AWS runtime are now implemented; use [infra/aws/README.md](../infra/aws/README.md) for the current template, security configuration, backup/restore, retention, teardown and limitations. The judge stack was deployed and smoke-tested ([evidence](evidence/aws-deployment.json)); its teardown is documented but has not been executed because it must stay up through judging. New encrypted storage is not compatible with rolling back to the old plaintext implementation without an explicit migration plan. Keep the original key and consistent backups; never replace a missing encryption key with a new random key.
