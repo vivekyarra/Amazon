@@ -19,7 +19,7 @@
 | Privacy/consent | VERIFIED | exclusions, masks, retention, disconnect, deletion tests |
 | Companion Web Push | IMPLEMENTED + tested | VAPID push, generic lock-screen copy; not yet observed on a real phone |
 | Ring live | BLOCKED (ready) | `scripts/ring-live-probe.py` waits for a Playground token |
-| Open-source Agent Skill | READY | `packages/agent-skills/evidence-backed-commitments`; PR to `AmazonAppDev/devices-agent-skills` awaits owner approval |
+| Open-source Agent Skill | PR OPEN | `packages/agent-skills/evidence-backed-commitments` → https://github.com/AmazonAppDev/devices-agent-skills/pull/16 |
 
 ## Owner actions that unblock remaining gates
 
