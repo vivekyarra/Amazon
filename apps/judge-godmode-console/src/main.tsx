@@ -32,7 +32,6 @@ import {
   Package,
   Pause,
   Play,
-  Plus,
   Radio,
   RotateCcw,
   ScanLine,
@@ -56,6 +55,14 @@ import { PrivacyControls } from "./PrivacyControls";
 import { PushOptIn } from "./PushOptIn";
 import AlexaSimulator, { resetAlexaMemory } from "./AlexaSimulator";
 import { Buddy } from "./Buddy";
+import {
+  AddPromise,
+  IncidentNext,
+  StartHere,
+  TodaySummary,
+  Verdict,
+  modalityText,
+} from "./guide";
 import {
   Brand,
   ContractChip,
@@ -240,8 +247,7 @@ function App() {
     "events",
   );
   const [ledgerFilter, setLedgerFilter] = useState("all");
-  const [customUtterance, setCustomUtterance] = useState(""),
-    [integrations, setIntegrations] = useState<
+  const [integrations, setIntegrations] = useState<
       { name: string; status: string; reason: string }[]
     >([]),
     [role, setRole] = useState("admin");
@@ -425,6 +431,20 @@ function App() {
   useEffect(() => {
     if (!authenticated) resetAlexaMemory();
   }, [authenticated]);
+  // Number keys 1–6 switch views (desktop console only; TV uses the D-pad handler above).
+  const shortcut = useRef<(index: number) => void>(() => {});
+  useEffect(() => {
+    if (tv) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      if (el?.closest?.("input, textarea, select, [contenteditable]")) return;
+      if (document.querySelector("[aria-modal='true']")) return;
+      if (/^[1-9]$/.test(e.key)) shortcut.current(Number(e.key) - 1);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [tv]);
   // Escape closes overlays everywhere (not only on TV).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -707,6 +727,21 @@ function App() {
   const navPages: Page[] = admin
     ? ["overview", "replay", "contracts", "studio", "alexa", "incidents"]
     : ["overview", "contracts", "studio", "alexa", "incidents"];
+  shortcut.current = (i) => {
+    if (navPages[i]) navigate(navPages[i]);
+  };
+  const addPromise = (className = "") => (
+    <AddPromise
+      admin={admin}
+      now={state.now}
+      consent={state.consent}
+      busy={busy}
+      act={act}
+      guarded={guarded}
+      className={className}
+      newId={uuid}
+    />
+  );
   const sceneButton = (i: number, variant: "track" | "list") => {
     const [time, title, source, spec] = stages[i];
     const Icon = stageIcons[i];
@@ -817,7 +852,7 @@ function App() {
           />
         )}
         <nav className="nav">
-          {navPages.map((id) => {
+          {navPages.map((id, i) => {
             const Icon = pageIcons[id];
             const active =
               page === id || (id === "incidents" && page === "evidence");
@@ -828,6 +863,7 @@ function App() {
                 className={`nav-item ${active ? "active" : ""}`}
                 aria-current={active ? "page" : undefined}
                 aria-label={pageLabel(id)}
+                aria-keyshortcuts={String(i + 1)}
                 onClick={() => navigate(id)}
               >
                 <span className="nav-icon" aria-hidden>
@@ -1090,25 +1126,38 @@ function App() {
                       Open ledger <ArrowRight size={14} aria-hidden />
                     </button>
                   </div>
-                  <div className="card-grid">
-                    {state.contracts.length ? (
-                      state.contracts.map(contractCard)
-                    ) : (
-                      <Empty icon={AudioLines} title="No promises yet.">
-                        <p>
-                          Play the morning scene to compile four spoken
-                          promises.
-                        </p>
-                        <button
-                          className="button small"
-                          disabled={busy || running}
-                          onClick={() => void guarded(() => runStage(1))}
-                        >
-                          <Play size={13} aria-hidden /> Play morning promises
-                        </button>
-                      </Empty>
-                    )}
-                  </div>
+                  {state.contracts.length ? (
+                    <>
+                      <div
+                        className={`card-grid ${state.scenario >= 2 ? "with-today" : ""}`}
+                      >
+                        {state.contracts.map(contractCard)}
+                      </div>
+                      {state.scenario >= 2 && (
+                        <TodaySummary
+                          contracts={state.contracts}
+                          evidence={state.evidence}
+                          incidentPending={
+                            incident?.status === "AWAITING_HUMAN_DECISION"
+                          }
+                          onOpen={goContract}
+                          onGo={(p) => navigate(p)}
+                        />
+                      )}
+                      {addPromise("compact")}
+                    </>
+                  ) : (
+                    <StartHere
+                      disabled={busy || running}
+                      onPlay={() => void fullDay()}
+                      onOpen={(p) => navigate(p)}
+                    >
+                      <div className="start-add">
+                        <span>Or say a promise of your own:</span>
+                        {addPromise()}
+                      </div>
+                    </StartHere>
+                  )}
                 </section>
                 <div className="overview-side">
                   <section className="panel now-panel" aria-label="Right now">
@@ -1589,45 +1638,7 @@ function App() {
                       </Empty>
                     )}
                   </div>
-                  <form
-                    className="add-promise compact"
-                    onSubmit={(ev) => {
-                      ev.preventDefault();
-                      void guarded(async () => {
-                        if (admin)
-                          await act("/ingest/bee-simulated", {
-                            event_id: uuid(),
-                            utterance: customUtterance,
-                            speaker: "SELF",
-                            counterparty: "Household",
-                            occurred_at: state.now,
-                            timezone: "Asia/Kolkata",
-                          });
-                        else
-                          await act("/owner/promises", {
-                            utterance: customUtterance,
-                            timezone: "Asia/Kolkata",
-                          });
-                        setCustomUtterance("");
-                      });
-                    }}
-                  >
-                    <input
-                      aria-label="A new promise, in your own words"
-                      value={customUtterance}
-                      onChange={(ev) => setCustomUtterance(ev.target.value)}
-                      placeholder="“I’ll call my sister before 7 PM.”"
-                      required
-                      maxLength={4000}
-                    />
-                    <button
-                      className="button primary small"
-                      disabled={busy || !state.consent}
-                    >
-                      <Plus size={15} aria-hidden />
-                      Compile
-                    </button>
-                  </form>
+                  {addPromise("compact")}
                 </section>
                 <section
                   className="panel ledger-detail"
@@ -1662,6 +1673,11 @@ function App() {
                           <div className="detail-chips">
                             <ContractChip c={c} evidence={state.evidence} />
                           </div>
+                          <Verdict
+                            c={c}
+                            evidence={state.evidence}
+                            onStudio={() => navigate("studio")}
+                          />
                           <blockquote>“{c.original_utterance}”</blockquote>
                           <dl className="facts">
                             <dt>Counterparty</dt>
@@ -1673,7 +1689,7 @@ function App() {
                                 : human(c.deadline_trigger ?? "On evidence")}
                             </dd>
                             <dt>Verification</dt>
-                            <dd>{human(c.verification_modality)}</dd>
+                            <dd>{modalityText(c.verification_modality)}</dd>
                             <dt>Source</dt>
                             <dd>{sourceWords(contractSource(c))}</dd>
                             <dt>Evidence</dt>
@@ -1900,7 +1916,7 @@ function App() {
                       <p>
                         {live
                           ? "Choose a linked Ring camera. MediaPipe evaluates complete movements."
-                          : "Play the recorded workout, or run the marker-tracked workout."}
+                          : "Recommended: play the recorded workout. Every full squat is counted from the video by pose landmarks."}
                       </p>
                       {live && (
                         <label>
@@ -1922,14 +1938,25 @@ function App() {
                           </select>
                         </label>
                       )}
-                      <button
-                        className="button"
-                        onClick={openStudio}
-                        disabled={busy || (live && !cameraDevice)}
-                      >
-                        <Video size={15} aria-hidden />
-                        {live ? "Connect Ring camera" : "Open camera feed"}
-                      </button>
+                      {live ? (
+                        <button
+                          className="button"
+                          onClick={openStudio}
+                          disabled={busy || !cameraDevice}
+                        >
+                          <Video size={15} aria-hidden />
+                          Connect Ring camera
+                        </button>
+                      ) : (
+                        <button
+                          className="button primary"
+                          disabled={playing || busy}
+                          onClick={() => void playRecordedDemo()}
+                        >
+                          <Video size={15} aria-hidden />
+                          Play recorded workout
+                        </button>
+                      )}
                     </div>
                   )}
                   {studio?.gate === "UNLOCKED" && (
@@ -2027,19 +2054,21 @@ function App() {
                     </div>
                   ) : (
                     <div className="workout-buttons">
-                      <button
-                        className="button primary wide"
-                        disabled={
-                          playing ||
-                          busy ||
-                          studio?.status === "COMPLETED" ||
-                          studio?.status === "RUNNING"
-                        }
-                        onClick={() => void playRecordedDemo()}
-                      >
-                        <Video size={15} aria-hidden />
-                        Play recorded workout
-                      </button>
+                      {studio && (
+                        <button
+                          className="button primary wide"
+                          disabled={
+                            playing ||
+                            busy ||
+                            studio?.status === "COMPLETED" ||
+                            studio?.status === "RUNNING"
+                          }
+                          onClick={() => void playRecordedDemo()}
+                        >
+                          <Video size={15} aria-hidden />
+                          Play recorded workout
+                        </button>
+                      )}
                       <button
                         className="button wide"
                         disabled={playing || busy || !admin}
@@ -2220,6 +2249,18 @@ function App() {
                         </button>
                       )}
                     </div>
+                    <IncidentNext
+                      status={incident.status}
+                      onGo={(p) =>
+                        p === "contracts"
+                          ? navigate(
+                              "contracts",
+                              state.contracts.find((c) => c.key === "parcel") ??
+                                null,
+                            )
+                          : navigate(p)
+                      }
+                    />
                     {incident.receipt && (
                       <div className="banner receipt" role="status">
                         <ShieldCheck size={15} aria-hidden />

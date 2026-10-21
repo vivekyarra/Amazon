@@ -22,6 +22,9 @@ test.beforeEach(async ({ page }) => {
 test("canonical full day updates shared ledger, keeps uncertainty and verifies 15 cycles", async ({
   page,
 }) => {
+  // The squat replay is paced by the app (~150 frame steps); under machine load it can need
+  // well over a minute, so wait on the app's own completion state rather than a tight clock.
+  test.setTimeout(180000);
   fs.mkdirSync("artifacts/screenshots", { recursive: true });
   await page.screenshot({
     path: "artifacts/screenshots/01-mission-control.png",
@@ -35,7 +38,7 @@ test("canonical full day updates shared ledger, keeps uncertainty and verifies 1
     page.getByRole("heading", { name: "Reality-Lock studio." }),
   ).toBeVisible({ timeout: 20000 });
   await expect(page.getByText("Promise kept. Evidence saved.")).toBeVisible({
-    timeout: 55000,
+    timeout: 120000,
   });
   await page.screenshot({
     path: "artifacts/screenshots/02-studio-verified.png",

@@ -194,13 +194,89 @@
   margin-left: auto;
   color: var(--text-3);
 }
-.alexa-rpc summary .ok {
-  color: var(--accent);
-  font-weight: 650;
+.alexa-rail-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
-.alexa-rpc summary .bad {
-  color: var(--coral);
-  font-weight: 650;
+.alexa-rail-head .live-dot {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 0 3px rgba(91, 227, 174, 0.15);
+}
+.rpc-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.rpc-dot.bad {
+  background: var(--coral);
+}
+.alexa-rpc.handshake {
+  background: transparent;
+  opacity: 0.8;
+}
+.alexa-rpc.tool {
+  border-color: rgba(91, 227, 174, 0.18);
+}
+.alexa-rpc summary .rpc-tool {
+  font-weight: 600;
+  font-size: 11.5px;
+}
+.rpc-io {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 10px;
+  padding: 2px 10px 8px 22px;
+  font-size: 11.5px;
+}
+.rpc-io dt {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+.rpc-io dd {
+  color: var(--text-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.rpc-arg {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-3);
+}
+.rpc-arg b {
+  font-weight: 600;
+  color: var(--text);
+}
+.rpc-raw {
+  border-top: 1px solid var(--line);
+}
+.rpc-raw > summary {
+  padding: 4px 8px 4px 22px;
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+.alexa-via {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.alexa-via code {
+  color: var(--accent);
+  padding: 0 5px;
+  border-radius: 5px;
+  background: var(--accent-soft);
 }
 .alexa-rpc pre {
   max-height: 180px;
