@@ -51,6 +51,12 @@ const memory: { turns: Turn[]; log: RpcLogEntry[]; id: number } = {
   log: [],
   id: 0,
 };
+/** Forget the conversation (on sign-out it must not leak to the next account). */
+export function resetAlexaMemory() {
+  memory.turns = [];
+  memory.log = [];
+  memory.id = 0;
+}
 
 export default function AlexaSimulator({
   state,

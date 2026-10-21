@@ -48,7 +48,7 @@ import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./style.css";
 import { PrivacyControls } from "./PrivacyControls";
 import { PushOptIn } from "./PushOptIn";
-import AlexaSimulator from "./AlexaSimulator";
+import AlexaSimulator, { resetAlexaMemory } from "./AlexaSimulator";
 import { Buddy } from "./Buddy";
 import {
   Brand,
@@ -341,6 +341,10 @@ function App() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [tv]);
+  // An expired or ended session must not hand its Alexa+ transcript to the next account.
+  useEffect(() => {
+    if (!authenticated) resetAlexaMemory();
+  }, [authenticated]);
   // Escape closes overlays everywhere (not only on TV).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -459,6 +463,7 @@ function App() {
     } catch {
       /* session already gone */
     }
+    resetAlexaMemory();
     setAuthenticated(false);
     setState(null);
     setError("");
