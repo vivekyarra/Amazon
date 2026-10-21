@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AudioLines, Mic, MicOff, Send, Volume2, VolumeX } from "lucide-react";
 import type { State } from "../../../packages/physical-contract-schema";
 import { EXAMPLES, answer, whisperCopy, type RpcLogEntry } from "./alexaSim";
+import { plain } from "./ui";
 import "./alexa.css";
 
 type Turn = {
@@ -9,8 +10,60 @@ type Turn = {
   who: "you" | "sim";
   text: string;
   intent?: string;
+  tools?: string[];
   error?: boolean;
 };
+
+type RpcBody = {
+  method?: string;
+  params?: { name?: string; arguments?: Record<string, unknown> };
+};
+type RpcReply = {
+  result?: {
+    structuredContent?: unknown;
+    content?: { text?: string }[];
+    protocolVersion?: string;
+    serverInfo?: { name?: string };
+    isError?: boolean;
+  };
+  error?: { message?: string };
+} | null;
+
+const short = (v: unknown): string => {
+  if (v === null || v === undefined) return "—";
+  if (Array.isArray(v)) return `${v.length} item${v.length === 1 ? "" : "s"}`;
+  if (typeof v === "object") return `${Object.keys(v).length} fields`;
+  const raw = String(v);
+  // Enum values (SIMULATED_VERIFIED, AWAITING_HUMAN_DECISION) read as words.
+  const t = /^[A-Z][A-Z_]+$/.test(raw)
+    ? plain(raw.replaceAll("_", " ")).toLowerCase()
+    : plain(raw);
+  return t.length > 42 ? t.slice(0, 40) + "…" : t;
+};
+
+/** A tool result as a handful of readable rows (the raw JSON stays one click away). */
+function resultRows(response: unknown): [string, string][] {
+  const r = (response as RpcReply)?.result;
+  if (!r) return [];
+  if (r.protocolVersion)
+    return [
+      ["protocol", r.protocolVersion],
+      ["server", r.serverInfo?.name ?? "—"],
+    ];
+  let data: unknown = r.structuredContent;
+  if (data === undefined) {
+    try {
+      data = JSON.parse(r.content?.[0]?.text ?? "");
+    } catch {
+      data = r.content?.[0]?.text;
+    }
+  }
+  if (data && typeof data === "object" && !Array.isArray(data))
+    return Object.entries(data as Record<string, unknown>)
+      .slice(0, 4)
+      .map(([k, v]) => [k, short(v)]);
+  return data === undefined ? [] : [["result", short(data)]];
+}
 
 type Recognition = {
   lang: string;
@@ -116,9 +169,11 @@ export default function AlexaSimulator({
     setInput("");
     setTurns((t) => [...t, { id: ++turnId.current, who: "you", text }]);
     try {
-      const result = await answer(text, (entry) =>
-        setLog((l) => [entry, ...l].slice(0, 40)),
-      );
+      const tools: string[] = [];
+      const result = await answer(text, (entry) => {
+        if (entry.tool && !tools.includes(entry.tool)) tools.push(entry.tool);
+        setLog((l) => [entry, ...l].slice(0, 40));
+      });
       setTurns((t) => [
         ...t,
         {
@@ -126,6 +181,7 @@ export default function AlexaSimulator({
           who: "sim",
           text: result.reply,
           intent: result.intent,
+          tools,
         },
       ]);
       speak(result.reply, voiceOut);
@@ -218,7 +274,14 @@ export default function AlexaSimulator({
                 >
                   {t.text}
                 </p>
-                {t.intent && <small>intent: {t.intent}</small>}
+                {t.intent && (
+                  <small className="alexa-via">
+                    {t.tools?.length ? "answered from " : `intent: ${t.intent}`}
+                    {t.tools?.map((name) => (
+                      <code key={name}>{name}</code>
+                    ))}
+                  </small>
+                )}
               </div>
             ))}
           </div>
@@ -293,30 +356,79 @@ export default function AlexaSimulator({
         </div>
         <aside className="alexa-rail" aria-label="MCP JSON-RPC log">
           <div className="alexa-rail-head">
-            <strong>MCP JSON-RPC</strong>
-            <span>{log.length} calls · POST /mcp/</span>
+            <strong>
+              <span className="live-dot" aria-hidden /> MCP tool calls
+            </strong>
+            <span>
+              {log.filter((e) => e.tool).length} tool calls · POST /mcp/
+            </span>
           </div>
-          {log.length === 0 && <p className="alexa-empty">No MCP calls yet.</p>}
+          {log.length === 0 && (
+            <p className="alexa-empty">
+              Ask a question: each tool the answer needs appears here with its
+              arguments and result.
+            </p>
+          )}
           {log.map((entry, i) => {
-            const req = entry.request as { method?: string };
+            const req = entry.request as RpcBody;
+            const args = Object.entries(req.params?.arguments ?? {});
+            const rows = resultRows(entry.response);
             return (
               <details
                 key={log.length - i}
-                className="alexa-rpc"
-                open={i === 0}
+                className={`alexa-rpc ${entry.tool ? "tool" : "handshake"}`}
+                open={i === 0 || (i < 3 && !!entry.tool)}
               >
                 <summary>
-                  <span className={entry.status < 300 ? "ok" : "bad"}>
-                    {entry.status}
-                  </span>
-                  <strong>{req.method}</strong>
-                  {entry.tool && (
-                    <code data-testid="alexa-rpc-tool">{entry.tool}</code>
+                  <span
+                    className={`rpc-dot ${entry.status < 300 ? "ok" : "bad"}`}
+                    title={`HTTP ${entry.status}`}
+                    aria-label={`HTTP ${entry.status}`}
+                  />
+                  {entry.tool ? (
+                    <code className="rpc-tool" data-testid="alexa-rpc-tool">
+                      {entry.tool}
+                    </code>
+                  ) : (
+                    <strong>{req.method}</strong>
                   )}
                   <time>{entry.ms} ms</time>
                 </summary>
-                <pre>{"→ " + JSON.stringify(entry.request, null, 2)}</pre>
-                <pre>{"← " + JSON.stringify(entry.response, null, 2)}</pre>
+                {entry.tool && (
+                  <dl className="rpc-io">
+                    <dt>args</dt>
+                    <dd>
+                      {args.length
+                        ? args.map(([k, v]) => (
+                            <span className="rpc-arg" key={k}>
+                              {k}=<b>{short(v)}</b>
+                            </span>
+                          ))
+                        : "none"}
+                    </dd>
+                    {rows.map(([k, v]) => (
+                      <React.Fragment key={k}>
+                        <dt>{k}</dt>
+                        <dd>{v}</dd>
+                      </React.Fragment>
+                    ))}
+                  </dl>
+                )}
+                {!entry.tool && rows.length > 0 && (
+                  <dl className="rpc-io">
+                    {rows.map(([k, v]) => (
+                      <React.Fragment key={k}>
+                        <dt>{k}</dt>
+                        <dd>{v}</dd>
+                      </React.Fragment>
+                    ))}
+                  </dl>
+                )}
+                <details className="rpc-raw">
+                  <summary>Raw JSON-RPC</summary>
+                  <pre>{"→ " + JSON.stringify(entry.request, null, 2)}</pre>
+                  <pre>{"← " + JSON.stringify(entry.response, null, 2)}</pre>
+                </details>
               </details>
             );
           })}
