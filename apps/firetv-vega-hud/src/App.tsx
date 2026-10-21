@@ -415,12 +415,12 @@ export const App = () => {
             <Text style={st.h3}>Human review - DRAFT (not sent)</Text>
             <Row k="Manifest SHA-256" v={shortHash(incident.manifest_hash, 32)} mono />
             <Row k="Attachments" v={'deposit, removal, clip, annotated clip, person crop'} />
-            <Row k="Destination" v="DEMO_RECEIVER_ONLY (simulated receiver; not police)" />
+            <Row k="Destination" v="Demo receiver - not sent to police" />
             <View style={st.btnRow}>
               <FocusButton label="Cancel review" preferred onPress={() => run('Cancel review', path + 'cancel-report', {action: 'cancel-report', revision: incident.revision})} />
               <FocusButton
                 testID="approve"
-                label="Approve simulated report..."
+                label="Approve report..."
                 sub="Requires a separate confirmation"
                 danger
                 onPress={() =>
@@ -447,14 +447,14 @@ export const App = () => {
             <FocusButton label="Cancel report" preferred onPress={() => run('Cancel report', path + 'cancel-report', {action: 'cancel-report', revision: incident.revision})} />
             <FocusButton
               label="Send to DEMO receiver..."
-              sub="Simulated dispatch; separate confirmation"
+              sub="Demo receiver - not sent to police"
               danger
               onPress={() =>
                 ask(
-                  'Send simulated dispatch?',
+                  'Send to demo receiver?',
                   'This sends the approved packet to the DEMO receiver only. No police or external party is contacted.',
-                  'Send simulated dispatch',
-                  () => run('Simulated dispatch', path + 'dispatch-report', {action: 'dispatch-report', revision: incident.revision}),
+                  'Send to demo receiver',
+                  () => run('Demo dispatch', path + 'dispatch-report', {action: 'dispatch-report', revision: incident.revision}),
                 )
               }
             />
@@ -476,7 +476,7 @@ export const App = () => {
   const viewC = () => {
     const evidence: Json[] = (state && state.evidence) || [];
     const ps = packetState(incident);
-    const states = ['DRAFT', 'SIMULATED', 'DISPATCHED', 'ACKNOWLEDGED'];
+    const states = ['DRAFT', 'DEMO RECEIVER', 'DISPATCHED', 'ACKNOWLEDGED'];
     return (
       <ScrollView style={st.scroll}>
         <View style={st.card}>

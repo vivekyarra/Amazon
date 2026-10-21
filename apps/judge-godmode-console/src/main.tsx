@@ -202,6 +202,17 @@ const ATTENTION = [
   "REPORT_APPROVED",
 ];
 
+const SCRIPTED_FALLBACK: Record<string, string> = {
+  real_deposit: "deposit",
+  real_no_deposit: "fake",
+  real_removal: "unknown",
+  real_pickup: "retained",
+  real_passerby: "retained",
+  real_visible: "visible",
+  real_empty: "empty",
+  real_bags: "ambiguous",
+};
+
 function App() {
   const params = new URLSearchParams(location.search);
   const [state, setState] = useState<State | null>(null),
@@ -215,9 +226,10 @@ function App() {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [running, setRunning] = useState(false);
-  const [branch, setBranch] = useState("unknown"),
-    [deposit, setDeposit] = useState("deposit"),
-    [arrival, setArrival] = useState("empty"),
+  // Real recorded footage by default; scripted marker scenes stay selectable in Judge replay.
+  const [branch, setBranch] = useState("real_removal"),
+    [deposit, setDeposit] = useState("real_deposit"),
+    [arrival, setArrival] = useState("real_empty"),
     [engagement, setEngagement] = useState("disengaged");
   const [selected, setSelected] = useState<Contract | null>(null),
     [showNotifications, setShowNotifications] = useState(false),
@@ -453,7 +465,18 @@ function App() {
       5: arrival,
       6: "deposit",
     };
-    await act(`/admin/scenarios/${index}/run`, { branch: branches[index] });
+    let chosen = branches[index];
+    if (chosen.startsWith("real_")) {
+      // Real footage is analysed once per server start; until that finishes, use the scripted scene.
+      const ready = await fetch("/api/scene/status", {
+        credentials: "same-origin",
+      })
+        .then((r) => (r.ok ? r.json() : { ready: false }))
+        .then((j) => Boolean(j.ready))
+        .catch(() => false);
+      if (!ready) chosen = SCRIPTED_FALLBACK[chosen] ?? chosen;
+    }
+    await act(`/admin/scenarios/${index}/run`, { branch: chosen });
   };
   const workout = async () => {
     stop.current = false;
@@ -638,6 +661,12 @@ function App() {
   const target = studio?.target_reps ?? 15;
   // Pinned recorded workout video decoded server-side through MediaPipe (never the live camera).
   const recordedDemo = !live && studio?.source === "RECORDED_DEMO_VIDEO";
+  // Only show the camera surface once a frame has actually been processed (or a live/recorded stream runs).
+  const hasFrames =
+    live ||
+    recordedDemo ||
+    (studio?.last_timestamp_ms ?? -1) >= 0 ||
+    (studio?.count ?? 0) > 0;
   const playRecordedDemo = () =>
     guarded(async () => {
       cancelReplay();
@@ -1811,13 +1840,15 @@ function App() {
                   <div className="studio-overlay top">
                     <span className="studio-state">
                       <span className="pulse-dot" aria-hidden />
-                      {studio?.status === "RUNNING"
-                        ? live
-                          ? "PROCESSING RING FRAMES"
-                          : "PROCESSING FRAMES"
-                        : studio
-                          ? human(studio.status).toUpperCase()
-                          : "CAMERA STUDIO"}
+                      {studio?.status === "RUNNING" && !hasFrames
+                        ? "READY"
+                        : studio?.status === "RUNNING"
+                          ? live
+                            ? "PROCESSING RING FRAMES"
+                            : "PROCESSING FRAMES"
+                          : studio
+                            ? human(studio.status).toUpperCase()
+                            : "CAMERA STUDIO"}
                     </span>
                     {live && (
                       <span className="studio-source">
@@ -1828,12 +1859,21 @@ function App() {
                       </span>
                     )}
                   </div>
-                  {studio && (
+                  {studio && hasFrames && (
                     <span className="frame-wait" role="status">
                       Waiting for the first processed frame…
                     </span>
                   )}
-                  {studio ? (
+                  {studio && !hasFrames ? (
+                    <div className="studio-intro">
+                      <ScanLine size={44} aria-hidden />
+                      <h2>Ready when you are.</h2>
+                      <p>
+                        {target} full squats unlock your evening. Start the
+                        workout and every rep is counted from the video.
+                      </p>
+                    </div>
+                  ) : studio ? (
                     <img
                       className="pose-feed"
                       onLoad={(e) => (e.currentTarget.style.opacity = "1")}

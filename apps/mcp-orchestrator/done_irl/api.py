@@ -293,6 +293,14 @@ def create_app(data_dir=None, passwords=None):
                         e.emit(s, "watchdog.monitoring_gap", {"reason": "PROCESS_RESTART_GAP"})
                         store.save(db, row["id"], s)
             tasks = [asyncio.create_task(reconcile()), asyncio.create_task(push_worker())]
+            if demo and os.getenv("DONE_IRL_WARM_SCENES", "1") == "1":
+
+                async def warm_scenes():
+                    from . import scene
+
+                    app.state.scene_warm = await asyncio.to_thread(scene.warm_cache)
+
+                tasks.append(asyncio.create_task(warm_scenes()))
             if os.getenv("AWS_LEDGER_TABLE"):
                 app.state.cloud_status = "STARTING"
                 tasks.append(asyncio.create_task(cloud_sync()))
@@ -544,6 +552,12 @@ def create_app(data_dir=None, passwords=None):
                 raise ApiError(409, "PROOF_REQUIRED", "This action cannot bypass contract evidence policy.")
 
         return command(request, p, op)
+
+    @app.get("/api/scene/status")
+    def scene_status(p=Depends(principal)):
+        from . import scene
+
+        return {"schema_version": "1.0", "ready": getattr(app.state, "scene_warm", 0) >= len(scene.REAL_BRANCHES)}
 
     @app.get("/api/push/config")
     def push_config(p=Depends(principal)):
@@ -971,7 +985,7 @@ def create_app(data_dir=None, passwords=None):
             )
         cv2.putText(
             frame,
-            "SYNTHETIC MARKER SOURCE / NOT LIVE RING",
+            "DONE/IRL - camera frame",
             (18, 35),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,

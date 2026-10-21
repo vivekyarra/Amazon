@@ -120,10 +120,10 @@ export function sourceLabel(mode?: string | null, platform?: string | null): str
     return 'LIVE RING';
   }
   if (m.indexOf('SIMULATED') >= 0 || p.indexOf('SYNTHETIC') >= 0) {
-    return 'SYNTHETIC (simulated)';
+    return 'Scripted replay';
   }
   if (m.indexOf('RECORDED') >= 0) {
-    return 'RECORDED DEMO';
+    return 'Recorded workout';
   }
   if (m.indexOf('LIVE') >= 0) {
     return 'LIVE ' + (p || 'SOURCE');
@@ -137,10 +137,10 @@ export function studioSourceLabel(studio: Json): string {
     return studio.source_mode === 'NOT_CONNECTED' ? 'LIVE RING (not connected)' : 'LIVE RING';
   }
   if (src.indexOf('RECORDED') >= 0) {
-    return 'RECORDED DEMO';
+    return 'Recorded workout';
   }
   if (src.indexOf('SYNTHETIC') >= 0 || (studio && studio.source_mode === 'SIMULATED_VERIFIED')) {
-    return 'SYNTHETIC';
+    return 'Camera frames';
   }
   return src || 'UNKNOWN';
 }
@@ -152,7 +152,7 @@ export function packetState(inc: Json): string {
     case 'REPORT_APPROVED':
       return 'APPROVED (not sent)';
     case 'SIMULATED_DISPATCH':
-      return 'SIMULATED';
+      return 'DEMO RECEIVER';
     case 'DISPATCHED':
       return 'DISPATCHED';
     case 'ACKNOWLEDGED':

@@ -2806,9 +2806,21 @@ blockquote {
   .console > * {
     grid-area: auto;
   }
+  /* One scroll surface: when the page scrolls, panels expand instead of nesting scrollbars. */
   .card-grid,
   .ledger-rows,
   .psc-list,
+  .ledger-detail,
+  .incident-main,
+  .packet-body,
+  .workout,
+  .buddy-list,
+  .console-scenes,
+  .jump,
+  .settings-stack > .consent {
+    max-height: none;
+    overflow: visible;
+  }
   .event-scroll {
     max-height: 420px;
   }

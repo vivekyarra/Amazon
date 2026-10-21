@@ -227,3 +227,11 @@
     max-height: 320px;
   }
 }
+
+/* Phones scroll the page; let the whisper list expand instead of nesting a scrollbar. */
+@media (max-width: 1279px) {
+  .alexa-whispers {
+    max-height: none;
+    overflow: visible;
+  }
+}

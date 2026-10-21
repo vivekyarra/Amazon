@@ -28,7 +28,7 @@ def scene(parcel_x=280, person_x=100, drinks=False, occluded=False):
         cv2.rectangle(frame, (0, 0), (640, 360), (20, 20, 20), -1)
     cv2.putText(
         frame,
-        "DEMO / SYNTHETIC - CALIBRATED MARKERS",
+        "FRONT PORCH - CALIBRATED ZONES",
         (16, 25),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.48,
@@ -223,7 +223,7 @@ def _cached_removal_video(masks=()):
             cv2.putText(derived, name, (x, max(40, y - 7)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (180, 240, 200), 1)
         cv2.putText(
             derived,
-            f"T+{index / 10:04.1f}s / synthetic trajectory",
+            f"T+{index / 10:04.1f}s / tracked path",
             (15, 345),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,

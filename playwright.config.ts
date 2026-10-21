@@ -32,6 +32,7 @@ export default defineConfig({
       DATA_DIR: ".local/e2e",
       DEMO_ADMIN_PASSWORD: "e2e-private-password",
       OWNER_PASSWORD: "e2e-owner-password",
+      DONE_IRL_WARM_SCENES: "0",
       PYTHONPATH: path.resolve("apps/mcp-orchestrator"),
     },
     url: `http://127.0.0.1:${port}/health/ready`,

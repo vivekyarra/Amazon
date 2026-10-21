@@ -210,3 +210,7 @@ def test_real_threshold_branches(detector, post, branch, result):
     assert c["status"] == "ACTIVE"  # never verified or failed from vision alone
     checks = [a for a in s["alerts"] if a["kind"] == "ARRIVAL_ITEM_CHECK"]
     assert len(checks) == (0 if result == "VISIBLE_MATCH" else 1)
+
+
+def test_scene_status_reports_not_ready_until_warm(client):
+    assert client.get("/api/scene/status").json()["ready"] is False

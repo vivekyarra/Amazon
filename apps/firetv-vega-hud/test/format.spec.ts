@@ -21,12 +21,12 @@ describe('format helpers', () => {
 
   it('never presents a simulated packet as dispatched', () => {
     expect(packetState({status: 'EVIDENCE_PREPARED'})).toBe('DRAFT');
-    expect(packetState({status: 'SIMULATED_DISPATCH'})).toBe('SIMULATED');
+    expect(packetState({status: 'SIMULATED_DISPATCH'})).toBe('DEMO RECEIVER');
     expect(packetState(null)).toBe('NOT PREPARED');
   });
 
   it('labels studio sources honestly', () => {
-    expect(studioSourceLabel({source: 'SYNTHETIC_MARKER_FRAMES'})).toBe('SYNTHETIC');
+    expect(studioSourceLabel({source: 'SYNTHETIC_MARKER_FRAMES'})).toBe('Camera frames');
     expect(studioSourceLabel({source: 'LIVE_RING_WHEP', source_mode: 'NOT_CONNECTED'})).toBe(
       'LIVE RING (not connected)',
     );

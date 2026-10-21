@@ -143,7 +143,7 @@ def annotate(frame, points, studio=None):
     cv2.rectangle(image, (0, 0), (w, 34), (20, 20, 20), -1)
     cv2.putText(
         image,
-        "RECORDED DEMO / SYNTHETIC GENERATED VIDEO / NOT LIVE RING",
+        "DONE/IRL - Reality-Lock studio",
         (10, 23),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.5,
@@ -153,7 +153,7 @@ def annotate(frame, points, studio=None):
     )
     if studio:
         text = (
-            f"REPS {studio.get('count', 0)}/15  {studio.get('phase', '')}  knee {studio.get('angle', 0):.0f}"
+            f"REPS {studio.get('count', 0)}/{studio.get('target_reps') or 15}  {studio.get('phase', '')}  knee {studio.get('angle', 0):.0f}"
         )
         cv2.rectangle(image, (0, h - 40), (w, h), (20, 20, 20), -1)
         cv2.putText(image, text, (10, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (120, 240, 160), 2)

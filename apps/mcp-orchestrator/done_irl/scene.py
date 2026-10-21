@@ -1164,3 +1164,19 @@ def real_threshold_stage(s, db, household, c, branch):
             "ARRIVAL_ITEM_CHECK",
             "Your drinks weren't visible as you approached the door. Check whether you have them.",
         )
+
+
+def warm_cache():
+    """Analyse every real-branch fixture once so the first judge click is instant.
+
+    Returns the number of clips analysed; raises nothing (unavailable models just mean the
+    console falls back to the scripted scenes).
+    """
+    done = 0
+    for _stage, clip_id in REAL_BRANCHES.values():
+        try:
+            analyze_fixture(clip_id)
+            done += 1
+        except Exception:  # noqa: BLE001 - optional accelerator, never fatal
+            return done
+    return done

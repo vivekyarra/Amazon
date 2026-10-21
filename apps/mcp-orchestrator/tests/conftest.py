@@ -1,4 +1,8 @@
+import os
+
 import pytest
+
+os.environ.setdefault("DONE_IRL_WARM_SCENES", "0")  # keep unit tests fast; warm-up is a runtime accelerator
 from fastapi.testclient import TestClient
 from done_irl.api import create_app
 
