@@ -109,7 +109,7 @@ def test_consent_revocation_stops_processing(post):
     assert all(a["status"] == "PAUSED_CONSENT" for a in s["subagents"])
     post("/admin/scenarios/5/run", status=409)
     post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         {"event_id": "blocked", "utterance": "I'll do squats", "occurred_at": e.at("08:15")},
         status=409,
     )

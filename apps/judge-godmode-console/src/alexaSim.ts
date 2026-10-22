@@ -85,7 +85,7 @@ export async function ensureInitialized(log: Logger) {
     {
       protocolVersion: PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: "done-irl-simulated-alexa", version: "1.0.0" },
+      clientInfo: { name: "muni-alexa-web", version: "1.0.0" },
     },
     log,
   );

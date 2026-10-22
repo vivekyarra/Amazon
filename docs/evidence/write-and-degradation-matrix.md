@@ -31,7 +31,7 @@ The ledger-write routes are:
 
 - **Contracts:** `/api/contracts/{cid}/confirm`
 - **Push:** `/api/push/subscribe`, `/api/push/unsubscribe`
-- **Ingestion and owner input:** `/api/ingest/bee-simulated`, `/api/owner/promises`
+- **Ingestion and owner input:** `/api/ingest/bee`, `/api/owner/promises`
 - **Demo administration:** `/api/admin/scenarios/{stage}/run`, `/api/admin/reset`,
   `/api/admin/clock/advance`, `/api/admin/sister-proof`, `/api/admin/owner-pickup`
 - **Consent and incidents:** `/api/consent`, `/api/incidents/{iid}/{action}`

@@ -90,8 +90,8 @@ WRITES = {
     ),
     "/api/push/subscribe": dict(path="/api/push/subscribe", body=PUSH),
     "/api/push/unsubscribe": dict(path="/api/push/unsubscribe", body={"endpoint": PUSH["endpoint"]}),
-    "/api/ingest/bee-simulated": dict(
-        path="/api/ingest/bee-simulated",
+    "/api/ingest/bee": dict(
+        path="/api/ingest/bee",
         body={"event_id": "matrix", "utterance": "I'll call my sister before 6 PM.", "occurred_at": e.at("08:15")},
         admin=True,
     ),

@@ -41,7 +41,7 @@ def test_F01_four_promises_and_duplicate_reconnect(client, post):
 )
 def test_compiler_intent(post, utterance, speaker, count, status):
     s = post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(event_id="u1", utterance=utterance, speaker=speaker, occurred_at=e.at("08:15")),
     )["state"]
     assert len(s["contracts"]) == count
@@ -57,10 +57,10 @@ def test_deadline_amendment_and_source_dedupe(post):
         speaker="SELF",
         occurred_at=e.at("08:15"),
     )
-    s = post("/ingest/bee-simulated", body)["state"]
+    s = post("/ingest/bee", body)["state"]
     assert len(s["contracts"]) == 4
     assert e.contract(s, "sister")["due_at"] == e.at("19:00")
-    assert len(post("/ingest/bee-simulated", body)["state"]["contracts"]) == 4
+    assert len(post("/ingest/bee", body)["state"]["contracts"]) == 4
 
 
 def test_F02_deposit_starts_one_watchdog_without_completion(post):
@@ -338,7 +338,7 @@ def test_schema_export_validates_fixture():
 
 def test_timezone_and_dst_are_resolved_to_utc(post):
     s = post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(
             event_id="dst",
             utterance="I'll call my sister before 6 PM.",
@@ -355,7 +355,7 @@ def test_timezone_and_dst_are_resolved_to_utc(post):
 
 def test_timezone_offset_required_for_ingestion(post):
     post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(event_id="naive", utterance="I'll call my sister.", occurred_at="2026-10-20T08:15:00"),
         status=422,
     )
@@ -401,7 +401,7 @@ def test_generated_video_duration_and_original_derived_provenance(tmp_path, post
 @pytest.mark.parametrize("utterance", ["I will not call my sister.", "I won't bring drinks."])
 def test_negated_speech_does_not_create_obligation(post, utterance):
     s = post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(event_id="negated", utterance=utterance, speaker="SELF", occurred_at=e.at("08:15")),
     )["state"]
     assert not s["contracts"]
@@ -409,7 +409,7 @@ def test_negated_speech_does_not_create_obligation(post, utterance):
 
 def test_conditional_promise_requires_confirmation(post):
     s = post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(
             event_id="conditional",
             utterance="I'll bring drinks if I have time.",

@@ -11,6 +11,7 @@ instance=$(aws cloudformation describe-stack-resource --region "$region" --stack
 ip=$(aws cloudformation describe-stacks --region "$region" --stack-name "$stack" \
   --query "Stacks[0].Outputs[?OutputKey=='PublicIp'].OutputValue|[0]" --output text)
 host="$(echo "$ip" | tr . -).sslip.io"
+secret=$(aws cloudformation describe-stacks --region "$region" --stack-name "$stack"   --query "Stacks[0].Parameters[?ParameterKey=='RuntimeSecretArn'].ParameterValue|[0]" --output text)
 read -r -d '' remote <<EOF || true
 set -euo pipefail
 cd /srv/done-irl/src
@@ -24,6 +25,18 @@ if [ ! -f /srv/done-irl/config/detector.tflite ]; then
   chown 10001:10001 /srv/done-irl/config/detector.tflite; chmod 0600 /srv/done-irl/config/detector.tflite
 fi
 grep -q '^DONE_IRL_DETECTOR_MODEL=' /srv/done-irl/runtime.env || { echo DONE_IRL_DETECTOR_MODEL=/config/detector.tflite; echo DONE_IRL_DETECTOR_DOWNLOAD=0; } >> /srv/done-irl/runtime.env
+# Optional Amazon Bedrock (Nova) key: copied from the stack's runtime secret, never passed through SSM.
+/opt/done-irl-aws/bin/python - <<'PY'
+import json
+from pathlib import Path
+import boto3
+s = json.loads(boto3.client('secretsmanager', region_name='$region').get_secret_value(SecretId='$secret')['SecretString'])
+p = Path('/srv/done-irl/runtime.env')
+rows = [r for r in p.read_text().splitlines() if r and not r.startswith(('BEDROCK_', 'MUNI_NOVA='))]
+if s.get('BEDROCK_ACCESS_KEY_ID') and s.get('BEDROCK_SECRET_ACCESS_KEY'):
+    rows += ['BEDROCK_ACCESS_KEY_ID=' + s['BEDROCK_ACCESS_KEY_ID'], 'BEDROCK_SECRET_ACCESS_KEY=' + s['BEDROCK_SECRET_ACCESS_KEY'], 'MUNI_NOVA=1']
+p.write_text('\n'.join(rows) + '\n')
+PY
 sed -i -E 's#done-irl:[a-f0-9]{40}#done-irl:$commit#' /etc/systemd/system/done-irl.service
 systemctl daemon-reload
 systemctl restart done-irl

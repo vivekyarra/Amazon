@@ -151,7 +151,7 @@ def test_m6_weekend_said_late_saturday_is_not_born_overdue():
 def test_m7_user_confirmed_provenance_is_recorded(app, post):
     say_body = dict(event_id="m7", utterance="I'll pay the electricity bill by 6 pm", speaker="SELF",
                     occurred_at=e.at("08:15"))
-    s = post("/ingest/bee-simulated", say_body)["state"]
+    s = post("/ingest/bee", say_body)["state"]
     [c] = [c for c in s["contracts"] if c["key"].startswith("gen_")]
     s = post(f"/contracts/{c['contract_id']}/confirm", {"action": "confirm-done"})["state"]
     [c] = [c for c in s["contracts"] if c["key"].startswith("gen_")]

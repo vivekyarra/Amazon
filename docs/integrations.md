@@ -11,7 +11,7 @@ Every integration below runs through the same backend, reducers and evidence pol
 | **Bee** | Bee developer API on a real Bee device: `GET /v1/stream` SSE (`new-utterance`, `todo-created`) and `GET /v1/todos` backfill compiled into commitment contracts. | [verification](evidence/bee-live-verification.md) |
 | **Fire TV — Vega OS** | React Native for Vega app (`apps/firetv-vega-hud`) built with the Vega SDK, installed and run on the Vega Virtual Device; all four views by D-pad against the live backend. | [device report](../tests/firetv/vega-device-report.md) · [recording](evidence/vega/vvd-session-4x.mp4) |
 | **Fire TV — Fire OS** | Android TV / Fire OS APK (`apps/firetv-command-hud`); D-pad journey (33 checks) runs on an Android TV emulator in CI on every push. | [report](../tests/firetv/device-report.md) · [walkthrough](evidence/firetv/walkthrough.mp4) · [CI](evidence/ci-runs.md) |
-| **AWS** | CloudFormation stack: EC2 reducer (SSM-managed), DynamoDB (KMS, PITR), S3 (SSE-KMS, versioned), EventBridge Scheduler → SQS (KMS, DLQ), Secrets Manager, CloudWatch. Real T-60 / T-25 / deadline escalations fired by EventBridge within a second of schedule. | [deployment](evidence/aws-deployment.json) · [live escalation](evidence/aws-live-escalation.json) |
+| **AWS** | Amazon Bedrock Nova Lite (Converse) as a validated fallback interpreter for promises the rules can't parse. CloudFormation stack: EC2 reducer (SSM-managed), DynamoDB (KMS, PITR), S3 (SSE-KMS, versioned), EventBridge Scheduler → SQS (KMS, DLQ), Secrets Manager, CloudWatch. Real T-60 / T-25 / deadline escalations fired by EventBridge within a second of schedule. | [deployment](evidence/aws-deployment.json) · [live escalation](evidence/aws-live-escalation.json) |
 
 ## Perception
 

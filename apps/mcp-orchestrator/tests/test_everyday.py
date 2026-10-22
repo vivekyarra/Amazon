@@ -13,7 +13,7 @@ NOW = datetime(2026, 10, 20, 8, 15, tzinfo=ZoneInfo("Asia/Kolkata"))  # a Tuesda
 
 def say(post, event_id, utterance, speaker="SELF", hm="08:15", counterparty="Household"):
     return post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(event_id=event_id, utterance=utterance, speaker=speaker, occurred_at=e.at(hm), counterparty=counterparty),
     )["state"]
 
@@ -139,7 +139,7 @@ def test_missed_deadline_without_proof_and_quiet_when_claimed(post):
 
 def test_bee_todo_keeps_bee_alarm_as_deadline(post):
     s = post(
-        "/ingest/bee-simulated",
+        "/ingest/bee",
         dict(
             event_id="bee:todo:99",
             utterance="Renew passport",

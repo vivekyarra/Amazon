@@ -10,6 +10,7 @@ from .models import ApiError, BeeInput
 from . import vision
 from . import scene
 from . import commitments as nl
+from . import nova
 from . import privacy
 
 DAY = "2026-10-20"
@@ -318,7 +319,7 @@ def compile_bee(s, bee: BeeInput):
     if not re.search(
         r"\b(i(?:'ll| will| promise)|i promised|i need to|i should|can you|please|bring)\b", text
     ) and not nl.PROMISE.search(text):
-        return []
+        return _nova_fallback(s, bee, zone)
     if re.search(r"\b(i will not|i won't|i'll not|i cannot|i can't|do not|don't|did not|didn't)\b", text) and not (
         nl.NOT_FORGET.search(text)
     ):
@@ -421,9 +422,51 @@ def compile_bee(s, bee: BeeInput):
             )
             if cand["modality"] == "AUTHORIZED_MANUAL_CONFIRMATION":
                 c["verification_note"] = "No sensor can prove this task; completion is recorded as USER_CONFIRMED."
+    if not created:
+        return _nova_fallback(s, bee, zone)
     for cid in created:
         next(c for c in s["contracts"] if c["contract_id"] == cid)["timezone"] = bee.timezone
     return created
+
+
+def _nova_fallback(s, bee, zone):
+    """Ask Amazon Bedrock (Nova) about an intention the rules could not parse. Proposes, never verifies."""
+    text = bee.utterance.replace("’", "'")
+    if not nova.worth_asking(text) or re.search(r"\b(did not|didn't|won't|will not|never|already)\b", text, re.I):
+        return []
+    now_local = bee.occurred_at.astimezone(zone)
+    reading = nova.interpret(text, now_local)
+    if not reading:
+        emit(s, "commitment.ai_reviewed", {"source_event_id": bee.event_id, "model": nova.model_id(),
+                                           "decision": "NO_COMMITMENT"})  # fmt: skip
+        return []
+    due = reading["due_local"].astimezone(timezone.utc).isoformat() if reading["due_local"] else None
+    slug = re.sub(r"[^a-z0-9]+", "_", reading["title"].lower()).strip("_")[:40] or "task"
+    uncertain = bee.speaker != "SELF" or reading["confidence"] < 0.8
+    person = "Self" if bee.speaker == "SELF" else bee.counterparty
+    cid, writable = _upsert(s, bee, "gen_nova_" + slug, reading["title"], person,
+                            "AUTHORIZED_MANUAL_CONFIRMATION", due, None, uncertain)  # fmt: skip
+    if writable:
+        c = next(c for c in s["contracts"] if c["contract_id"] == cid)
+        local_due, freq = reading["due_local"], reading["recurrence"]
+        series = None
+        if freq == "DAILY":
+            series = {"freq": "DAILY"}
+        elif freq == "WEEKLY":
+            series = {"freq": "WEEKLY", "weekday": local_due.weekday() if local_due else None}
+        elif freq == "MONTHLY":
+            series = {"freq": "MONTHLY", "day": local_due.day if local_due else None}
+        c.update(
+            commitment_origin="BEDROCK_NOVA",
+            interpreted_by={"model": reading["model"], "confidence": round(reading["confidence"], 2)},
+            original_utterance=bee.utterance,
+            recurrence=series,
+            timezone=bee.timezone,
+            verification_note="Understood by Amazon Nova; completion is recorded as USER_CONFIRMED.",
+        )
+        emit(s, "commitment.ai_interpreted", {"source_event_id": bee.event_id, "contract_id": cid,
+                                              "model": reading["model"], "confidence": reading["confidence"]})  # fmt: skip
+    return [cid]
 
 
 def _compile_bee_todo(s, bee, zone):

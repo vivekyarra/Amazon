@@ -687,7 +687,7 @@ def create_app(data_dir=None, passwords=None):
             "subagents": initial(p["household"])["subagents"],
         }
 
-    @app.post("/api/ingest/bee-simulated")
+    @app.post("/api/ingest/bee")
     def ingest(body: BeeInput, request: Request, p=Depends(admin)):
         return command(request, p, lambda s, db: e.compile_bee(s, body))
 

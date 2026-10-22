@@ -71,6 +71,7 @@ Beyond the canonical day, Muni handles everyday life: *"pay the electricity bill
 ```mermaid
 flowchart LR
   Bee[Bee wearable<br/>SSE utterances & todos] --> C[Commitment compiler]
+  C -. unparsed intent .-> N[Amazon Bedrock<br/>Nova Lite]
   Alexa[Alexa+ / any MCP client] -- MCP 2025-11-25 --> M[MCP server<br/>11 tools]
   M --> C
   C --> L[(Encrypted ledger<br/>contracts · events · evidence)]
@@ -83,7 +84,7 @@ flowchart LR
   L --> UI[Console · Fire TV Vega & Fire OS · Web Push]
 ```
 
-- **Commitment compiler** — deterministic, explainable parsing of deadlines (*tonight, by 5th, day after tomorrow, in an hour and a half*), triggers (*when I get home, before TV*), recurrence, counterparty and verification method; injection text and negations are refused.
+- **Commitment compiler** — deterministic, explainable parsing first; when the rules find nothing in a sentence that still sounds like an intention, **Amazon Bedrock Nova** reads it and returns validated JSON. Nova can propose a contract but never verify one, and low-confidence readings wait for your OK. Deterministic parsing covers deadlines (*tonight, by 5th, day after tomorrow, in an hour and a half*), triggers (*when I get home, before TV*), recurrence, counterparty and verification method; injection text and negations are refused.
 - **Evidence policy** — a contract reaches `VERIFIED` only with policy-matching evidence; terminal states never regress; every transition is an append-only event with one trace ID from utterance to screen.
 - **Perception** — Ring WHEP video decoded server-side; MediaPipe EfficientDet + tracking for porch and doorway scenes; MediaPipe Pose for squat cycles, rejecting half reps, frozen frames and loops.
 - **Durability** — AES-GCM encrypted SQLite WAL ledger with a leased provider inbox, replicated through a transactional outbox to DynamoDB and S3; every deadline is a real EventBridge schedule.
@@ -98,7 +99,7 @@ More: [architecture](docs/architecture.md) · [integrations](docs/integrations.m
 | **Ring** | Partner API: device discovery, capabilities, event history, signed webhooks, and WHEP live view decoded server-side into the Reality-Lock studio — verified live on the Ring Developer Playground device. |
 | **Bee** | Developer API: live SSE stream (`new-utterance`, `todo-created`) and todo backfill compiled straight into contracts — verified on a real Bee device. |
 | **Fire TV** | A React Native for **Vega OS** app running on the Vega Virtual Device, and a **Fire OS** APK with full D-pad navigation (tested on every push in CI). |
-| **AWS** | CloudFormation · EC2 + SSM · DynamoDB · S3 (SSE-KMS) · EventBridge Scheduler · SQS + DLQ · Secrets Manager · CloudWatch. |
+| **AWS** | **Amazon Bedrock (Nova Lite)** reads promises the rules can't parse (*"the car needs servicing this weekend, I'm on it"*) · CloudFormation · EC2 + SSM · DynamoDB · S3 (SSE-KMS) · EventBridge Scheduler · SQS + DLQ · Secrets Manager · CloudWatch. |
 
 ## Try it in 5 minutes
 

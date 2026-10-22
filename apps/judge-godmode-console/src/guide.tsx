@@ -151,7 +151,7 @@ export function AddPromise({
         ev.preventDefault();
         void guarded(async () => {
           if (admin)
-            await act("/ingest/bee-simulated", {
+            await act("/ingest/bee", {
               event_id: newId(),
               utterance: text,
               speaker: "SELF",

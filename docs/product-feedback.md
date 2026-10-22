@@ -74,9 +74,9 @@ Written from hands-on use while building Muni (October 2026); every point below 
 | SQS (+ DLQ) | Scheduler wake-ups to the reconciler; KMS-encrypted, dead-letter after six receives. |
 | Secrets Manager | Ledger key and owner/admin passwords, never in stack parameters or git. |
 | CloudWatch | Container logs and queue-age / DLQ alarms. |
-| Bedrock (attempted) | Nova Converse returned `Operation not allowed` in three regions (friction A3); Muni ships a deterministic, tested compiler instead. |
+| Amazon Bedrock (Nova Lite) | Converse API as a fallback interpreter (`done_irl/nova.py`): when the deterministic compiler finds nothing in an utterance that still sounds like an intention, Nova returns strict JSON (title, local due time, recurrence, confidence) that Muni validates. It proposes contracts, never verifies them; readings under 0.8 confidence wait for owner confirmation; calls are capped per hour and time out in 8 s. Runs on a dedicated least-privilege key that can only invoke Nova Lite. The first attempt on another account returned `Operation not allowed` (friction A3). |
 
-What worked: Scheduler `at()` expressions with `ActionAfterCompletion=DELETE` are a clean fit for per-promise escalations; DynamoDB/S3/KMS wiring was straightforward. What needs work: CloudFront's account-verification block surfaced mid-stack (A4), and Bedrock's error gave no remedy (A3). Would build again: Yes.
+What worked: Scheduler `at()` expressions with `ActionAfterCompletion=DELETE` are a clean fit for per-promise escalations; DynamoDB/S3/KMS wiring was straightforward. What needs work: CloudFront's account-verification block surfaced mid-stack (A4), and Bedrock's error on our first account gave no remedy (A3). Once enabled, Nova Lite's Converse API with `temperature 0` returned clean, schema-following JSON for promise extraction on the first try. Would build again: Yes.
 
 ## Other tools
 

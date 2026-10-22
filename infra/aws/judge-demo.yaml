@@ -238,6 +238,8 @@ Resources:
               if not isinstance(value, str) or any(c in value for c in '\r\n\x00'):
                   raise SystemExit('Invalid secret encoding')
               rows.append(name + '=' + value)
+          if secret.get('BEDROCK_ACCESS_KEY_ID') and secret.get('BEDROCK_SECRET_ACCESS_KEY'):
+              rows += ['BEDROCK_ACCESS_KEY_ID=' + secret['BEDROCK_ACCESS_KEY_ID'], 'BEDROCK_SECRET_ACCESS_KEY=' + secret['BEDROCK_SECRET_ACCESS_KEY'], 'MUNI_NOVA=1']
           Path('/srv/done-irl/runtime.env').write_text('\n'.join(rows) + '\n')
           for p in config.iterdir():
               p.chmod(0o600)
