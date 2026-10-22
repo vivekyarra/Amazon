@@ -107,12 +107,15 @@ def create_app(data_dir=None, passwords=None):
     )
     rates = {}
 
+    def is_demo(household):
+        return household == "demo" or household.startswith("demo_")
+
     def fresh(household):
         s = e.fresh()
         s["household_id"] = household
         # Only the isolated judge namespace replays the virtual canonical day. Every real
         # household (including the owner of a demo deployment) runs on wall-clock time.
-        if not demo or household != "demo":
+        if not demo or not is_demo(household):
             from datetime import datetime, timezone
 
             s.update(
@@ -190,7 +193,7 @@ def create_app(data_dir=None, passwords=None):
         return authenticate(request)
 
     def admin(p=Depends(principal)):
-        if p["role"] != "admin" or p["household"] != "demo":
+        if p["role"] != "admin" or not is_demo(p["household"]):
             raise ApiError(
                 403, "ADMIN_REQUIRED", "Judge replay controls require the isolated demo administrator."
             )
@@ -305,7 +308,7 @@ def create_app(data_dir=None, passwords=None):
             with store.transaction() as db:
                 for row in db.execute("SELECT id FROM households").fetchall():
                     s = store.read(row["id"])
-                    if row["id"] != "demo" and s.get("clock_mode") != "WALL":
+                    if not is_demo(row["id"]) and s.get("clock_mode") != "WALL":
                         # Households created before real households moved to wall-clock time would
                         # otherwise never be reconciled; overdue jobs then resolve as stale/missed.
                         from datetime import datetime, timezone
@@ -493,6 +496,72 @@ def create_app(data_dir=None, passwords=None):
             samesite="strict",
             secure=not demo or request.url.scheme == "https",
             max_age=8 * 3600,
+        )
+        return response
+
+    guest_hits = {}
+    GUEST_TTL = 4 * 3600
+
+    def prune_guests(db):
+        """Erase guest demo households whose sessions have all expired (no personal data is kept)."""
+        now = time.time()
+        rows = db.execute(
+            "SELECT h.id FROM households h WHERE substr(h.id,1,5)='demo_' AND NOT EXISTS "
+            "(SELECT 1 FROM sessions s WHERE s.household=h.id AND s.expires>?)",
+            (now,),
+        ).fetchall()
+        for row in rows:
+            household = row["id"]
+            for table in ["artifacts", "retention_tombstones", "inbox", "provider_cursors", "commands",
+                          "cloud_outbox", "sessions"]:  # fmt: skip
+                db.execute(f"DELETE FROM {table} WHERE household=?", (household,))
+            db.execute("DELETE FROM households WHERE id=?", (household,))
+            if os.getenv("AWS_LEDGER_TABLE"):
+                db.execute(
+                    "INSERT INTO cloud_deletions(household,schedules,requested) VALUES (?,?,?)",
+                    (household, "[]", now),
+                )
+        return len(rows)
+
+    @app.post("/api/auth/guest")
+    def guest(request: Request):
+        """One-click judge access: a private, isolated copy of the demo day. Demo deployments only."""
+        if not demo or os.getenv("DEMO_GUEST", "1") != "1":
+            raise ApiError(404, "NOT_FOUND", "Endpoint not found.")
+        ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        hits = [t for t in guest_hits.get(ip, []) if now - t < 3600]
+        if len(hits) >= int(os.getenv("DEMO_GUEST_PER_HOUR", "20")):
+            raise ApiError(429, "RATE_LIMITED", "Too many demo sessions from this network. Try again later.")
+        guest_hits[ip] = hits + [now]
+        if len(guest_hits) > 5000:
+            guest_hits.clear()
+        token = secrets.token_urlsafe(32)
+        household = "demo_" + secrets.token_hex(6)
+        with store.transaction() as db:
+            prune_guests(db)
+            active = db.execute(
+                "SELECT COUNT(DISTINCT household) n FROM sessions WHERE substr(household,1,5)='demo_' "
+                "AND expires>?",
+                (now,),
+            ).fetchone()["n"]
+            if active >= int(os.getenv("DEMO_GUEST_MAX", "150")):
+                raise ApiError(503, "DEMO_BUSY", "The demo is busy. Please try again in a few minutes.")
+            db.execute(
+                "INSERT INTO sessions VALUES (?,?,?,?,?)",
+                (hashlib.sha256(token.encode()).hexdigest(), "guest", household, "admin", now + GUEST_TTL),
+            )
+        initial(household)
+        response = JSONResponse(
+            {"schema_version": "1.0", "trace_id": uuid.uuid4().hex, "user": "guest", "role": "admin"}
+        )
+        response.set_cookie(
+            "done_session",
+            token,
+            httponly=True,
+            samesite="strict",
+            secure=request.url.scheme == "https",
+            max_age=GUEST_TTL,
         )
         return response
 

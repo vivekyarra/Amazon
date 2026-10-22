@@ -28,6 +28,7 @@ async function ask(page: Page, text: string, tool: string) {
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Owner sign-in" }).click();
   await page
     .getByLabel("Password", { exact: true })
     .fill("e2e-private-password");

@@ -3832,3 +3832,20 @@ kbd {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.login-owner-link {
+  margin-top: 14px;
+  background: none;
+  border: 0;
+  color: var(--muted, #8a9aab);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: center;
+}
+.login-owner-link:hover,
+.login-owner-link:focus-visible {
+  color: inherit;
+}

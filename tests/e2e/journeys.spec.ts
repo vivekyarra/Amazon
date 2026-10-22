@@ -3,6 +3,7 @@ import fs from "node:fs";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Owner sign-in" }).click();
   await page
     .getByLabel("Password", { exact: true })
     .fill("e2e-private-password");

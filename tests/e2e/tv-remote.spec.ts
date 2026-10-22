@@ -27,6 +27,7 @@ test("F24: every control in the four TV views is reachable by D-pad with visible
 }) => {
   test.setTimeout(180000);
   await page.goto("/");
+  await page.getByRole("button", { name: "Owner sign-in" }).click();
   await page
     .getByLabel("Password", { exact: true })
     .fill("e2e-private-password");

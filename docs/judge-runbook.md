@@ -1,7 +1,7 @@
 # Judge runbook — Muni in five minutes
 
-**Live:** https://100-49-183-59.sslip.io · sign in as `demo-admin` (password in the Devpost testing instructions).
-The **Demo day** household replays one scripted day; your clicks run the same backend, reducers and evidence policy as a live household.
+**Live:** https://100-49-183-59.sslip.io · press **Try the live demo**. No account or password needed.
+Each visitor gets a private copy of the **Demo day** household with full judge controls; your clicks run the same backend, reducers and evidence policy as a live household.
 
 | # | Do this | What to notice |
 |---|---|---|
@@ -15,7 +15,7 @@ The **Demo day** household replays one scripted day; your clicks run the same ba
 | 8 | Type a promise of your own: *"I'll pay the electricity bill by Friday"* | Parsed into a contract with a deadline, T-60/T-25 jobs and the right verification method. |
 | 9 | **Judge replay** | The six spec buttons with branches: fake delivery, family pickup, visible/empty/ambiguous drinks, real-footage branches; the MCP JSON-RPC log streams on the right. |
 
-**MCP from your own client:** `https://100-49-183-59.sslip.io/mcp/` — Streamable HTTP, protocol `2025-11-25`, Bearer = the `done_session` cookie value after signing in.
+**MCP from your own client:** `https://100-49-183-59.sslip.io/mcp/` — Streamable HTTP, protocol `2025-11-25`, Bearer = the `done_session` cookie value after pressing *Try the live demo*.
 
 **Fire TV:** the Vega OS app (`apps/firetv-vega-hud`) runs on the Vega Virtual Device; the Fire OS APK (`apps/firetv-command-hud`) sideloads on Fire TV / Android TV and is D-pad tested in CI.
 

@@ -242,7 +242,9 @@ function App() {
     [showNotifications, setShowNotifications] = useState(false),
     [password, setPassword] = useState(""),
     [username, setUsername] = useState("demo-admin"),
-    [loginBusy, setLoginBusy] = useState(false);
+    [loginBusy, setLoginBusy] = useState(false),
+    [guestAvailable, setGuestAvailable] = useState(false),
+    [ownerForm, setOwnerForm] = useState(false);
   const [consoleTab, setConsoleTab] = useState<"events" | "decisions" | "mcp">(
     "events",
   );
@@ -567,6 +569,25 @@ function App() {
       setLoginBusy(false);
     }
   };
+  const tryDemo = async () => {
+    setLoginBusy(true);
+    setError("");
+    try {
+      await api("/auth/guest", {});
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoginBusy(false);
+    }
+  };
+  useEffect(() => {
+    if (authenticated) return;
+    fetch("/health/ready")
+      .then((r) => r.json())
+      .then((h) => setGuestAvailable(h.mode === "SYNTHETIC_DEMO" && !tv))
+      .catch(() => setGuestAvailable(false));
+  }, [authenticated, tv]);
   const logOut = async () => {
     cancelReplay();
     try {
@@ -595,37 +616,68 @@ function App() {
         <div className="login-card">
           <Brand />
           <h1>Life makes promises. Reality keeps score.</h1>
-          <p className="login-lede">Sign in to your private Muni workspace.</p>
-          <form onSubmit={login}>
-            <label>
-              Workspace account
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-              />
-            </label>
-            <label>
-              Password
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-                placeholder="Your local access password"
-              />
-            </label>
-            {error && (
-              <div role="alert" className="error-inline">
-                {error}
-              </div>
-            )}
-            <button className="button primary wide" disabled={loginBusy}>
-              {loginBusy ? "Connecting…" : "Open mission control"}
+          <p className="login-lede">
+            {guestAvailable
+              ? "Explore a full day with Muni. No account needed."
+              : "Sign in to your private Muni workspace."}
+          </p>
+          {guestAvailable && (
+            <button
+              type="button"
+              className="button primary wide"
+              onClick={() => void tryDemo()}
+              disabled={loginBusy}
+            >
+              {loginBusy ? "Opening demo…" : "Try the live demo"}
               <ArrowRight size={16} aria-hidden />
             </button>
-          </form>
+          )}
+          {guestAvailable && !ownerForm && (
+            <button
+              type="button"
+              className="login-owner-link"
+              onClick={() => setOwnerForm(true)}
+            >
+              Owner sign-in
+            </button>
+          )}
+          {guestAvailable && !ownerForm && error && (
+            <div role="alert" className="error-inline">
+              {error}
+            </div>
+          )}
+          {(!guestAvailable || ownerForm) && (
+            <form onSubmit={login}>
+              <label>
+                Workspace account
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                  placeholder="Your local access password"
+                />
+              </label>
+              {error && (
+                <div role="alert" className="error-inline">
+                  {error}
+                </div>
+              )}
+              <button className="button primary wide" disabled={loginBusy}>
+                {loginBusy ? "Connecting…" : "Open mission control"}
+                <ArrowRight size={16} aria-hidden />
+              </button>
+            </form>
+          )}
           <p className="login-note">
             <LockKeyhole size={14} aria-hidden />
             <span>

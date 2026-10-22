@@ -102,7 +102,7 @@ More: [architecture](docs/architecture.md) · [integrations](docs/integrations.m
 
 ## Try it in 5 minutes
 
-**https://100-49-183-59.sslip.io** — sign in as `demo-admin` (password in the Devpost testing instructions), press **Run the full day**, then follow the [judge runbook](docs/judge-runbook.md). Point any MCP client at `https://100-49-183-59.sslip.io/mcp/`.
+**https://100-49-183-59.sslip.io** — press **Try the live demo** (no account needed; every visitor gets a private copy of the day), then **Run the full day**, then follow the [judge runbook](docs/judge-runbook.md). Point any MCP client at `https://100-49-183-59.sslip.io/mcp/`.
 
 ## Quick start
 
