@@ -15,7 +15,7 @@ Parameters:
     Description: Secret JSON with OWNER_PASSWORD, JUDGE_PASSWORD and LEDGER_KEY_BASE64 (never stack parameters).
   RepoUrl:
     Type: String
-    Default: https://github.com/vivekyarra/Amazon.git
+    Default: https://github.com/vivekyarra/Muni.git
   GitCommit:
     Type: String
     AllowedPattern: '[a-f0-9]{40}'

@@ -6,7 +6,7 @@
 
 Muni hears the promises you make in passing, turns each one into a living contract, watches the real world for proof, and nudges you while there's still time — across **Alexa+**, **Ring**, **Bee** and **Fire TV**.
 
-[![CI](https://github.com/vivekyarra/Amazon/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vivekyarra/Amazon/actions/workflows/ci.yml)
+[![CI](https://github.com/vivekyarra/Muni/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vivekyarra/Muni/actions/workflows/ci.yml)
 ![Alexa+](https://img.shields.io/badge/Alexa%2B-MCP%202025--11--25-00CAFF)
 ![Fire TV](https://img.shields.io/badge/Fire%20TV-Vega%20OS%20%2B%20Fire%20OS-FF9900)
 ![Ring](https://img.shields.io/badge/Ring-Partner%20API%20%C2%B7%20WHEP-1C9AD6)
@@ -110,7 +110,7 @@ More: [architecture](docs/architecture.md) · [integrations](docs/integrations.m
 Requires Python 3.12+ with [uv](https://docs.astral.sh/uv/), Node.js 22.12+ and npm. Works on Linux, macOS and Windows (Git Bash).
 
 ```bash
-git clone https://github.com/vivekyarra/Amazon.git && cd Amazon
+git clone https://github.com/vivekyarra/Muni.git && cd Muni
 ./scripts/setup-local.sh      # Python deps, pinned MediaPipe models, console build
 ./scripts/start-local.sh      # http://127.0.0.1:8080
 ./scripts/access.sh           # local judge / owner passwords
