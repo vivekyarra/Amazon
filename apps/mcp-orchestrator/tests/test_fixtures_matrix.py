@@ -77,6 +77,7 @@ def landmarks():
 
 EXEMPT = {
     "/api/auth/login": "Credential exchange cannot require a session; validated, rate-limited, no ledger write.",
+    "/api/auth/guest": "One-click judge access in demo deployments only: issues a session for a new isolated demo_* household; rate-limited and capped, no ledger write.",
     "/api/auth/logout": "Requires the session it revokes; repeat is a no-op 401; no household data is written.",
     "/api/webhooks/ring": "Provider callback: raw-body HMAC + account/device binding instead of a session; "
     "idempotent by provider event id; receipts are audited through the durable inbox.",
