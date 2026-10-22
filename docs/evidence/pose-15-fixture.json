@@ -15,28 +15,28 @@
   "fixtures": {
     "squats-15": {
       "path": "packages/testing-fixtures/pose/squats-15-synthetic.mp4",
-      "sha256": "2a35a46dd85d419bc38fdbcf2baa7a22272fbee8b9ab74e9e7c012e101e19162"
+      "sha256": "1de9cfd3f7c4c4738c430e205d139bacb68df44700857bd238203d50688a1d95"
     },
     "squats-half-15": {
       "path": "packages/testing-fixtures/pose/squats-half-15-synthetic.mp4",
-      "sha256": "cdb46543128196ace704df0d7706e921cb256ff9edf8a74a1f31fd823d97c47a"
+      "sha256": "f364d681ed9ca2b22d7617fe68c68fc59e745d9cbe4d65ab42910b992a86d8d0"
     }
   },
   "annotated_clip": {
     "path": "docs/evidence/pose-15-annotated.mp4",
-    "sha256": "b653438b355bd6d447c8def03ca27582d8f42ceff1d7541f1842d28d53299bf5",
+    "sha256": "71055d6c6b4e59721320d2b83bd45f7d8a62ec08ef1e2b9b900140db62ccea7c",
     "note": "Derived overlay of F17_full_15; skeleton/counter drawn after inference, never fed back."
   },
   "scenarios": {
     "F17_full_15": {
       "frames_processed": 769,
       "frames_with_pose": 769,
-      "processing_fps": 20.9,
+      "processing_fps": 23.7,
       "rep_verified_events": 15,
       "reducer_count": 15,
       "gate": "UNLOCKED",
       "contract_status": "VERIFIED",
-      "first_unlocked_frame": 756,
+      "first_unlocked_frame": 757,
       "unlocked_before_15": false,
       "evidence_provenance": [
         "RECORDED_DEMO"
@@ -44,107 +44,107 @@
       "reps": [
         {
           "rep": 1,
-          "frame_index": 50,
-          "timestamp_ms": 3333,
-          "min_knee_angle_deg": 67.3,
+          "frame_index": 52,
+          "timestamp_ms": 3466,
+          "min_knee_angle_deg": 55.9,
           "gate_after": "LOCKED"
         },
         {
           "rep": 2,
-          "frame_index": 104,
-          "timestamp_ms": 6933,
-          "min_knee_angle_deg": 78.9,
+          "frame_index": 106,
+          "timestamp_ms": 7066,
+          "min_knee_angle_deg": 61.1,
           "gate_after": "LOCKED"
         },
         {
           "rep": 3,
-          "frame_index": 154,
-          "timestamp_ms": 10266,
-          "min_knee_angle_deg": 62.1,
+          "frame_index": 156,
+          "timestamp_ms": 10400,
+          "min_knee_angle_deg": 60.5,
           "gate_after": "LOCKED"
         },
         {
           "rep": 4,
-          "frame_index": 202,
-          "timestamp_ms": 13466,
-          "min_knee_angle_deg": 80.5,
+          "frame_index": 204,
+          "timestamp_ms": 13600,
+          "min_knee_angle_deg": 65.1,
           "gate_after": "LOCKED"
         },
         {
           "rep": 5,
-          "frame_index": 253,
-          "timestamp_ms": 16866,
-          "min_knee_angle_deg": 69.7,
+          "frame_index": 255,
+          "timestamp_ms": 17000,
+          "min_knee_angle_deg": 58.3,
           "gate_after": "LOCKED"
         },
         {
           "rep": 6,
-          "frame_index": 305,
-          "timestamp_ms": 20333,
-          "min_knee_angle_deg": 77.2,
+          "frame_index": 307,
+          "timestamp_ms": 20466,
+          "min_knee_angle_deg": 63.2,
           "gate_after": "LOCKED"
         },
         {
           "rep": 7,
-          "frame_index": 358,
-          "timestamp_ms": 23866,
-          "min_knee_angle_deg": 81.4,
+          "frame_index": 361,
+          "timestamp_ms": 24066,
+          "min_knee_angle_deg": 64.0,
           "gate_after": "LOCKED"
         },
         {
           "rep": 8,
-          "frame_index": 411,
-          "timestamp_ms": 27400,
-          "min_knee_angle_deg": 72.7,
+          "frame_index": 413,
+          "timestamp_ms": 27533,
+          "min_knee_angle_deg": 60.1,
           "gate_after": "LOCKED"
         },
         {
           "rep": 9,
-          "frame_index": 462,
-          "timestamp_ms": 30800,
-          "min_knee_angle_deg": 77.7,
+          "frame_index": 464,
+          "timestamp_ms": 30933,
+          "min_knee_angle_deg": 60.7,
           "gate_after": "LOCKED"
         },
         {
           "rep": 10,
-          "frame_index": 514,
-          "timestamp_ms": 34266,
-          "min_knee_angle_deg": 85.5,
+          "frame_index": 516,
+          "timestamp_ms": 34400,
+          "min_knee_angle_deg": 64.2,
           "gate_after": "LOCKED"
         },
         {
           "rep": 11,
-          "frame_index": 558,
-          "timestamp_ms": 37200,
-          "min_knee_angle_deg": 75.3,
+          "frame_index": 559,
+          "timestamp_ms": 37266,
+          "min_knee_angle_deg": 59.9,
           "gate_after": "LOCKED"
         },
         {
           "rep": 12,
-          "frame_index": 608,
-          "timestamp_ms": 40533,
-          "min_knee_angle_deg": 79.0,
+          "frame_index": 610,
+          "timestamp_ms": 40666,
+          "min_knee_angle_deg": 61.5,
           "gate_after": "LOCKED"
         },
         {
           "rep": 13,
-          "frame_index": 659,
-          "timestamp_ms": 43933,
-          "min_knee_angle_deg": 72.7,
+          "frame_index": 661,
+          "timestamp_ms": 44066,
+          "min_knee_angle_deg": 58.8,
           "gate_after": "LOCKED"
         },
         {
           "rep": 14,
-          "frame_index": 708,
-          "timestamp_ms": 47200,
-          "min_knee_angle_deg": 76.2,
+          "frame_index": 710,
+          "timestamp_ms": 47333,
+          "min_knee_angle_deg": 63.8,
           "gate_after": "LOCKED"
         },
         {
           "rep": 15,
-          "frame_index": 756,
-          "timestamp_ms": 50400,
-          "min_knee_angle_deg": 60.1,
+          "frame_index": 757,
+          "timestamp_ms": 50466,
+          "min_knee_angle_deg": 55.0,
           "gate_after": "UNLOCKED"
         }
       ],
@@ -155,7 +155,7 @@
     "F17_truncated_14": {
       "frames_processed": 723,
       "frames_with_pose": 723,
-      "processing_fps": 33.8,
+      "processing_fps": 31.5,
       "rep_verified_events": 14,
       "reducer_count": 14,
       "gate": "LOCKED",
@@ -166,100 +166,100 @@
       "reps": [
         {
           "rep": 1,
-          "frame_index": 50,
-          "timestamp_ms": 3333,
-          "min_knee_angle_deg": 67.3,
+          "frame_index": 52,
+          "timestamp_ms": 3466,
+          "min_knee_angle_deg": 55.9,
           "gate_after": "LOCKED"
         },
         {
           "rep": 2,
-          "frame_index": 104,
-          "timestamp_ms": 6933,
-          "min_knee_angle_deg": 78.9,
+          "frame_index": 106,
+          "timestamp_ms": 7066,
+          "min_knee_angle_deg": 61.1,
           "gate_after": "LOCKED"
         },
         {
           "rep": 3,
-          "frame_index": 154,
-          "timestamp_ms": 10266,
-          "min_knee_angle_deg": 62.1,
+          "frame_index": 156,
+          "timestamp_ms": 10400,
+          "min_knee_angle_deg": 60.5,
           "gate_after": "LOCKED"
         },
         {
           "rep": 4,
-          "frame_index": 202,
-          "timestamp_ms": 13466,
-          "min_knee_angle_deg": 80.5,
+          "frame_index": 204,
+          "timestamp_ms": 13600,
+          "min_knee_angle_deg": 65.1,
           "gate_after": "LOCKED"
         },
         {
           "rep": 5,
-          "frame_index": 253,
-          "timestamp_ms": 16866,
-          "min_knee_angle_deg": 69.7,
+          "frame_index": 255,
+          "timestamp_ms": 17000,
+          "min_knee_angle_deg": 58.3,
           "gate_after": "LOCKED"
         },
         {
           "rep": 6,
-          "frame_index": 305,
-          "timestamp_ms": 20333,
-          "min_knee_angle_deg": 77.2,
+          "frame_index": 307,
+          "timestamp_ms": 20466,
+          "min_knee_angle_deg": 63.2,
           "gate_after": "LOCKED"
         },
         {
           "rep": 7,
-          "frame_index": 358,
-          "timestamp_ms": 23866,
-          "min_knee_angle_deg": 81.4,
+          "frame_index": 361,
+          "timestamp_ms": 24066,
+          "min_knee_angle_deg": 64.0,
           "gate_after": "LOCKED"
         },
         {
           "rep": 8,
-          "frame_index": 411,
-          "timestamp_ms": 27400,
-          "min_knee_angle_deg": 72.7,
+          "frame_index": 413,
+          "timestamp_ms": 27533,
+          "min_knee_angle_deg": 60.1,
           "gate_after": "LOCKED"
         },
         {
           "rep": 9,
-          "frame_index": 462,
-          "timestamp_ms": 30800,
-          "min_knee_angle_deg": 77.7,
+          "frame_index": 464,
+          "timestamp_ms": 30933,
+          "min_knee_angle_deg": 60.7,
           "gate_after": "LOCKED"
         },
         {
           "rep": 10,
-          "frame_index": 514,
-          "timestamp_ms": 34266,
-          "min_knee_angle_deg": 85.5,
+          "frame_index": 516,
+          "timestamp_ms": 34400,
+          "min_knee_angle_deg": 64.2,
           "gate_after": "LOCKED"
         },
         {
           "rep": 11,
-          "frame_index": 558,
-          "timestamp_ms": 37200,
-          "min_knee_angle_deg": 75.3,
+          "frame_index": 559,
+          "timestamp_ms": 37266,
+          "min_knee_angle_deg": 59.9,
           "gate_after": "LOCKED"
         },
         {
           "rep": 12,
-          "frame_index": 608,
-          "timestamp_ms": 40533,
-          "min_knee_angle_deg": 79.0,
+          "frame_index": 610,
+          "timestamp_ms": 40666,
+          "min_knee_angle_deg": 61.5,
           "gate_after": "LOCKED"
         },
         {
           "rep": 13,
-          "frame_index": 659,
-          "timestamp_ms": 43933,
-          "min_knee_angle_deg": 72.7,
+          "frame_index": 661,
+          "timestamp_ms": 44066,
+          "min_knee_angle_deg": 58.8,
           "gate_after": "LOCKED"
         },
         {
           "rep": 14,
-          "frame_index": 708,
-          "timestamp_ms": 47200,
-          "min_knee_angle_deg": 76.2,
+          "frame_index": 710,
+          "timestamp_ms": 47333,
+          "min_knee_angle_deg": 63.8,
           "gate_after": "LOCKED"
         }
       ],
@@ -270,7 +270,7 @@
     "F18_half_squats_15": {
       "frames_processed": 746,
       "frames_with_pose": 746,
-      "processing_fps": 37.2,
+      "processing_fps": 33.2,
       "rep_verified_events": 0,
       "reducer_count": 0,
       "gate": "LOCKED",
@@ -285,8 +285,8 @@
     },
     "F18_frozen_static_frames": {
       "frames_processed": 75,
-      "frames_with_pose": 74,
-      "processing_fps": 46.2,
+      "frames_with_pose": 75,
+      "processing_fps": 35.8,
       "rep_verified_events": 0,
       "reducer_count": 0,
       "gate": "LOCKED",
@@ -302,7 +302,7 @@
     "F18_one_rep_looped_15x": {
       "frames_processed": 753,
       "frames_with_pose": 753,
-      "processing_fps": 31.9,
+      "processing_fps": 28.7,
       "rep_verified_events": 1,
       "reducer_count": 1,
       "gate": "LOCKED",
@@ -313,9 +313,9 @@
       "reps": [
         {
           "rep": 1,
-          "frame_index": 50,
-          "timestamp_ms": 3300,
-          "min_knee_angle_deg": 67.3,
+          "frame_index": 52,
+          "timestamp_ms": 3432,
+          "min_knee_angle_deg": 55.9,
           "gate_after": "LOCKED"
         }
       ],

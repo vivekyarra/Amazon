@@ -33,11 +33,11 @@ FIXTURE_DIR = REPO_ROOT / "packages" / "testing-fixtures" / "pose"
 FIXTURES = {
     "squats-15": (
         "squats-15-synthetic.mp4",
-        "2a35a46dd85d419bc38fdbcf2baa7a22272fbee8b9ab74e9e7c012e101e19162",
+        "1de9cfd3f7c4c4738c430e205d139bacb68df44700857bd238203d50688a1d95",
     ),
     "squats-half-15": (
         "squats-half-15-synthetic.mp4",
-        "cdb46543128196ace704df0d7706e921cb256ff9edf8a74a1f31fd823d97c47a",
+        "f364d681ed9ca2b22d7617fe68c68fc59e745d9cbe4d65ab42910b992a86d8d0",
     ),
 }
 SKELETON = (

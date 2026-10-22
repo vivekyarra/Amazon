@@ -22,7 +22,7 @@ import numpy as np
 
 np.seterr(invalid="ignore", divide="ignore")
 
-W, H, FPS = 640, 480, 15
+W, H, FPS = 960, 720, 15
 SKIN, SHIRT, SHORTS = (0.86, 0.64, 0.50), (0.15, 0.38, 0.70), (0.16, 0.16, 0.20)
 SHOE, HAIR, EYE, LIP = (0.92, 0.92, 0.95), (0.18, 0.11, 0.07), (0.06, 0.05, 0.05), (0.62, 0.32, 0.30)
 
@@ -37,11 +37,13 @@ def rot_x(a):
     return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
 
 
-def skeleton(flex, arm, yaw, sway, stance=0.18, toe_out=0.45, hip_width=0.14):
+def skeleton(flex, arm, yaw, sway, stance=0.24, toe_out=(1.1, 0.4), hip_width=0.19):
     """Return body primitives for knee flexion `flex` (radians, 0 = standing)."""
-    shin_tilt = 0.42 * flex
+    # Ankles dorsiflex ~45 deg at the bottom; the rest is hip travel, so full reps finish with
+    # thighs about parallel, hips back and the torso leaning forward over the feet.
+    shin_tilt = 0.36 * flex
     thigh_tilt = flex - shin_tilt
-    lean = 0.12 + 0.62 * thigh_tilt
+    lean = 0.10 + 0.55 * thigh_tilt
     shin, thigh, torso = 0.43, 0.45, 0.50
     body = rot_y(yaw)
 
@@ -52,8 +54,10 @@ def skeleton(flex, arm, yaw, sway, stance=0.18, toe_out=0.45, hip_width=0.14):
     hips, knees, ankles = [], [], []
     for side in (-1, 1):
         ankle = np.array([stance * side, 0.085, 0.0])
-        # Feet and knees turn out together (common bodyweight squat form); hips stay level.
-        turn = rot_y(side * toe_out)
+        # Wide stance: feet and knees turn out together and track over the toes; hips stay
+        # level. toe_out is (left-of-screen leg, right-of-screen leg); with the body yawed the
+        # turn-out is uneven so both knees present a similar, clearly bent angle to the camera.
+        turn = rot_y(side * toe_out[side > 0])
         knee = ankle + turn @ np.array([0.0, shin * math.cos(shin_tilt), shin * math.sin(shin_tilt)])
         hip = knee + turn @ np.array([0.0, thigh * math.cos(thigh_tilt), -thigh * math.sin(thigh_tilt)])
         hip[0] = hip_width * side
@@ -73,8 +77,8 @@ def skeleton(flex, arm, yaw, sway, stance=0.18, toe_out=0.45, hip_width=0.14):
     neck = chest + up * 0.07 + np.array([0, 0.03, 0])
     head = neck + np.array([0, 0.13, 0.02 + 0.25 * math.sin(lean) * 0.2])
     parts += [
-        ("ell", world(pelvis + up * 0.06), body @ rot_x(-lean), (0.18, 0.12, 0.12), SHORTS),
-        ("ell", world(pelvis + up * 0.30), body @ rot_x(-lean), (0.19, 0.25, 0.125), SHIRT),
+        ("ell", world(pelvis + up * 0.06), body @ rot_x(lean), (0.18, 0.12, 0.12), SHORTS),
+        ("ell", world(pelvis + up * 0.30), body @ rot_x(lean), (0.19, 0.25, 0.125), SHIRT),
         ("cap", world(chest), world(neck), 0.058, SKIN),
         ("ell", world(head), body, (0.088, 0.115, 0.098), SKIN),
         ("ell", world(head + np.array([0, 0.035, -0.015])), body, (0.092, 0.095, 0.098), HAIR),
@@ -220,10 +224,17 @@ def render(parts, cam, rng, light):
         normal[sel] = n[closer]
         color[sel] = col
     hit = np.isfinite(depth)
+    # Key light + opposite fill + sky ambient, with a soft highlight from the key.
     light = light / np.linalg.norm(light)
+    fill = np.array([-light[0], 0.35, light[2]])
+    fill /= np.linalg.norm(fill)
     diffuse = np.clip(normal @ light, 0, 1)
     rim = np.clip(1 - np.abs(np.sum(normal * -d, 1)), 0, 1)
-    shade = 0.38 + 0.62 * diffuse - 0.08 * rim
+    shade = 0.20 + 0.58 * diffuse + 0.16 * np.clip(normal @ fill, 0, 1) + 0.10 * (0.5 + 0.5 * normal[:, 1])
+    shade -= 0.06 * rim
+    half = light - d
+    half /= np.linalg.norm(half, axis=1, keepdims=True)
+    spec = 0.10 * np.clip(np.sum(normal * half, 1), 0, 1) ** 24
     img = np.zeros((n_pix, 3))
     # Background: wall above y=0, wooden floor below, computed from the ray/plane intersections.
     t_floor = np.where(d[:, 1] < -1e-6, -o[1] / np.minimum(d[:, 1], -1e-6), np.inf)
@@ -234,7 +245,7 @@ def render(parts, cam, rng, light):
     floor *= (1 - 0.35 * shadow)[:, None]
     wall = np.array([0.78, 0.80, 0.76]) * (0.92 + 0.06 * d[:, 1:2])
     img[:] = np.where((t_floor < 9)[:, None], floor, wall)
-    img[hit] = color[hit] * shade[hit, None]
+    img[hit] = color[hit] * shade[hit, None] + spec[hit, None]
     img = img.reshape(H, W, 3)
     img += rng.normal(0, 0.012, img.shape)
     return (np.clip(img, 0, 1)[..., ::-1] * 255).astype(np.uint8)
@@ -248,7 +259,7 @@ def rep_plan(kind, count, seed):
     rng = np.random.default_rng(seed)
     reps = []
     for i in range(count):
-        depth = rng.uniform(128, 140) if kind == "full" else rng.uniform(42, 62)
+        depth = rng.uniform(128, 136) if kind == "full" else rng.uniform(42, 62)
         reps.append(
             dict(
                 index=i + 1,
@@ -258,7 +269,7 @@ def rep_plan(kind, count, seed):
                 ascend_s=round(float(rng.uniform(0.85, 1.2)), 3),
                 stand_s=round(float(rng.uniform(0.7, 1.05)), 3),
                 yaw_offset_deg=round(float(rng.uniform(-3, 3)), 2),
-                sway_m=round(float(rng.uniform(-0.03, 0.03)), 4),
+                sway_m=round(float(rng.uniform(-0.02, 0.02)), 4),
                 arm_raise=round(float(rng.uniform(0.85, 1.05)), 3),
             )
         )
@@ -288,7 +299,7 @@ def timeline(reps, lead_s=1.2):
                 frames.append(
                     (
                         bottom * f,
-                        1.45 * r["arm_raise"] * f * min(1, bottom / 1.9),
+                        1.6 * r["arm_raise"] * f * min(1, bottom / 1.9),
                         r["yaw_offset_deg"] * f,
                         r["sway_m"] * f,
                         r["index"],
@@ -302,13 +313,14 @@ def main():
     parser.add_argument("--plan", choices=["full15", "full14", "half15"], required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--seed", type=int, default=20261020)
+    parser.add_argument("--yaw", type=float, default=20.0, help="body yaw vs camera (deg); 0 = head-on")
     args = parser.parse_args()
     kind = "half" if args.plan == "half15" else "full"
     reps = rep_plan(kind, 15, args.seed + (1 if kind == "half" else 0))
     if args.plan == "full14":
         reps = reps[:14]
     frames = timeline(reps)
-    cam = Camera((0.0, 1.05, 4.1), (0.0, 0.86, 0.0), 32)
+    cam = Camera((0.0, 1.0, 3.9), (0.0, 0.88, 0.0), 31)
     rng = np.random.default_rng(args.seed + 7)
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -347,7 +359,7 @@ def main():
         stdin=subprocess.PIPE,
     )
     for flex, arm, yaw_off, sway, _ in frames:
-        parts = skeleton(flex, arm, math.radians(-6 + yaw_off), sway)
+        parts = skeleton(flex, arm, math.radians(args.yaw + yaw_off), sway)
         proc.stdin.write(render(parts, cam, rng, np.array([0.3, 0.75, 0.95])).tobytes())
     proc.stdin.close()
     if proc.wait():
@@ -355,6 +367,7 @@ def main():
     plan = dict(
         plan=args.plan,
         seed=args.seed,
+        yaw_deg=args.yaw,
         fps=FPS,
         size=[W, H],
         frames=len(frames),

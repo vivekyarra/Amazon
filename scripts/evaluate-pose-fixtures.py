@@ -79,9 +79,10 @@ def run(model, frames, annotate_to=None):
         reps, gate_history, angles, n, with_pose = [], [], [], 0, 0
         writer = None
         if annotate_to:
+            width, height = plan("squats-15")["size"]
             writer = subprocess.Popen(
                 ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "rawvideo", "-pixel_format",
-                 "bgr24", "-video_size", "640x480", "-framerate", "15", "-i", "pipe:0", "-an", "-c:v", "libx264",
+                 "bgr24", "-video_size", f"{width}x{height}", "-framerate", "15", "-i", "pipe:0", "-an", "-c:v", "libx264",
                  "-preset", "medium", "-crf", "26", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
                  str(annotate_to)],
                 stdin=subprocess.PIPE,
