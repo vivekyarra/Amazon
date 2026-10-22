@@ -32,12 +32,12 @@ A separate public squat dataset repository was also inspected, but its `license`
 
 ## Fifteen-rep pose fixture
 
-The canonical fifteen-rep fixture is **generated**, not human footage and not a Ring recording. `scripts/generate-synthetic-squats.py` ray-traces a humanoid figure (shaded capsules/ellipsoids with skin, clothing and face features) and poses it by forward kinematics. Each of the 15 reps has its own seeded depth (128–140° knee flexion), tempo, sway and arm raise, and every frame carries fresh sensor noise; no footage is looped or copied between reps. The generator is byte-reproducible (seed `20261020`), and the outputs are MIT-licensed project assets:
+The canonical fifteen-rep fixture is **generated**, not human footage and not a Ring recording. `scripts/generate-synthetic-squats.py` ray-traces a humanoid figure (shaded capsules/ellipsoids with skin, clothing and face features) and poses it by forward kinematics. Each of the 15 reps has its own seeded depth (128–136° knee flexion), filmed at a 20° turn so each deep squat is clearly visible, tempo, sway and arm raise, and every frame carries fresh sensor noise; no footage is looped or copied between reps. The generator is byte-reproducible (seed `20261020`), and the outputs are MIT-licensed project assets:
 
 | Fixture | File | SHA-256 |
 |---|---|---|
-| `squats-15` (15 full reps, 769 frames, 640×480 @ 15 fps) | `packages/testing-fixtures/pose/squats-15-synthetic.mp4` | `2a35a46dd85d419bc38fdbcf2baa7a22272fbee8b9ab74e9e7c012e101e19162` |
-| `squats-half-15` (15 half-squats, 746 frames) | `packages/testing-fixtures/pose/squats-half-15-synthetic.mp4` | `cdb46543128196ace704df0d7706e921cb256ff9edf8a74a1f31fd823d97c47a` |
+| `squats-15` (15 full reps, 769 frames, 960×720 @ 15 fps) | `packages/testing-fixtures/pose/squats-15-synthetic.mp4` | `1de9cfd3f7c4c4738c430e205d139bacb68df44700857bd238203d50688a1d95` |
+| `squats-half-15` (15 half-squats, 746 frames) | `packages/testing-fixtures/pose/squats-half-15-synthetic.mp4` | `f364d681ed9ca2b22d7617fe68c68fc59e745d9cbe4d65ab42910b992a86d8d0` |
 
 The official [MediaPipe Pose Landmarker lite model](https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task) (SHA-256 `59929e1d…690d574a`) is fetched by `scripts/fetch-pose-model.py` into ignored `artifacts/vision/` and is never committed. `scripts/evaluate-pose-fixtures.py` decodes the fixtures, runs that model and feeds the same reducer as live Ring frames. Its observed results are in [pose-15-fixture.json](evidence/pose-15-fixture.json), with a derived overlay clip in [pose-15-annotated.mp4](evidence/pose-15-annotated.mp4): 15 reps for `squats-15`, 14 when truncated before the 15th rep, 0 for half-squats, 0 for frozen frames, and 1 when a single rep is looped 15 times. The studio streams the same fixture as **RECORDED DEMO** through `POST /api/studio/recorded/start`, and it is never labelled LIVE RING.
 
