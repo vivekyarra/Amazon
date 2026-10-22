@@ -14,7 +14,7 @@ Muni hears the promises you make in passing, turns each one into a living contra
 ![AWS](https://img.shields.io/badge/AWS-DynamoDB%20%C2%B7%20S3%20%C2%B7%20EventBridge%20%C2%B7%20SQS-232F3E)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**[Try Muni live](https://100-49-183-59.sslip.io)** · [Judge in 5 minutes](docs/judge-runbook.md) · [How it works](#how-it-works) · [Amazon tech](#built-on-amazon) · [Quick start](#quick-start)
+**[Try Muni live](https://100-49-183-59.sslip.io)** · **[▶ Watch the video](https://youtu.be/bQ7NeIiHXAQ)** · [Judge in 5 minutes](docs/judge-runbook.md) · [How it works](#how-it-works) · [Amazon tech](#built-on-amazon) · [Quick start](#quick-start)
 
 <img src="docs/images/mission-control.png" alt="Muni Mission control: the day's promises, what's proven, what needs you, and what was missed" width="900">
 

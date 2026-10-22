@@ -1,5 +1,7 @@
 # Judge runbook — Muni in five minutes
 
+**Video (2:48):** https://youtu.be/bQ7NeIiHXAQ
+
 **Live:** https://100-49-183-59.sslip.io · press **Try Muni live**. No account or password needed.
 Each visitor gets a private copy of the **Guided day** household with full judge controls; your clicks run the same backend, reducers and evidence policy as a live household.
 
