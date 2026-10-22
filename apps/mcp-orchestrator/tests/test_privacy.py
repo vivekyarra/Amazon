@@ -74,7 +74,7 @@ def live(tmp_path, monkeypatch):
             }
         )
     )
-    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("GUIDED_MODE", "false")
     monkeypatch.setenv("LEDGER_KEY_FILE", str(key))
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://testserver")
     monkeypatch.setenv("RING_HMAC_KEY", "private-test-key")
@@ -105,11 +105,11 @@ def test_privacy_controls_require_authenticated_owner_and_idempotency(app):
         assert write(c, "/privacy/retention", {"days": 4}, key="same").status_code == 409
 
 
-def test_camera_exclusion_blocks_synthetic_collection_and_is_audited(client, post):
+def test_camera_exclusion_blocks_scripted_collection_and_is_audited(client, post):
     stage(post, 1)
     post("/privacy/cameras/exclusion", {"device_id": "unknown-camera", "excluded": True}, status=404)
-    s = post("/privacy/cameras/exclusion", {"device_id": privacy.SYNTHETIC_CAMERA, "excluded": True})["state"]
-    assert s["privacy"]["excluded_cameras"] == [privacy.SYNTHETIC_CAMERA]
+    s = post("/privacy/cameras/exclusion", {"device_id": privacy.SCRIPTED_CAMERA, "excluded": True})["state"]
+    assert s["privacy"]["excluded_cameras"] == [privacy.SCRIPTED_CAMERA]
     assert s["events"][-1]["event_type"] == "privacy.camera_exclusion_changed"
     for n in (2, 5):
         post(f"/admin/scenarios/{n}/run", {"branch": "deposit"}, status=409)
@@ -118,8 +118,8 @@ def test_camera_exclusion_blocks_synthetic_collection_and_is_audited(client, pos
     # Another household's exclusion does not change this one.
     login(client, "other", "test-other-password")
     assert client.get("/api/privacy").json()["excluded_cameras"] == []
-    login(client, "demo-admin", "test-admin-password")
-    post("/privacy/cameras/exclusion", {"device_id": privacy.SYNTHETIC_CAMERA, "excluded": False})
+    login(client, "judge", "test-admin-password")
+    post("/privacy/cameras/exclusion", {"device_id": privacy.SCRIPTED_CAMERA, "excluded": False})
     assert stage(post, 2)["evidence"]
 
 
@@ -205,18 +205,18 @@ def _decode_png(data):
 
 def test_private_masks_zero_pixels_in_derived_evidence_before_hashing(client, post):
     mask = post(
-        "/privacy/cameras/masks", {"device_id": privacy.SYNTHETIC_CAMERA, "polygons": [MASK], "revision": 0}
+        "/privacy/cameras/masks", {"device_id": privacy.SCRIPTED_CAMERA, "polygons": [MASK], "revision": 0}
     )
     assert mask["result"]["calibration_revision"] == 1
     assert mask["state"]["events"][-1]["event_type"] == "privacy.masks_updated"
     post(
         "/privacy/cameras/masks",
-        {"device_id": privacy.SYNTHETIC_CAMERA, "polygons": [MASK], "revision": 0},
+        {"device_id": privacy.SCRIPTED_CAMERA, "polygons": [MASK], "revision": 0},
         status=409,
     )
     post(
         "/privacy/cameras/masks",
-        {"device_id": privacy.SYNTHETIC_CAMERA, "polygons": [[[0, 0], [2, 0], [0, 1]]]},
+        {"device_id": privacy.SCRIPTED_CAMERA, "polygons": [[[0, 0], [2, 0], [0, 1]]]},
         status=422,
     )
     stage(post, 2)
@@ -281,29 +281,29 @@ def test_retention_setting_updates_existing_and_new_artifacts_without_breaking_c
     # Another household keeps its own default policy.
     login(client, "other", "test-other-password")
     assert client.get("/api/privacy").json()["retention_days"] == 7
-    login(client, "demo-admin", "test-admin-password")
+    login(client, "judge", "test-admin-password")
     store = app.state.store
     with store.transaction() as db:
         assert store.purge_expired(db, expiry.timestamp() + 1) >= 1
-        assert not db.get_artifact(item["evidence_id"], "demo")
+        assert not db.get_artifact(item["evidence_id"], "guided")
         assert db.execute("SELECT id FROM retention_tombstones WHERE id=?", (item["evidence_id"],)).fetchone()
-    login(client, "demo-admin", "test-admin-password")  # The simulated future purge also expired sessions.
+    login(client, "judge", "test-admin-password")  # The fast-forwarded purge also expired sessions.
     assert client.get("/api/export").status_code == 410  # Expired, distinguished from tampering.
 
 
 def test_shortened_retention_deletes_due_bytes_immediately_and_never_resurrects(app, post):
     stage(post, 2)
     store = app.state.store
-    state = store.read("demo")
+    state = store.read("guided")
     later = datetime.now(timezone.utc) + timedelta(days=3)
     with store.transaction() as db:
-        result = privacy.apply_retention(state, db, "demo", 2, now=later)
+        result = privacy.apply_retention(state, db, "guided", 2, now=later)
         assert result["purged"] == len(state["evidence"])
-        assert not db.execute("SELECT id FROM artifacts WHERE household='demo'").fetchall()
-        tombstones = db.execute("SELECT id FROM retention_tombstones WHERE household='demo'").fetchall()
+        assert not db.execute("SELECT id FROM artifacts WHERE household='guided'").fetchall()
+        tombstones = db.execute("SELECT id FROM retention_tombstones WHERE household='guided'").fetchall()
         assert len(tombstones) == len(state["evidence"])
         before = [item["retention_expires_at"] for item in state["evidence"]]
-        assert privacy.apply_retention(state, db, "demo", 30, now=later)["updated"] == 0
+        assert privacy.apply_retention(state, db, "guided", 30, now=later)["updated"] == 0
         assert [item["retention_expires_at"] for item in state["evidence"]] == before
 
 
@@ -323,7 +323,7 @@ def test_provider_disconnect_cancels_work_and_never_auto_reconnects(live, monkey
         assert result.status_code == 200
         assert result.json()["result"] == {
             "provider": "bee",
-            "status": "NOT_CONNECTED",
+            "status": "STANDBY",
             "cancelled_inbox": 1,
             "cursors_removed": 1,
         }
@@ -344,7 +344,7 @@ def test_provider_disconnect_cancels_work_and_never_auto_reconnects(live, monkey
         statuses = {
             i["name"]: i["status"] for i in client.get("/api/integrations/status").json()["integrations"]
         }
-        assert statuses["Bee"] == "NOT_CONNECTED"
+        assert statuses["Bee"] == "STANDBY"
         assert write(client, "/privacy/providers/ring/disconnect").status_code == 200
         body, signature = signed(ring_payload())
         ignored = client.post("/api/webhooks/ring", content=body, headers={"X-Signature": signature})
@@ -354,7 +354,7 @@ def test_provider_disconnect_cancels_work_and_never_auto_reconnects(live, monkey
         statuses = {
             i["name"]: i["status"] for i in client.get("/api/integrations/status").json()["integrations"]
         }
-        assert statuses["Ring"] == statuses["Ring video"] == "NOT_CONNECTED"
+        assert statuses["Ring"] == statuses["Ring video"] == "STANDBY"
         # Another household is unaffected.
         login(client, "other", OTHER_PASSWORD)
         assert client.get("/api/privacy").json()["providers"]["bee"]["status"] == "NOT_REVOKED"
@@ -372,7 +372,7 @@ def test_provider_disconnect_cancels_work_and_never_auto_reconnects(live, monkey
         assert write(client, "/privacy/providers/bee/reauthorize").status_code == 409
 
 
-def seed_other(store):
+def populate_other_household(store):
     state = e.fresh()
     state["household_id"] = "house_other"
     c = e.create_contract(
@@ -389,21 +389,21 @@ def test_household_deletion_requires_confirmation_and_is_household_scoped(app, c
     before = stage(post, 4, "unknown")
     assert before["incidents"] and before["subagents"] and before["evidence"]
     store = app.state.store
-    other_state, other_evidence = seed_other(store)
+    other_state, other_evidence = populate_other_household(store)
     phrase = privacy.DELETE_PHRASE
-    post("/privacy/household/delete", {"household_id": "demo", "confirmation": "delete"}, status=422)
+    post("/privacy/household/delete", {"household_id": "guided", "confirmation": "delete"}, status=422)
     post("/privacy/household/delete", {"household_id": "house_other", "confirmation": phrase}, status=403)
-    # The other owner cannot delete the demo household.
+    # The other owner cannot delete the guided household.
     login(client, "other", "test-other-password")
     assert (
         write(
-            client, "/privacy/household/delete", {"household_id": "demo", "confirmation": phrase}
+            client, "/privacy/household/delete", {"household_id": "guided", "confirmation": phrase}
         ).status_code
         == 403
     )
-    login(client, "demo-admin", "test-admin-password")
+    login(client, "judge", "test-admin-password")
     response = post(
-        "/privacy/household/delete", {"household_id": "demo", "confirmation": phrase}, key="erase"
+        "/privacy/household/delete", {"household_id": "guided", "confirmation": phrase}, key="erase"
     )
     receipt = response["result"]
     assert receipt["deleted"]["contracts"] == len(before["contracts"])
@@ -417,12 +417,12 @@ def test_household_deletion_requires_confirmation_and_is_household_scoped(app, c
     serialized = json.dumps(s)
     for text in ("sister", "teacher", "drinks", "squats", "parcel"):
         assert text not in serialized.lower()
-    assert not store.db.execute("SELECT id FROM artifacts WHERE household='demo'").fetchall()
-    assert [r["key"] for r in store.db.execute("SELECT key FROM commands WHERE household='demo'")] == [
+    assert not store.db.execute("SELECT id FROM artifacts WHERE household='guided'").fetchall()
+    assert [r["key"] for r in store.db.execute("SELECT key FROM commands WHERE household='guided'")] == [
         "erase"
     ]
     assert (
-        post("/privacy/household/delete", {"household_id": "demo", "confirmation": phrase}, key="erase")
+        post("/privacy/household/delete", {"household_id": "guided", "confirmation": phrase}, key="erase")
         == response
     )
     assert client.get("/api/evidence/" + before["evidence"][0]["evidence_id"]).status_code == 404

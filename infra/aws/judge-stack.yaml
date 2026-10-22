@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  Muni public judge deployment. One EC2 reducer in DEMO_MODE (synthetic, clearly labeled scenarios)
+  Muni public judge deployment. One EC2 reducer in GUIDED_MODE (scripted, clearly labeled scenarios)
   behind Caddy automatic HTTPS (Let's Encrypt, <elastic-ip>.sslip.io), with live DynamoDB/S3/KMS/
   EventBridge Scheduler/SQS coordination.
 Parameters:
@@ -12,7 +12,7 @@ Parameters:
   RuntimeSecretArn:
     Type: String
     AllowedPattern: 'arn:aws[a-z-]*:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+'
-    Description: Secret JSON with OWNER_PASSWORD, DEMO_ADMIN_PASSWORD and LEDGER_KEY_BASE64 (never stack parameters).
+    Description: Secret JSON with OWNER_PASSWORD, JUDGE_PASSWORD and LEDGER_KEY_BASE64 (never stack parameters).
   RepoUrl:
     Type: String
     Default: https://github.com/vivekyarra/Amazon.git
@@ -228,12 +228,12 @@ Resources:
           raw = boto3.client('secretsmanager', region_name=os.environ['DONE_REGION']).get_secret_value(SecretId=os.environ['DONE_SECRET'])['SecretString']
           secret = json.loads(raw)
           key = base64.b64decode(secret.pop('LEDGER_KEY_BASE64'), validate=True)
-          if len(key) != 32 or len(secret['OWNER_PASSWORD']) < 16 or len(secret['DEMO_ADMIN_PASSWORD']) < 16:
+          if len(key) != 32 or len(secret['OWNER_PASSWORD']) < 16 or len(secret['JUDGE_PASSWORD']) < 16:
               raise SystemExit('Invalid provisioned owner/key configuration')
           config = Path('/srv/done-irl/config')
           (config / 'ledger.key').write_bytes(key)
           rows = []
-          for name in ('OWNER_PASSWORD', 'DEMO_ADMIN_PASSWORD'):
+          for name in ('OWNER_PASSWORD', 'JUDGE_PASSWORD'):
               value = secret[name]
               if not isinstance(value, str) or any(c in value for c in '\r\n\x00'):
                   raise SystemExit('Invalid secret encoding')
@@ -258,14 +258,14 @@ Resources:
           docker build -q --build-arg ENABLE_LIVE_RUNTIME=true -f /srv/done-irl/src/infra/local/Dockerfile -t 'done-irl:${GitCommit}' /srv/done-irl/src
           cat > /etc/systemd/system/done-irl.service <<'UNIT'
           [Unit]
-          Description=Muni judge reducer (DEMO_MODE, single active writer)
+          Description=Muni judge reducer (GUIDED_MODE, single active writer)
           Requires=docker.service
           After=docker.service network-online.target
           [Service]
           Restart=always
           RestartSec=10
           ExecStartPre=-/usr/bin/docker rm -f done-irl
-          ExecStart=/usr/bin/docker run --name done-irl --network done-irl-net --init --read-only --tmpfs /tmp:rw,noexec,nosuid,size=256m --cap-drop=ALL --security-opt no-new-privileges --memory=3g --cpus=2 --env-file /srv/done-irl/runtime.env -e DEMO_MODE=true -e DATA_DIR=/data -e LEDGER_KEY_FILE=/config/ledger.key -e AWS_REGION=${AWS::Region} -e AWS_LEDGER_TABLE=${Ledger} -e S3_EVIDENCE_BUCKET=${Evidence} -e AWS_WAKE_QUEUE_URL=${WakeQueue} -e AWS_WAKE_QUEUE_ARN=${WakeQueue.Arn} -e AWS_SCHEDULER_ROLE_ARN=${SchedulerRole.Arn} -e POSE_MODEL_FILE=/config/pose.task -e POSE_MODEL_SHA256=59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a -e MPLCONFIGDIR=/tmp/matplotlib -e XDG_CACHE_HOME=/tmp/cache -v /srv/done-irl/data:/data -v /srv/done-irl/config:/config:ro --log-driver awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=${ServiceLogs} --log-opt awslogs-stream=runtime 'done-irl:${GitCommit}' /app/.venv/bin/uvicorn done_irl.api:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips=*
+          ExecStart=/usr/bin/docker run --name done-irl --network done-irl-net --init --read-only --tmpfs /tmp:rw,noexec,nosuid,size=256m --cap-drop=ALL --security-opt no-new-privileges --memory=3g --cpus=2 --env-file /srv/done-irl/runtime.env -e GUIDED_MODE=true -e DATA_DIR=/data -e LEDGER_KEY_FILE=/config/ledger.key -e AWS_REGION=${AWS::Region} -e AWS_LEDGER_TABLE=${Ledger} -e S3_EVIDENCE_BUCKET=${Evidence} -e AWS_WAKE_QUEUE_URL=${WakeQueue} -e AWS_WAKE_QUEUE_ARN=${WakeQueue.Arn} -e AWS_SCHEDULER_ROLE_ARN=${SchedulerRole.Arn} -e POSE_MODEL_FILE=/config/pose.task -e POSE_MODEL_SHA256=59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a -e MPLCONFIGDIR=/tmp/matplotlib -e XDG_CACHE_HOME=/tmp/cache -v /srv/done-irl/data:/data -v /srv/done-irl/config:/config:ro --log-driver awslogs --log-opt awslogs-region=${AWS::Region} --log-opt awslogs-group=${ServiceLogs} --log-opt awslogs-stream=runtime 'done-irl:${GitCommit}' /app/.venv/bin/uvicorn done_irl.api:app --host 0.0.0.0 --port 8080 --proxy-headers --forwarded-allow-ips=*
           ExecStop=/usr/bin/docker stop -t 30 done-irl
           [Install]
           WantedBy=multi-user.target

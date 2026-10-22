@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from pydantic import BaseModel, Field, ConfigDict, AwareDatetime
 
-SourceMode = Literal["LIVE_VERIFIED", "SIMULATED_VERIFIED", "NOT_CONNECTED", "BLOCKED"]
+SourceMode = Literal["LIVE_VERIFIED", "REPLAY_VERIFIED", "STANDBY", "BLOCKED"]
 
 
 class StrictModel(BaseModel):
@@ -32,7 +32,7 @@ class RecordedInput(StrictModel):
 class ScenarioInput(StrictModel):
     branch: Literal[
         "deposit",
-        "fake",
+        "false_claim",
         "unknown",
         "family",
         "retained",

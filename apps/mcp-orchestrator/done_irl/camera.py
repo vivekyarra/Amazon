@@ -84,7 +84,7 @@ class CameraBridge:
             raise ApiError(409, "CAMERA_ALREADY_OPEN", "Close the current camera session first.")
         mains = authorized_device(household, device, os.getenv("RING_BINDINGS_FILE"))
         if not os.getenv("RING_ACCESS_TOKEN"):
-            raise ApiError(503, "RING_NOT_CONNECTED", "An authorized Ring access token is required.")
+            raise ApiError(503, "RING_STANDBY", "An authorized Ring access token is required.")
         try:
             from aiortc import RTCPeerConnection, RTCConfiguration, RTCSessionDescription, RTCIceServer
         except (ImportError, OSError):
@@ -102,7 +102,7 @@ class CameraBridge:
             "device_id": device,
             "status": "CONNECTING",
             "source": "LIVE_RING_WHEP",
-            "source_mode": "NOT_CONNECTED",
+            "source_mode": "STANDBY",
             "frames_decoded": 0,
             "model_sha256": detector.model_hash,
             "jpeg": None,
@@ -128,7 +128,7 @@ class CameraBridge:
                 raise ApiError(
                     409, "VIDEO_NOT_SUPPORTED", "The linked device does not advertise video capability."
                 )
-            # recvonly creates a real video m-line; no dummy transmitted camera or audio.
+            # recvonly creates a real video m-line; no outbound camera or audio track is sent.
             pc.addTransceiver("video", direction="recvonly")
             await pc.setLocalDescription(await pc.createOffer())
             result = await adapter.whep(device, pc.localDescription.sdp, battery=not mains)
@@ -143,7 +143,7 @@ class CameraBridge:
     def status(self, household):
         session = self.sessions.get(household)
         if not session:
-            return {"status": "CLOSED", "source_mode": "NOT_CONNECTED"}
+            return {"status": "CLOSED", "source_mode": "STANDBY"}
         public = (
             "id",
             "device_id",

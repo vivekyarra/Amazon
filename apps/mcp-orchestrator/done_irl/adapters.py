@@ -23,8 +23,8 @@ class RingAdapter:
         if not self.token:
             raise ApiError(
                 503,
-                "RING_NOT_CONNECTED",
-                "Ring is not connected. Synthetic replay remains separately available.",
+                "RING_STANDBY",
+                "Ring is on standby until linked. Scripted replay remains separately available.",
             )
         response = await self.client.request(
             method,
@@ -168,7 +168,7 @@ class BeeAdapter:
 
     def _headers(self, accept="application/json"):
         if not self.token:
-            raise ApiError(503, "BEE_NOT_CONNECTED", "Bee token is unavailable; live ingestion is blocked.")
+            raise ApiError(503, "BEE_STANDBY", "Bee token is unavailable; live ingestion is blocked.")
         return {"Authorization": "Bearer " + self.token, "Accept": accept}
 
     async def backfill_todos(self, handle):

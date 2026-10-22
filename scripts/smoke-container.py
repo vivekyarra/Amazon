@@ -51,7 +51,7 @@ try:
 
         def login():
             response = client.post(
-                "/api/auth/login", json={"username": "demo-admin", "password": credentials["demo-admin"]}
+                "/api/auth/login", json={"username": "judge", "password": credentials["judge"]}
             )
             response.raise_for_status()
 
@@ -94,7 +94,7 @@ try:
             "contracts": contracts,
             "rep_count": 15,
             "restart_durable": True,
-            "source": "SYNTHETIC",
+            "source": "SCRIPTED",
             "official_dispatches": 0,
         }
         Path("artifacts/container").mkdir(parents=True, exist_ok=True)

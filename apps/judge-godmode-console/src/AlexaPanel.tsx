@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AudioLines, Mic, MicOff, Send, Volume2, VolumeX } from "lucide-react";
 import type { State } from "../../../packages/physical-contract-schema";
-import { EXAMPLES, answer, whisperCopy, type RpcLogEntry } from "./alexaSim";
+import { EXAMPLES, answer, whisperCopy, type RpcLogEntry } from "./alexaClient";
 import { plain } from "./ui";
 import "./alexa.css";
 
 type Turn = {
   id: number;
-  who: "you" | "sim";
+  who: "you" | "alexa";
   text: string;
   intent?: string;
   tools?: string[];
@@ -34,7 +34,7 @@ const short = (v: unknown): string => {
   if (Array.isArray(v)) return `${v.length} item${v.length === 1 ? "" : "s"}`;
   if (typeof v === "object") return `${Object.keys(v).length} fields`;
   const raw = String(v);
-  // Enum values (SIMULATED_VERIFIED, AWAITING_HUMAN_DECISION) read as words.
+  // Enum values (REPLAY_VERIFIED, AWAITING_HUMAN_DECISION) read as words.
   const t = /^[A-Z][A-Z_]+$/.test(raw)
     ? plain(raw.replaceAll("_", " ")).toLowerCase()
     : plain(raw);
@@ -109,7 +109,7 @@ export function resetAlexaMemory() {
   memory.id = 0;
 }
 
-export default function AlexaSimulator({
+export default function AlexaPanel({
   state,
   compact = false,
 }: {
@@ -178,7 +178,7 @@ export default function AlexaSimulator({
         ...t,
         {
           id: ++turnId.current,
-          who: "sim",
+          who: "alexa",
           text: result.reply,
           intent: result.intent,
           tools,
@@ -189,7 +189,7 @@ export default function AlexaSimulator({
       const message = `I couldn't reach the household ledger: ${(err as Error).message}`;
       setTurns((t) => [
         ...t,
-        { id: ++turnId.current, who: "sim", text: message, error: true },
+        { id: ++turnId.current, who: "alexa", text: message, error: true },
       ]);
     } finally {
       setBusy(false);
@@ -222,7 +222,7 @@ export default function AlexaSimulator({
 
   return (
     <section
-      className={`panel alexa-sim ${compact ? "compact" : ""}`}
+      className={`panel alexa-panel ${compact ? "compact" : ""}`}
       aria-label="Alexa+"
     >
       <div className="panel-head">
@@ -269,9 +269,7 @@ export default function AlexaSimulator({
                 key={t.id}
                 className={`alexa-turn ${t.who} ${t.error ? "error" : ""}`}
               >
-                <p
-                  data-testid={t.who === "sim" ? "alexa-sim-reply" : undefined}
-                >
+                <p data-testid={t.who === "alexa" ? "alexa-reply" : undefined}>
                   {t.text}
                 </p>
                 {t.intent && (

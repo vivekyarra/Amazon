@@ -21,9 +21,9 @@ Written from hands-on use while building Muni (October 2026); every point below 
 | Purpose | Ambient commitment capture: `GET /v1/stream` (`new-utterance`, `todo-created`) and `GET /v1/todos` feed the commitment compiler (`done_irl/adapters.py`). |
 | Zero-to-hello-world | Docs list endpoints and event types clearly; the payload shapes had to be read from the official bee-cli source. Once mirrored, the live stream from a Bee device compiled into contracts on the first run ([verification](evidence/bee-live-verification.md)). |
 | Best part | SSE with typed events plus Bee's own extracted todos (with alarms) are exactly the primitives a commitment tracker needs. |
-| Friction | No per-event JSON schema or timestamp units in the docs (friction A1); no documented wearer attribution on utterances (A2). |
-| Workaround | Normalizer mirroring bee-cli, unknown shapes ignored, unattributed speech held for owner confirmation. |
-| Requested improvement | (Critical for integrators) Published event schemas and samples; (Important) an `is_wearer` field. |
+| Friction | No per-event JSON schema or timestamp units in the docs (friction A1); no documented wearer attribution on utterances (A2); developer access requires owning a Bee wearable or an Apple Watch running Bee: the iPhone app reports "Developer mode is not enabled" until a device is paired, and `bee login --token` only returns `unauthorized` (A10). |
+| Workaround | Normalizer mirroring bee-cli, unknown shapes ignored, unattributed speech held for owner confirmation; the integration was tested on a borrowed Bee device. |
+| Requested improvement | (Critical for integrators) Published event schemas and samples, and a hardware-free developer sandbox (sample stream + token); (Important) an `is_wearer` field and clearer CLI login errors. |
 | Build again? | Yes. |
 
 ## Ring Partner API
@@ -47,7 +47,7 @@ Written from hands-on use while building Muni (October 2026); every point below 
 | Best part | Familiar React Native with first-class D-pad focus; the same `.vpkg` build targets x86_64, armv7 and aarch64. |
 | Friction | The Vega Virtual Device did not raise a system IME for `TextInput`; scripted input through `vda shell inputd-cli button_press` was reliable only one key at a time; under WSL the launching shell must stay alive. |
 | Workaround | An in-app 5×10 D-pad keyboard for sign-in; single-key test helpers in `tests/firetv/vega/`. |
-| Requested improvement | (Important) System keyboard support on the Virtual Device and a batched input command for automation. |
+| Requested improvement | (Important) System keyboard support on the Vega Virtual Device and a batched input command for automation. |
 | Build again? | Yes. |
 
 ## Fire TV — Fire OS (Android) tooling
@@ -66,7 +66,7 @@ Written from hands-on use while building Muni (October 2026); every point below 
 
 | Service | How Muni uses it (live in stack `done-irl-judge`) |
 |---|---|
-| CloudFormation | `infra/aws/judge-demo.yaml` provisions everything below; `cfn-lint` in CI. |
+| CloudFormation | `infra/aws/judge-stack.yaml` provisions everything below; `cfn-lint` in CI. |
 | EC2 + SSM | Single active reducer building an exact public commit; SSM Run Command redeploys (`scripts/judge-redeploy.sh`), no SSH. |
 | DynamoDB | Encrypted (KMS), PITR projection of contracts, sub-agents, incidents, evidence and audit (`HOUSE#…` partitions); conditional revision writes. |
 | S3 + KMS | Private, versioned, SSE-KMS evidence replica and hash-checked state snapshots; lifecycle expiry. |
@@ -90,9 +90,10 @@ What worked: Scheduler `at()` expressions with `ActionAfterCompletion=DELETE` ar
 | Request | Why it matters | Urgency |
 |---|---|---|
 | Published JSON schemas and samples for every Bee stream event | Integrators currently reverse-engineer payloads from bee-cli source (A1) | Critical |
+| Hardware-free Bee developer sandbox (sample stream + token) and clearer `bee login` errors | Developer mode and API tokens require owning a Bee wearable or Apple Watch, which blocks the Bee track for builders without hardware (A10) | Critical |
 | A sandbox Alexa+ client that can call a public MCP URL | Lets MCP builders test the real Alexa+ conversation loop before Preview access | Important |
 | Actionable Bedrock access errors | `Operation not allowed` gives no remedy and blocks Nova adoption (A3) | Important |
-| Longer-lived Ring Playground tokens | Judging and demos run for days; 30-minute tokens cannot serve a live view (A6) | Important |
+| Longer-lived Ring Playground tokens | Judging windows run for days; 30-minute tokens cannot serve a live view (A6) | Important |
 | `is_wearer` / speaker identity on Bee utterances | Safely separates the wearer's promises from other people's speech (A2) | Important |
 | System keyboard and batched input on the Vega Virtual Device | Unblocks sign-in flows and automated D-pad testing (A7, A8) | Important |
 | Official Fire OS emulator image | Teams without hardware can validate Fire OS behaviour, not just Android TV (A9) | Important |

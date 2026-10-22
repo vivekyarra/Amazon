@@ -37,7 +37,7 @@
   "health_ready": {
     "status": "ready",
     "storage": "encrypted-sqlite-wal",
-    "mode": "SYNTHETIC_DEMO",
+    "mode": "GUIDED",
     "worker": "RUNNING",
     "schema_version": "1.0",
     "trace_id": "440127446a8d44dbaa141308a1ed72d9"
@@ -57,13 +57,13 @@
   "incidents": [
     {
       "status": "AWAITING_HUMAN_DECISION",
-      "quality": "SYNTHETIC_CLIP_AVAILABLE"
+      "quality": "SCRIPTED_CLIP_AVAILABLE"
     }
   ],
   "evidence_items": 8,
   "dynamodb": {
     "table": "done-irl-judge-Ledger-RU4E2ZI6GP75",
-    "items_for_demo_household": 69,
+    "items_for_guided_household": 69,
     "by_sort_prefix": {
       "AGENT": 3,
       "AUDIT": 51,

@@ -1,6 +1,6 @@
-"""P0-039 / F17 / F18: real MediaPipe pose inference on the committed RECORDED DEMO fixtures.
+"""P0-039 / F17 / F18: real MediaPipe pose inference on the committed RECORDED WORKOUT fixtures.
 
-The fixtures are SYNTHETIC generated humanoid videos (scripts/generate-synthetic-squats.py).
+The fixtures are generated humanoid videos (scripts/generate-squats.py).
 These tests decode the video pixels, run the SHA-pinned MediaPipe Pose Landmarker model and
 feed the same reducer used by live Ring frames. No landmarks or counts are injected.
 
@@ -46,7 +46,7 @@ def full_frames():
 
 @pytest.fixture(scope="module")
 def plan():
-    return json.loads((recorded.FIXTURE_DIR / "squats-15-synthetic.plan.json").read_text())["reps"]
+    return json.loads((recorded.FIXTURE_DIR / "squats-15-generated.plan.json").read_text())["reps"]
 
 
 def ledger(tmp_path, model_hash):
@@ -79,14 +79,14 @@ def rep_events(state):
     return [x for x in state["events"] if x["event_type"] == "studio.rep_verified"]
 
 
-def test_fixtures_are_pinned_small_and_labelled_synthetic():
+def test_fixtures_are_pinned_small_and_labelled_scripted():
     manifest = json.loads((recorded.REPO_ROOT / "packages/testing-fixtures/manifest.json").read_text())
     pose = {f["id"]: f for f in manifest["pose_video_fixtures"]}
     for name, (filename, sha) in recorded.FIXTURES.items():
         data = (recorded.FIXTURE_DIR / filename).read_bytes()
         assert hashlib.sha256(data).hexdigest() == sha
         assert len(data) < 10 * 1024 * 1024
-        assert pose[name]["sha256"] == sha and pose[name]["provenance"] == "SYNTHETIC"
+        assert pose[name]["sha256"] == sha and pose[name]["provenance"] == "SCRIPTED"
     with pytest.raises(Exception):
         recorded.fixture_path("../../etc/passwd")
 
@@ -127,15 +127,15 @@ def test_F18_frozen_frames_and_looped_rep_cannot_add_reps(tmp_path, detector_fac
     assert e.contract(state, "squats")["status"] == "ACTIVE"
 
 
-def test_F17_recorded_demo_api_streams_15_reps_and_unlocks_after_15th(app, client, post, detector_factory):
-    app.state.recorded_demo.realtime = False
-    app.state.recorded_demo.detector_factory = detector_factory
+def test_F17_recorded_workout_api_streams_15_reps_and_unlocks_after_15th(app, client, post, detector_factory):
+    app.state.recorded_workout.realtime = False
+    app.state.recorded_workout.detector_factory = detector_factory
     post("/admin/scenarios/1/run", {"branch": "deposit"})
     started = post("/studio/recorded/start", {"fixture": "squats-15"})
-    assert started["label"] == "RECORDED DEMO" and started["source"] == "RECORDED_DEMO_VIDEO"
+    assert started["label"] == "RECORDED WORKOUT" and started["source"] == "RECORDED_WORKOUT_VIDEO"
     deadline = time.monotonic() + 300
     while client.get("/api/studio/recorded/status").json()["status"] != "ENDED":
-        assert time.monotonic() < deadline, "recorded demo did not finish"
+        assert time.monotonic() < deadline, "recorded workout did not finish"
         time.sleep(0.5)
     status = client.get("/api/studio/recorded/status").json()
     assert status["end_reason"] == "COMPLETED"
@@ -147,33 +147,33 @@ def test_F17_recorded_demo_api_streams_15_reps_and_unlocks_after_15th(app, clien
     assert [r["payload"]["count"] for r in reps] == list(range(1, 16))
     assert s["studio"]["count"] == 15 and s["studio"]["gate"] == "UNLOCKED"
     assert (
-        s["studio"]["source"] == "RECORDED_DEMO_VIDEO" and s["studio"]["source_mode"] == "SIMULATED_VERIFIED"
+        s["studio"]["source"] == "RECORDED_WORKOUT_VIDEO" and s["studio"]["source_mode"] == "REPLAY_VERIFIED"
     )
     assert all(
-        r["source"] == "RECORDED_DEMO_VIDEO" and r["source_mode"] == "SIMULATED_VERIFIED" for r in reps
+        r["source"] == "RECORDED_WORKOUT_VIDEO" and r["source_mode"] == "REPLAY_VERIFIED" for r in reps
     )
     assert e.contract(s, "squats")["status"] == "VERIFIED"
     order = [x["event_type"] for x in s["events"]]
     unlock = order.index("studio.reality_lock_unlocked")
-    assert order.index("commitment.verified", order.index("studio.recorded_demo_opened")) < unlock
+    assert order.index("commitment.verified", order.index("studio.recorded_workout_opened")) < unlock
     assert max(i for i, t in enumerate(order) if t == "studio.rep_verified") < unlock
     proof = [x for x in s["evidence"] if x["kind"] == "POSE_15_CYCLES"]
-    assert len(proof) == 1 and proof[0]["provenance"] == "RECORDED_DEMO"
-    assert proof[0]["source_platform"] == "RECORDED_DEMO_VIDEO"
+    assert len(proof) == 1 and proof[0]["provenance"] == "RECORDED_WORKOUT"
+    assert proof[0]["source_platform"] == "RECORDED_WORKOUT_VIDEO"
     assert "LIVE" not in json.dumps(proof[0])
-    body = json.loads(app.state.store.uow.get_artifact(proof[0]["evidence_id"], "demo")["data"])
-    assert body["label"] == "RECORDED DEMO" and len(body["verified_reps"]) == 15
+    body = json.loads(app.state.store.uow.get_artifact(proof[0]["evidence_id"], "guided")["data"])
+    assert body["label"] == "RECORDED WORKOUT" and len(body["verified_reps"]) == 15
     assert len({r["frame_sha256"] for r in body["verified_reps"]}) == 15
 
 
-def test_recorded_demo_is_refused_outside_demo_and_never_labelled_live(tmp_path, monkeypatch):
+def test_recorded_workout_is_refused_outside_guided_and_never_labelled_live(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
     from done_irl.api import create_app
 
     key = tmp_path / "ledger.key"
     key.write_bytes(b"k" * 32)
     key.chmod(0o600)  # POSIX ledger-key permission check
-    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("GUIDED_MODE", "false")
     monkeypatch.setenv("LEDGER_KEY_FILE", str(key))
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://example.test")
     try:
@@ -184,11 +184,11 @@ def test_recorded_demo_is_refused_outside_demo_and_never_labelled_live(tmp_path,
         c.post("/api/auth/login", json={"username": "owner", "password": "owner-password-long-enough"})
         r = c.post("/api/studio/recorded/start", json={}, headers={"Idempotency-Key": "k1"})
         assert r.status_code == 409 and r.json()["error"]["code"] == "LIVE_DEPLOYMENT"
-    assert recorded.LABEL == "RECORDED DEMO" and "LIVE" not in recorded.SOURCE
+    assert recorded.LABEL == "RECORDED WORKOUT" and "LIVE" not in recorded.SOURCE
 
 
-def test_recorded_demo_stop_pauses_without_unlock(app, client, post, detector_factory):
-    app.state.recorded_demo.detector_factory = detector_factory  # realtime pacing kept
+def test_recorded_workout_stop_pauses_without_unlock(app, client, post, detector_factory):
+    app.state.recorded_workout.detector_factory = detector_factory  # realtime pacing kept
     post("/admin/scenarios/1/run", {"branch": "deposit"})
     post("/studio/recorded/start", {"fixture": "squats-15"})
     post("/studio/recorded/start", {"fixture": "squats-15"}, status=409)
@@ -196,5 +196,5 @@ def test_recorded_demo_stop_pauses_without_unlock(app, client, post, detector_fa
     assert status["status"] == "ENDED" and status["end_reason"] == "OWNER_CLOSED"
     s = client.get("/api/state").json()["state"]
     assert s["studio"]["status"] == "PAUSED" and s["studio"]["gate"] == "LOCKED"
-    assert s["studio"]["source"] == "RECORDED_DEMO_VIDEO"
+    assert s["studio"]["source"] == "RECORDED_WORKOUT_VIDEO"
     assert e.contract(s, "squats")["status"] == "ACTIVE"

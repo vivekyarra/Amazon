@@ -1030,7 +1030,7 @@ details.info > p {
   align-items: center;
   gap: 6px;
 }
-.demo-chip {
+.day-chip {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -1045,7 +1045,7 @@ details.info > p {
   white-space: nowrap;
   cursor: default;
 }
-.demo-chip:focus-visible {
+.day-chip:focus-visible {
   border-radius: 999px;
 }
 .topbar .tip {
@@ -2879,7 +2879,7 @@ blockquote {
   .topbar-right {
     gap: 2px;
   }
-  .demo-chip {
+  .day-chip {
     height: 22px;
     padding: 0 8px;
     font-size: var(--fs-xs);

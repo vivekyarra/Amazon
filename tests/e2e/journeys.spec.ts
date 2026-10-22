@@ -75,10 +75,10 @@ test("canonical full day updates shared ledger, keeps uncertainty and verifies 1
   await page.getByLabel("Type APPROVE REPORT").fill("APPROVE REPORT");
   await page.getByRole("button", { name: "Approve this packet" }).click();
   await page
-    .getByRole("button", { name: "Send to demo receiver only" })
+    .getByRole("button", { name: "Send to local receiver only" })
     .click();
   await expect(
-    page.getByText("Demo receiver — not sent to police"),
+    page.getByText("Local receiver — not sent to police"),
   ).toBeVisible();
 });
 
@@ -90,7 +90,7 @@ test("manual scenario branches, contract provenance, and private notifications",
   await expect(
     page.getByText("Attend nephew’s teacher meeting", { exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Courier", { exact: true }).selectOption("fake");
+  await page.getByLabel("Courier", { exact: true }).selectOption("false_claim");
   await page
     .getByRole("button", { name: "2. 14:10 Trust, then verify" })
     .click();
@@ -133,7 +133,7 @@ test("mobile layout, consent pause, and TV keyboard navigation", async ({
     page.getByText("Collection paused.", { exact: false }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Restore demo consent", exact: true })
+    .getByRole("button", { name: "Restore guided consent", exact: true })
     .first()
     .click();
   await page.goto("/?tv=1&page=overview");

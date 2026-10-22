@@ -5,7 +5,7 @@ from done_irl.models import ApiError
 
 
 @pytest.mark.asyncio
-async def test_ring_expired_token_does_not_become_live_or_simulated():
+async def test_ring_expired_token_does_not_become_live_or_replay():
     adapter = RingAdapter("private-test-token", httpx.MockTransport(lambda r: httpx.Response(401)))
     with pytest.raises(ApiError) as error:
         await adapter.devices()
@@ -109,7 +109,7 @@ async def test_bee_401_redacted():
 
 
 @pytest.mark.parametrize("provider", ["alexa", "bee-haptic"])
-def test_unavailable_notification_adapters_do_not_fake_success(provider):
+def test_unavailable_notification_adapters_do_not_claim_success(provider):
     adapter = NotificationAdapter(provider)
     assert not adapter.capabilities()["available"]
     assert adapter.send("test")["status"] == "UNAVAILABLE"

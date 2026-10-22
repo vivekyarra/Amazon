@@ -1,5 +1,5 @@
 /* Alexa+ panel: conversation, whispers and the MCP JSON-RPC log. */
-.alexa-sim {
+.alexa-panel {
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -7,14 +7,14 @@
 .alexa-page {
   display: flex;
 }
-.alexa-sim .panel-head {
+.alexa-panel .panel-head {
   flex-wrap: wrap;
   row-gap: 6px;
 }
-.alexa-sim .panel-head h2 svg {
+.alexa-panel .panel-head h2 svg {
   color: var(--accent);
 }
-.alexa-sim code {
+.alexa-panel code {
   font-size: 0.9em;
   color: var(--text);
 }
@@ -96,13 +96,13 @@
   background: linear-gradient(180deg, #2a3b4f, #223246);
   border-bottom-right-radius: 4px;
 }
-.alexa-turn.sim {
+.alexa-turn.alexa {
   align-self: flex-start;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-bottom-left-radius: 4px;
 }
-.alexa-turn.sim.error {
+.alexa-turn.alexa.error {
   border-color: rgba(255, 149, 139, 0.35);
   background: rgba(255, 149, 139, 0.07);
 }
@@ -124,7 +124,7 @@
   font-weight: 550;
   color: var(--text-2);
 }
-.alexa-sim.compact .alexa-examples {
+.alexa-panel.compact .alexa-examples {
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
@@ -284,11 +284,11 @@
   word-break: break-word;
   border-top: 1px solid var(--line);
 }
-.alexa-sim.compact .alexa-grid {
+.alexa-panel.compact .alexa-grid {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) minmax(120px, 34%);
 }
-.alexa-sim.compact .alexa-rail {
+.alexa-panel.compact .alexa-rail {
   border-left: 0;
   border-top: 1px solid var(--line);
 }

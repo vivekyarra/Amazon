@@ -1,14 +1,14 @@
 # AWS deployment
 
-## Judge deployment (`judge-demo.yaml`)
+## Judge deployment (`judge-stack.yaml`)
 
-`infra/aws/judge-demo.yaml` is the stack running for the hackathon (`done-irl-judge`, us-east-1, since 20 October 2026): one EC2 reducer in DEMO_MODE that builds an exact public commit, Caddy terminating HTTPS with an automatic Let's Encrypt certificate on `<elastic-ip>.sslip.io`, and the same DynamoDB (KMS, PITR), versioned SSE-KMS S3, EventBridge Scheduler → SQS (KMS, DLQ), CloudWatch logs and alarms as the owner template below. No SSH; operations use SSM.
+`infra/aws/judge-stack.yaml` is the stack running for the hackathon (`done-irl-judge`, us-east-1, since 20 October 2026): one EC2 reducer in GUIDED_MODE that builds an exact public commit, Caddy terminating HTTPS with an automatic Let's Encrypt certificate on `<elastic-ip>.sslip.io`, and the same DynamoDB (KMS, PITR), versioned SSE-KMS S3, EventBridge Scheduler → SQS (KMS, DLQ), CloudWatch logs and alarms as the owner template below. No SSH; operations use SSM.
 
 ```bash
-# one-time: a Secrets Manager secret with OWNER_PASSWORD, DEMO_ADMIN_PASSWORD (>=16 chars) and LEDGER_KEY_BASE64 (32 random bytes)
-aws cloudformation create-stack --stack-name done-irl-judge --template-body file://infra/aws/judge-demo.yaml   --capabilities CAPABILITY_IAM --parameters ParameterKey=SubnetId,ParameterValue=<public-subnet>   ParameterKey=VpcId,ParameterValue=<vpc> ParameterKey=RuntimeSecretArn,ParameterValue=<secret-arn>   ParameterKey=GitCommit,ParameterValue=<40-char sha>
-scripts/judge-redeploy.sh <40-char sha>          # rebuild/restart a newer commit via SSM
-DONE_URL=https://<ip>.sslip.io DEMO_ADMIN_PASSWORD=... uv run --extra aws python scripts/aws-judge-smoke.py
+# one-time: a Secrets Manager secret with OWNER_PASSWORD, JUDGE_PASSWORD (>=16 chars) and LEDGER_KEY_BASE64 (32 random bytes)
+aws cloudformation create-stack --stack-name done-irl-judge --template-body file://infra/aws/judge-stack.yaml   --capabilities CAPABILITY_IAM --parameters ParameterKey=SubnetId,ParameterValue=<public-subnet>   ParameterKey=VpcId,ParameterValue=<vpc> ParameterKey=RuntimeSecretArn,ParameterValue=<secret-arn>   ParameterKey=GitCommit,ParameterValue=<40-char sha>
+scripts/judge-redeploy.sh <40-char sha>          # rebuild/restart a newer commit via SSM (refreshes JUDGE_PASSWORD from the secret)
+DONE_URL=https://<ip>.sslip.io JUDGE_PASSWORD=... uv run --extra aws python scripts/aws-judge-smoke.py
 aws cloudformation delete-stack --stack-name done-irl-judge   # after judging; then remove retained table/bucket/key
 ```
 
@@ -48,7 +48,7 @@ The parameter file contains **identifiers only**: `VpcId`, `PublicSubnets` (comm
 ## Post-deployment verification
 
 1. `/health/ready` must return ready after both the ledger and AWS worker succeed. `/health/live` only proves the process is alive. Missing required AWS configuration fails startup; synchronization failures degrade readiness rather than silently becoming a local-only success.
-2. Sign in over the configured HTTPS origin. New live households start with **consent disabled**; enable collection explicitly. Demo administrator routes are unavailable.
+2. Sign in over the configured HTTPS origin. New live households start with **consent disabled**; enable collection explicitly. Judge administrator routes are unavailable.
 3. Register the HTTPS Ring webhook endpoint `/api/webhooks/ring` with the authorized partner account. Signatures use **`X-Signature: sha256=HMAC_SHA256(raw_body)`**. Account and device allowlists are server-side; duplicate `meta.request_id` receipts do not reapply state. By design, motion is never treated as physical proof.
 4. Confirm Bee ingestion with `scripts/bee-live-probe.py`. The normalizer mirrors the official bee-cli event shapes (verified live on a Bee device, [evidence](../../docs/evidence/bee-live-verification.md)); unknown envelopes are ignored, never relabelled as successful ingestion.
 5. In Reality-Lock choose a linked Ring camera. Capability discovery must advertise video. WHEP uses a receive-only video offer, gathered ICE and the documented STUN server. SDP and session URLs stay on the backend. The server decodes changing frames, runs the SHA-pinned MediaPipe model, relays an authenticated JPEG with skeleton, and verifies reps from those decoded observations. Sessions expire at 30/60 seconds; reconnect explicitly to preserve count. Camera loss resets an incomplete phase and pauses verification.

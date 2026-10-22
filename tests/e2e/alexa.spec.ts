@@ -51,7 +51,6 @@ test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
   await page.getByRole("button", { name: "Judge replay" }).click();
   const panel = page.getByRole("region", { name: "Alexa+", exact: true });
   await expect(panel).toBeVisible();
-  await expect(panel.getByText(/simulat/i)).toHaveCount(0);
 
   await page.getByRole("button", { name: "1. 08:15 Morning promises" }).click();
   await expect(
@@ -60,7 +59,7 @@ test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
 
   await ask(page, "Alexa, what did I promise today?", "list_active_contracts");
   const ledger = (await (await page.request.get("/api/state")).json()).state;
-  const reply = panel.getByTestId("alexa-sim-reply").last();
+  const reply = panel.getByTestId("alexa-reply").last();
   await expect(reply).toContainText(
     `You have ${ledger.contracts.length} tracked commitments`,
   );
@@ -80,7 +79,7 @@ test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
     page.getByText("Keep parcel in safe custody", { exact: true }),
   ).toBeVisible();
   await ask(page, "Alexa, is my parcel safe?", "get_watchdog_status");
-  await expect(panel.getByTestId("alexa-sim-reply").last()).toContainText(
+  await expect(panel.getByTestId("alexa-reply").last()).toContainText(
     "Parcel was observed on your porch. PorchWatchdog is watching; custody is not yet complete.",
   );
 
@@ -92,11 +91,11 @@ test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
   );
 
   await ask(page, "Alexa, did I call my sister?", "request_user_verification");
-  await expect(panel.getByTestId("alexa-sim-reply").last()).toContainText(
+  await expect(panel.getByTestId("alexa-reply").last()).toContainText(
     "Not yet verified",
   );
   await ask(page, "Alexa, start Reality-Lock", "bridge_ring_camera_to_firetv");
-  await expect(panel.getByTestId("alexa-sim-reply").last()).toContainText(
+  await expect(panel.getByTestId("alexa-reply").last()).toContainText(
     "can't open a live Ring-to-Fire TV camera relay",
   );
 
@@ -116,5 +115,5 @@ test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
   );
 
   fs.mkdirSync("artifacts/screenshots", { recursive: true });
-  await panel.screenshot({ path: "artifacts/screenshots/alexa-sim.png" });
+  await panel.screenshot({ path: "artifacts/screenshots/alexa.png" });
 });

@@ -8,7 +8,7 @@ services:
     volumes:
       - ledger:/data
     environment:
-      DEMO_MODE: "true"
+      GUIDED_MODE: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready',timeout=3)"]

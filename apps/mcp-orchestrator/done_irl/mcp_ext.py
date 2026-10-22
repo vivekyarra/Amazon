@@ -30,7 +30,7 @@ def _methods(union) -> set[str]:
 KNOWN_METHODS = _methods(mcp_types.ClientRequest) | _methods(mcp_types.ClientNotification)
 
 
-def transport_security(demo: bool) -> TransportSecuritySettings:
+def transport_security(guided: bool) -> TransportSecuritySettings:
     """DNS-rebinding protection: Host and Origin must match configured deployment origins.
 
     The SDK default only allows localhost hosts, which would reject a real deployment with
@@ -43,7 +43,7 @@ def transport_security(demo: bool) -> TransportSecuritySettings:
     public = [h.strip() for h in os.getenv("PUBLIC_HOSTS", "").split(",") if h.strip()]
     hosts += public
     origins += ["https://" + h for h in public]
-    if demo:
+    if guided:
         hosts += LOCAL_HOSTS
         origins += LOCAL_ORIGINS
     return TransportSecuritySettings(
@@ -176,14 +176,14 @@ def register_read_tools(mcp, *, principal, initial, integrations):
                 for v in s["evidence"]
                 if v["evidence_id"] in ids
             ],
-            "report_states_distinct": ["DRAFT", "OWNER_APPROVED", "SIMULATED_DISPATCH", "RECEIPT"],
+            "report_states_distinct": ["DRAFT", "OWNER_APPROVED", "LOCAL_DISPATCH", "RECEIPT"],
             "official_case_id": None if not inc.get("receipt") else inc["receipt"].get("receipt_id"),
             "note": "Only an externally validated receipt is an official case ID.",
         }
 
     @mcp.tool(annotations=mcp_types.ToolAnnotations(readOnlyHint=True, idempotentHint=True))
     def get_integration_health() -> dict:
-        """Read truthful per-provider status (LIVE_VERIFIED / SIMULATED_VERIFIED / NOT_CONNECTED / BLOCKED)."""
+        """Read truthful per-provider status (LIVE_VERIFIED / REPLAY_VERIFIED / STANDBY / BLOCKED)."""
         p = principal()
         return {"integrations": integrations(p)["integrations"]}
 

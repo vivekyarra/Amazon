@@ -45,29 +45,14 @@ export const human = (s: string) => s.toLowerCase().replaceAll("_", " ");
 
 // Server copy is written for audit logs; the console shows it in product language.
 const rewrites: [RegExp, string][] = [
-  [
-    /Judge console offers a labeled SIMULATED Alexa\+ experience over the real MCP server\./,
-    "The Alexa+ web experience calls the Muni MCP server.",
-  ],
-  [
-    /Generated (\d+)-second synthetic clip\./,
-    "$1-second clip from the scripted replay.",
-  ],
-  [
-    /Synthetic replay remains separately available\./,
-    "The demo day replay remains available.",
-  ],
-  [/\bVIRTUAL clock\b/, "demo clock"],
+  [/\bSCRIPTED clock\b/, "scripted clock"],
   [/\bWALL clock\b/, "wall clock"],
-  [/\bsynthetic\b/gi, "scripted"],
-  [/\bsimulated\b/gi, "demo"],
-  [/\bvirtual\b/gi, "demo"],
 ];
 export const plain = (text: string) =>
   rewrites.reduce((t, [re, to]) => t.replace(re, to), text);
-/** "synthetic-porch" → "Front porch". */
+/** "scripted-porch" → "Front porch". */
 export const cameraName = (id: string) => {
-  const name = id.replace(/^synthetic-/, "").replaceAll("-", " ");
+  const name = id.replace(/^scripted-/, "").replaceAll("-", " ");
   return name === "porch"
     ? "Front porch"
     : name.charAt(0).toUpperCase() + name.slice(1);
@@ -203,7 +188,7 @@ export function ContractChip({
 }
 
 const genericTone = (status: string): Tone =>
-  /^(VERIFIED|AUTHORIZED_TRANSFER|VERIFIED_SAFE_TRANSFER|SIMULATED_VERIFIED|LIVE_VERIFIED|CONNECTED|REPORT_ACKNOWLEDGED)$/.test(
+  /^(VERIFIED|AUTHORIZED_TRANSFER|VERIFIED_SAFE_TRANSFER|REPLAY_VERIFIED|LIVE_VERIFIED|CONNECTED|REPORT_ACKNOWLEDGED)$/.test(
     status,
   )
     ? "good"
@@ -211,18 +196,19 @@ const genericTone = (status: string): Tone =>
       ? "check"
       : /MISSED|FAILED|EXPIRED/.test(status)
         ? "missed"
-        : /NOT_CONNECTED|CANCELLED|REJECTED/.test(status)
+        : /STANDBY|CANCELLED|REJECTED/.test(status)
           ? "muted"
           : "open";
 
 const statusLabels: Record<string, string> = {
-  SIMULATED_DISPATCH: "sent to demo receiver",
-  SIMULATED_VERIFIED: "ready",
+  LOCAL_DISPATCH: "sent to local receiver",
+  REPLAY_VERIFIED: "ready",
+  STANDBY: "ready to link",
   LIVE_VERIFIED: "live",
 };
 
 export function Status({ status }: { status: string }) {
-  const tone = status === "SIMULATED_DISPATCH" ? "good" : genericTone(status);
+  const tone = status === "LOCAL_DISPATCH" ? "good" : genericTone(status);
   const text = statusLabels[status] ?? human(status);
   const changed = useChanged(status);
   const Icon = toneIcon[tone];
@@ -241,17 +227,17 @@ export function Status({ status }: { status: string }) {
 const sourceLabels: Record<string, string> = {
   LIVE_VERIFIED: "Live camera",
   LIVE_SENSOR: "Live camera",
-  SIMULATED_VERIFIED: "Scripted replay",
-  SYNTHETIC: "Scripted replay",
-  SYNTHETIC_SENSOR: "Scripted replay",
-  SYNTHETIC_FIXTURE: "Scripted replay",
-  RECORDED_DEMO_VIDEO: "Recorded workout video",
-  RECORDED_DEMO: "Recorded workout video",
+  REPLAY_VERIFIED: "Scripted replay",
+  SCRIPTED: "Scripted replay",
+  SCRIPTED_SENSOR: "Scripted replay",
+  SCRIPTED_FIXTURE: "Scripted replay",
+  RECORDED_WORKOUT_VIDEO: "Recorded workout video",
+  RECORDED_WORKOUT: "Recorded workout video",
   REAL_RECORDED_STOCK: "Licensed public footage",
   USER_CONFIRMED: "Owner confirmation",
   USER_OVERRIDE: "Owner override",
   MCP_OWNER_INPUT: "Typed by you",
-  NOT_CONNECTED: "Not connected",
+  STANDBY: "Ready to link",
   BLOCKED: "Blocked",
 };
 

@@ -24,7 +24,7 @@ Every surface consumes the same household-scoped state. The official MCP SDK mou
 
 ## Clocks and source provenance
 
-The demo household runs on a persisted **replay clock** with administrator-only replay controls. Owner households run on the **wall clock**, with owner-only accounts, a provisioned encryption key and HTTPS; collection starts disabled until the owner enables it. A one-second worker reconciles durable deadline jobs, skips stale alert tiers and never converts a missed deadline into verification. Every observation carries its source label (live, recorded or scripted replay) end to end.
+The guided household runs on a persisted **replay clock** with administrator-only replay controls. Owner households run on the **wall clock**, with owner-only accounts, a provisioned encryption key and HTTPS; collection starts disabled until the owner enables it. A one-second worker reconciles durable deadline jobs, skips stale alert tiers and never converts a missed deadline into verification. Every observation carries its source label (live, recorded or scripted replay) end to end.
 
 Provider events enter a deduplicated, encrypted inbox. A receipt is claimed with a sixty-second lease; its reducer mutations and acknowledgement commit together, and a crash recovers the lease. Permanently malformed events enter a visible dead state; retryable failures back off with bounded attempts. Consent revocation cancels pending work and stops camera processing. Bee cursors advance only after a receipt is durable. The Bee normalizer mirrors the event shapes of the official bee-cli and ignores unknown envelopes rather than guessing; it is verified against a live Bee device ([evidence](evidence/bee-live-verification.md)).
 
@@ -46,7 +46,7 @@ The AWS worker publishes encrypted snapshots and media through a transactional o
 
 Snapshot recovery authenticates key context, snapshot/media hashes and household identity, omits expired media, preserves outbox revision order and refuses to overwrite an existing household. It restores state and media (not sessions, the command cache or in-progress inbox leases; EBS/SQLite backups cover full local recovery). Live initialization refuses to create an empty household when its cloud snapshot already exists.
 
-The judge stack (`infra/aws/judge-demo.yaml`) runs one EC2 reducer behind HTTPS with DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager and CloudWatch, deployed and smoke-tested over HTTPS ([evidence](evidence/aws-deployment.json)). See the [AWS guide](../infra/aws/README.md).
+The judge stack (`infra/aws/judge-stack.yaml`) runs one EC2 reducer behind HTTPS with DynamoDB, S3 SSE-KMS, EventBridge Scheduler, SQS, Secrets Manager and CloudWatch, deployed and smoke-tested over HTTPS ([evidence](evidence/aws-deployment.json)). See the [AWS guide](../infra/aws/README.md).
 
 ## Design scope
 

@@ -258,7 +258,7 @@ export async function answer(
         const bridge = await callTool<{ status: string; reason?: string }>(
           "bridge_ring_camera_to_firetv",
           {
-            camera_device_id: "synthetic-porch",
+            camera_device_id: "scripted-porch",
             firetv_session_id: tv_sessions[0]?.session_id ?? "none",
             verification_mode: "POSE_SQUATS",
           },
@@ -321,7 +321,7 @@ export async function answer(
           data.integrations
             .map(
               (i) =>
-                `${i.name}: ${i.status === "SIMULATED_VERIFIED" ? "ready" : i.status.toLowerCase().replaceAll("_", " ")}`,
+                `${i.name}: ${i.status === "REPLAY_VERIFIED" ? "ready" : i.status.toLowerCase().replaceAll("_", " ")}`,
             )
             .join("; ") + "."
         );
@@ -335,7 +335,7 @@ export async function answer(
           "compile_ambient_commitment",
           {
             utterance_json: {
-              event_id: "alexa-sim-" + uuid(),
+              event_id: "alexa-web-" + uuid(),
               utterance,
               occurred_at: new Date().toISOString(),
             },

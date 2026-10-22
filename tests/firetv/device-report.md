@@ -16,7 +16,7 @@ Date: 2026-10-20 · Host: Windows 11 (WHPX acceleration) · Branch: `feat/tv`
 | System WebView | `com.google.android.webview` 90.0.4430.91 |
 | Build | Gradle 8.13, AGP 8.9.1, JDK 21 (Temurin 21.0.12), `platforms;android-35`, build-tools 35.0.0 |
 | APK | `app-debug.apk`, 21 836 bytes, **SHA-256 `5ebe657fba4824c444854388b37009103a3714aff740ed1ffcf714b1299f035d`** (package `dev.doneirl.tv.debug`). Debug builds are not reproducible across machines; recompute the hash for your own build |
-| Backend | local demo mode (`DEMO_MODE=true`), `uvicorn done_irl.api:app` on 127.0.0.1:8080, frontend built with `npm run build`; emulator reaches it through `adb reverse tcp:8080 tcp:8080` as `http://127.0.0.1:8080` |
+| Backend | local guided mode (`GUIDED_MODE=true`), `uvicorn done_irl.api:app` on 127.0.0.1:8080, frontend built with `npm run build`; emulator reaches it through `adb reverse tcp:8080 tcp:8080` as `http://127.0.0.1:8080` |
 
 ## Commands run
 
@@ -34,16 +34,16 @@ echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager.bat" create avd -n 
 # APK
 gradle -p apps/firetv-command-hud assembleDebug --no-daemon --max-workers=2   # Gradle 8.13
 
-# Backend (demo mode)
+# Backend (guided mode)
 uv sync --frozen --extra ring-video --extra aws && npm ci && npm run build
-PYTHONPATH=apps/mcp-orchestrator DEMO_MODE=true uv run --frozen uvicorn done_irl.api:app --host 127.0.0.1 --port 8080
+PYTHONPATH=apps/mcp-orchestrator GUIDED_MODE=true uv run --frozen uvicorn done_irl.api:app --host 127.0.0.1 --port 8080
 
 # Runtime check (install, launch, connect, sign in, D-pad walkthrough, Reality-Lock, network, restart, exit)
 python scripts/firetv-emulator-check.py --serial emulator-5560 --record --out <dir>
 ffmpeg -i walkthrough-raw.mp4 -vf "setpts=PTS/2.1,scale=1280:720,drawtext=..." -an -c:v libx264 -crf 30 walkthrough.mp4
 ```
 
-The script uses only `adb shell input keyevent KEYCODE_DPAD_*/ENTER/BACK` for navigation. Text is typed with `adb shell input text`, standing in for the remote's on-screen keyboard, for the backend URL and the locally generated demo password; the password is read from the ignored `.local/access.json` and is never printed or recorded. Focus is checked with `uiautomator dump` for native views. For the web content it is checked by reading `document.activeElement` (tag, label, computed outline, in-viewport) through the debug-only WebView DevTools socket. That inspection is read-only.
+The script uses only `adb shell input keyevent KEYCODE_DPAD_*/ENTER/BACK` for navigation. Text is typed with `adb shell input text`, standing in for the remote's on-screen keyboard, for the backend URL and the locally generated judge password; the password is read from the ignored `.local/access.json` and is never printed or recorded. Focus is checked with `uiautomator dump` for native views. For the web content it is checked by reading `document.activeElement` (tag, label, computed outline, in-viewport) through the debug-only WebView DevTools socket. That inspection is read-only.
 
 ## Observed results (final run, 33/33 checks passed)
 
@@ -54,13 +54,13 @@ The machine-readable log is `docs/evidence/firetv/run-results.json`.
 | Install / cold launch | `Success`; `am start -W` `Status: ok`, TotalTime 7944 ms in the final run (3.8–8.9 s across runs; software GPU) |
 | Leanback registration | `cmd package query-activities -c LEANBACK_LAUNCHER` lists `dev.doneirl.tv.debug/.MainActivity` with label Muni and banner. Home screenshot not kept because it shows third-party content |
 | Connection | dialog opens on first run; URL typed, Enter/Go on the remote keyboard connects (debug build permits local HTTP) |
-| Sign-in | D-pad to username → Back closes IME → Down to password → typed (length verified) → Down → Enter: signed in as the demo household |
+| Sign-in | D-pad to username → Back closes IME → Down to password → typed (length verified) → Down → Enter: signed in as the guided household |
 | Live backend state | after `/api/admin/reset` and scenarios 1–6: 5 contracts, 1 incident; TV views show the same state (Incident review shows “A package moved. Was it authorized?”, awaiting human decision) |
 | View bar | Back from web content moves focus to the current view's button; DPAD_RIGHT moves Ledger → Incident review → Evidence packet → Reality-Lock; ENTER opens each view and hands focus to the web HUD |
 | Focus visibility | in all four views DPAD_DOWN moves web focus between controls with a `solid 4px` outline, in viewport; native buttons show a filled mint focus state, and the current view gets an outline |
 | Unreachable content | before the fix, the Reality-Lock counter sat below the fold with no focusable control near it, so the D-pad could never reveal it. After the fix, 5 × DPAD_DOWN scrolls it into view |
 | Reality-Lock 14/15 | backend `count=14 gate=LOCKED`; TV shows “14 / 15 verified cycles”, no “gate unlocked” |
-| Reality-Lock 15/15 | backend `count=15 gate=UNLOCKED`; TV shows “15 / 15” and “15 synthetic cycles verified. In-app gate unlocked.” (synthetic marker frames, not a live camera) |
+| Reality-Lock 15/15 | backend `count=15 gate=UNLOCKED`; TV shows “15 / 15” and the verified-cycles message with “In-app gate unlocked.” (scripted marker frames, not a live camera) |
 | Network loss | airplane mode on: status bar reads “Network lost. Showing last loaded state; nothing new is verified until reconnect.” Airplane mode off: message cleared and HUD reloaded |
 | Restart | `am force-stop` + relaunch: backend URL, session cookie, last view (`page=studio`) and server state preserved, with no re-login |
 | Back / no trap | Back on a view's bar returns to Ledger; Back on Ledger's bar exits to the TV launcher (`com.google.android.tvlauncher`) |
@@ -78,6 +78,6 @@ The machine-readable log is `docs/evidence/firetv/run-results.json`.
 
 - No physical Fire TV (Fire OS 7/8) device was used. Amazon WebView, a real remote, Fire OS launcher integration, HDMI overscan and hardware video decoding remain untested.
 - Not run on the Vega SDK or Vega Virtual Device. Vega is a separate platform, and this APK does not target it.
-- Private media/video playback inside the WebView was not exercised (the synthetic studio frames are JPEG stills).
+- Private media/video playback inside the WebView was not exercised (the scripted studio frames are JPEG stills).
 - The emulator uses software rendering, so its timings are not representative of device performance.
 - The repository's Playwright suite was not re-run locally on Windows, because its config targets Linux Chromium. CI runs it.

@@ -1,4 +1,4 @@
-"""One-click judge access: every guest gets a private, isolated copy of the demo day."""
+"""One-click judge access: every guest gets a private, isolated copy of the guided day."""
 
 import time
 import uuid
@@ -18,29 +18,29 @@ def guest(app):
     return c
 
 
-def test_guest_gets_isolated_demo_household_with_replay_controls(app):
+def test_guest_gets_isolated_guided_household_with_replay_controls(app):
     with TestClient(app):
         a, b = guest(app), guest(app)
         assert a.post("/api/admin/scenarios/1/run", json={"branch": "deposit"}, headers=key()).status_code == 200
         sa, sb = a.get("/api/state").json()["state"], b.get("/api/state").json()["state"]
-        assert sa["household_id"].startswith("demo_") and sb["household_id"].startswith("demo_")
+        assert sa["household_id"].startswith("guest_") and sb["household_id"].startswith("guest_")
         assert sa["household_id"] != sb["household_id"]
         assert len(sa["contracts"]) > 0 and len(sb["contracts"]) == 0
-        assert sa.get("clock_mode") != "WALL"  # guests replay the scripted demo clock, never AWS schedules
+        assert sa.get("clock_mode") != "WALL"  # guests replay the scripted guided clock, never AWS schedules
 
 
-def test_guest_cannot_reach_owner_or_shared_demo_household(app):
+def test_guest_cannot_reach_owner_or_shared_guided_household(app):
     with TestClient(app) as owner:
         owner.post("/api/auth/login", json={"username": "owner", "password": "test-owner-password"})
         owner.post("/api/owner/promises", json={"utterance": "I'll pay the electricity bill by Friday"}, headers=key())
         owned = owner.get("/api/state").json()["state"]
         s = guest(app).get("/api/state").json()["state"]
-        assert s["household_id"] not in {owned["household_id"], "demo"}
+        assert s["household_id"] not in {owned["household_id"], "guided"}
         assert not any("electricity" in x["title"].lower() for x in s["contracts"])
 
 
 def test_guest_rate_limited_per_network(app, monkeypatch):
-    monkeypatch.setenv("DEMO_GUEST_PER_HOUR", "2")
+    monkeypatch.setenv("GUEST_PER_HOUR", "2")
     with TestClient(app) as c:
         assert c.post("/api/auth/guest").status_code == 200
         assert c.post("/api/auth/guest").status_code == 200
@@ -48,8 +48,8 @@ def test_guest_rate_limited_per_network(app, monkeypatch):
         assert r.status_code == 429 and r.json()["error"]["code"] == "RATE_LIMITED"
 
 
-def test_guest_disabled_outside_demo_or_by_flag(app, monkeypatch):
-    monkeypatch.setenv("DEMO_GUEST", "0")
+def test_guest_disabled_outside_guided_or_by_flag(app, monkeypatch):
+    monkeypatch.setenv("GUEST_ACCESS", "0")
     with TestClient(app) as c:
         assert c.post("/api/auth/guest").status_code == 404
 

@@ -26,10 +26,10 @@ extracted from Muni (an Alexa+ MCP / Bee / Ring / Fire TV project). Use it when 
 3. **Consequential external actions need an authenticated human approval record** bound to the exact
    payload and destination. A boolean argument such as `human_confirmed=true` sent by a model is not
    approval. See [mcp-tool-design.md](references/mcp-tool-design.md).
-4. **Label every source truthfully**: `LIVE_VERIFIED`, `SIMULATED_VERIFIED`, `NOT_CONNECTED`, `BLOCKED`.
-   Never let a replay or simulator look live.
+4. **Label every source truthfully**: `LIVE_VERIFIED`, `REPLAY_VERIFIED`, `STANDBY`, `BLOCKED`.
+   Never let a replay or scripted source look live.
 5. **Deadlines escalate early, once, and go quiet when stale**: silent prep at T-60, an actionable
-   alert at T-25 only if the person is not demonstrably engaged, no "starts in 25 minutes" at T+10.
+   alert at T-25 only if the person is not provably engaged, no "starts in 25 minutes" at T+10.
 6. **Owner confirmation is allowed but labelled** `USER_CONFIRMED`, distinct from `SENSOR_VERIFIED`.
 
 ## Workflow

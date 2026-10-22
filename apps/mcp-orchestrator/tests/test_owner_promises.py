@@ -69,6 +69,6 @@ def test_owner_promise_requires_consent_session_and_key(owner):
 def test_owner_promise_stays_in_the_owner_household(owner):
     consent(owner)
     add(owner, "I will water the plants at 7 pm.")
-    assert login(owner, "demo-admin", "test-admin-password") == "admin"
-    demo = owner.get("/api/state").json()["state"]
-    assert not any(c["title"] == "Water the plants" for c in demo["contracts"])
+    assert login(owner, "judge", "test-admin-password") == "admin"
+    guided = owner.get("/api/state").json()["state"]
+    assert not any(c["title"] == "Water the plants" for c in guided["contracts"])

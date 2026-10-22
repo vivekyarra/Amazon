@@ -49,7 +49,7 @@ export function nowMs(state: Json, fetchedAt: number): number {
   if (isNaN(base)) {
     return Date.now();
   }
-  // Server clock is authoritative (VIRTUAL demo clock or WALL clock); advance it
+  // Server clock is authoritative (SCRIPTED clock or WALL clock); advance it
   // locally only by real time elapsed since the snapshot was fetched.
   return base + (state.clock_mode === 'WALL' ? Date.now() - fetchedAt : 0);
 }
@@ -119,7 +119,7 @@ export function sourceLabel(mode?: string | null, platform?: string | null): str
   if (p.indexOf('RING') >= 0 && m.indexOf('LIVE') >= 0) {
     return 'LIVE RING';
   }
-  if (m.indexOf('SIMULATED') >= 0 || p.indexOf('SYNTHETIC') >= 0) {
+  if (m.indexOf('REPLAY') >= 0 || m.indexOf('SCRIPTED') >= 0 || p.indexOf('SCRIPTED') >= 0) {
     return 'Scripted replay';
   }
   if (m.indexOf('RECORDED') >= 0) {
@@ -134,12 +134,12 @@ export function sourceLabel(mode?: string | null, platform?: string | null): str
 export function studioSourceLabel(studio: Json): string {
   const src = (studio && studio.source) || '';
   if (src.indexOf('LIVE_RING') >= 0) {
-    return studio.source_mode === 'NOT_CONNECTED' ? 'LIVE RING (not connected)' : 'LIVE RING';
+    return studio.source_mode === 'STANDBY' ? 'LIVE RING (ready to link)' : 'LIVE RING';
   }
   if (src.indexOf('RECORDED') >= 0) {
     return 'Recorded workout';
   }
-  if (src.indexOf('SYNTHETIC') >= 0 || (studio && studio.source_mode === 'SIMULATED_VERIFIED')) {
+  if (src.indexOf('SCRIPTED') >= 0 || (studio && studio.source_mode === 'REPLAY_VERIFIED')) {
     return 'Camera frames';
   }
   return src || 'UNKNOWN';
@@ -151,8 +151,8 @@ export function packetState(inc: Json): string {
       return 'DRAFT';
     case 'REPORT_APPROVED':
       return 'APPROVED (not sent)';
-    case 'SIMULATED_DISPATCH':
-      return 'DEMO RECEIVER';
+    case 'LOCAL_DISPATCH':
+      return 'LOCAL RECEIVER';
     case 'DISPATCHED':
       return 'DISPATCHED';
     case 'ACKNOWLEDGED':

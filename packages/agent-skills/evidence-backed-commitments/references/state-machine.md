@@ -21,7 +21,7 @@ Enumerations:
 CommitmentType   = SCHEDULED_SOCIAL_COMMITMENT | INBOUND_ITEM | PARCEL_CUSTODY | PHYSICAL_ACTION | TRIGGERED_TASK
 VerificationMode = RING_SPATIAL_CUSTODY | RING_THRESHOLD_OBJECT_SCAN | BEE_CONVERSATION_AUDIT
                  | FIRE_TV_LIVE_POSE_CAMERA | AUTHORIZED_MANUAL_CONFIRMATION
-SourceMode       = LIVE_VERIFIED | SIMULATED_VERIFIED | NOT_CONNECTED | BLOCKED
+SourceMode       = LIVE_VERIFIED | REPLAY_VERIFIED | STANDBY | BLOCKED
 ```
 
 Implementation notes: store corrections as new revisions (append-only); use optimistic concurrency
@@ -51,8 +51,8 @@ REPORT_APPROVED → REPORT_DISPATCHED (only via an independently verified, autho
 REPORT_DISPATCHED → REPORT_ACKNOWLEDGED (only with a real external receipt)
 ```
 
-Without a real receiving service the flow ends at an exportable packet; a demo receiver must be
-labelled `SIMULATED — NOT SENT`.
+Without a real receiving service the flow ends at an exportable packet; a local receiver must be
+labelled `LOCAL DISPATCH — NOT SENT`.
 
 ## Deadline escalation
 

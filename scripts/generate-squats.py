@@ -1,14 +1,14 @@
-"""Render a SYNTHETIC/GENERATED humanoid squat video for pose-verifier fixtures.
+"""Render a GENERATED humanoid squat video for pose-verifier fixtures.
 
 The figure is ray-traced from 3D capsules/ellipsoids (skin, clothing, face features) and
-posed by forward kinematics. Every rep is generated from its own seeded parameters
+posed by forward kinematics. Every rep is generated from its own randomized parameters (fixed RNG key)
 (depth, tempo, sway, arm raise), every frame has fresh sensor noise, and nothing is
 looped or copied between reps. The output is NOT a recording of a person and NOT a Ring
 recording; it exists so the real MediaPipe pose engine has physically complete
 movements to process. Counts are never written here; they come only from pose inference.
 
 Usage:
-  python scripts/generate-synthetic-squats.py --plan full15 --output out.mp4
+  python scripts/generate-squats.py --plan full15 --output out.mp4
 Plans: full15 (15 full reps), half15 (15 half-squats), full14 (first 14 reps of full15).
 """
 
@@ -255,8 +255,8 @@ def ease(x):
     return 0.5 - 0.5 * math.cos(math.pi * min(1, max(0, x)))
 
 
-def rep_plan(kind, count, seed):
-    rng = np.random.default_rng(seed)
+def rep_plan(kind, count, rng_key):
+    rng = np.random.default_rng(rng_key)
     reps = []
     for i in range(count):
         depth = rng.uniform(128, 136) if kind == "full" else rng.uniform(42, 62)
@@ -312,16 +312,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", choices=["full15", "full14", "half15"], required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--seed", type=int, default=20261020)
+    parser.add_argument("--rng-key", type=int, default=20261020)
     parser.add_argument("--yaw", type=float, default=20.0, help="body yaw vs camera (deg); 0 = head-on")
     args = parser.parse_args()
     kind = "half" if args.plan == "half15" else "full"
-    reps = rep_plan(kind, 15, args.seed + (1 if kind == "half" else 0))
+    reps = rep_plan(kind, 15, args.rng_key + (1 if kind == "half" else 0))
     if args.plan == "full14":
         reps = reps[:14]
     frames = timeline(reps)
     cam = Camera((0.0, 1.0, 3.9), (0.0, 0.88, 0.0), 31)
-    rng = np.random.default_rng(args.seed + 7)
+    rng = np.random.default_rng(args.rng_key + 7)
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
@@ -353,7 +353,7 @@ def main():
             "-movflags",
             "+faststart",
             "-metadata",
-            "comment=SYNTHETIC/GENERATED humanoid render - not a person, not Ring",
+            "comment=GENERATED humanoid render - not a person, not Ring",
             str(out),
         ],
         stdin=subprocess.PIPE,
@@ -366,13 +366,13 @@ def main():
         raise SystemExit("ffmpeg encoding failed")
     plan = dict(
         plan=args.plan,
-        seed=args.seed,
+        rng_key=args.rng_key,
         yaw_deg=args.yaw,
         fps=FPS,
         size=[W, H],
         frames=len(frames),
         reps=reps,
-        provenance="SYNTHETIC",
+        provenance="SCRIPTED",
     )
     out.with_suffix(".plan.json").write_text(json.dumps(plan, indent=2) + "\n", newline="\n")
     print(json.dumps({k: v for k, v in plan.items() if k != "reps"}))

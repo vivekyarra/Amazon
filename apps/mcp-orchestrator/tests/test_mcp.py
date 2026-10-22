@@ -1,4 +1,4 @@
-"""Real external SDK client over TCP, not a fake JSON route test."""
+"""Real external SDK client over TCP, not an in-process JSON route test."""
 
 import asyncio
 import os
@@ -20,8 +20,8 @@ async def test_mcp_streamable_http_handshake_discovery_and_shared_state(tmp_path
     environment = {
         **os.environ,
         "DATA_DIR": str(tmp_path),
-        "DEMO_ADMIN_PASSWORD": "external-client-password",
-        "DEMO_MODE": "true",
+        "JUDGE_PASSWORD": "external-client-password",
+        "GUIDED_MODE": "true",
         "PYTHONPATH": str(Path(__file__).resolve().parents[1]),
     }
     process = subprocess.Popen(
@@ -41,7 +41,7 @@ async def test_mcp_streamable_http_handshake_discovery_and_shared_state(tmp_path
                     pass
                 await asyncio.sleep(0.1)
             login = await http.post(
-                "/api/auth/login", json={"username": "demo-admin", "password": "external-client-password"}
+                "/api/auth/login", json={"username": "judge", "password": "external-client-password"}
             )
             assert login.status_code == 200
             token = http.cookies.get("done_session")
@@ -92,7 +92,7 @@ def test_mcp_accepts_configured_public_host_and_rejects_others(tmp_path, monkeyp
     from done_irl.api import create_app
 
     monkeypatch.setenv("PUBLIC_HOSTS", "judge.example.test")
-    app = create_app(tmp_path, {"demo-admin": "public-host-password"})
+    app = create_app(tmp_path, {"judge": "public-host-password"})
     body = {
         "jsonrpc": "2.0",
         "id": 1,
@@ -101,7 +101,7 @@ def test_mcp_accepts_configured_public_host_and_rejects_others(tmp_path, monkeyp
     }
     headers = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}
     with TestClient(app, base_url="https://judge.example.test") as client:
-        client.post("/api/auth/login", json={"username": "demo-admin", "password": "public-host-password"})
+        client.post("/api/auth/login", json={"username": "judge", "password": "public-host-password"})
         auth = {**headers, "Authorization": "Bearer " + client.cookies.get("done_session")}
         assert client.post("/mcp/", json=body, headers=auth).status_code == 200
         rejected = client.post("/mcp/", json=body, headers={**auth, "Host": "attacker.example.test"})

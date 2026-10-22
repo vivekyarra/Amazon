@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit contract records against the never-fake-done rules (zero dependencies).
+"""Audit contract records against the never-done-without-proof rules (zero dependencies).
 
 Usage: python check_contract.py contracts.json [evidence.json]
   contracts.json: a contract object, a list of them, or {"contracts": [...], "evidence": [...]}.
@@ -43,7 +43,7 @@ def audit(contracts, evidence):
         for before, after in zip(history, history[1:]):
             if before in TERMINAL and after != before:
                 findings.append(f"{cid}: terminal state {before} regressed to {after}")
-        if c.get("source_mode") not in {None, "LIVE_VERIFIED", "SIMULATED_VERIFIED", "NOT_CONNECTED", "BLOCKED"}:
+        if c.get("source_mode") not in {None, "LIVE_VERIFIED", "REPLAY_VERIFIED", "STANDBY", "BLOCKED"}:
             findings.append(f"{cid}: unknown source_mode {c.get('source_mode')}")
     return findings
 

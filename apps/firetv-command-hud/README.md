@@ -28,7 +28,7 @@ Enable ADB debugging only on a trusted network. Use **Connection** to enter the 
 # one-time: official cmdline-tools, then
 android sdk install "platforms;android-35" "system-images;android-30;android-tv;x86"   # Android CLI in cmdline-tools/latest/bin
 avdmanager create avd -n doneirl_tv30 -k "system-images;android-30;android-tv;x86" -d tv_1080p
-./scripts/start-local.sh                                  # demo backend on :8080 (writes .local/access.json)
+./scripts/start-local.sh                                  # local backend on :8080 (writes .local/access.json)
 gradle -p apps/firetv-command-hud assembleDebug --no-daemon --max-workers=2
 python scripts/firetv-emulator-check.py --boot --serial emulator-5560 --record --out /tmp/firetv-run
 ```

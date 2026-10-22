@@ -53,7 +53,7 @@ import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./style.css";
 import { PrivacyControls } from "./PrivacyControls";
 import { PushOptIn } from "./PushOptIn";
-import AlexaSimulator, { resetAlexaMemory } from "./AlexaSimulator";
+import AlexaPanel, { resetAlexaMemory } from "./AlexaPanel";
 import { Buddy } from "./Buddy";
 import {
   AddPromise,
@@ -156,7 +156,7 @@ const stages = [
     "14:10",
     "Trust, then verify",
     "Courier deposit",
-    "2. 2:10 PM Courier Fake-Out vs. Real Deposit",
+    "2. 2:10 PM Courier False Delivery Claim vs. Real Deposit",
   ],
   [
     "15:00",
@@ -211,7 +211,7 @@ const ATTENTION = [
 
 const SCRIPTED_FALLBACK: Record<string, string> = {
   real_deposit: "deposit",
-  real_no_deposit: "fake",
+  real_no_deposit: "false_claim",
   real_removal: "unknown",
   real_pickup: "retained",
   real_passerby: "retained",
@@ -241,7 +241,7 @@ function App() {
   const [selected, setSelected] = useState<Contract | null>(null),
     [showNotifications, setShowNotifications] = useState(false),
     [password, setPassword] = useState(""),
-    [username, setUsername] = useState("demo-admin"),
+    [username, setUsername] = useState("judge"),
     [loginBusy, setLoginBusy] = useState(false),
     [guestAvailable, setGuestAvailable] = useState(false),
     [ownerForm, setOwnerForm] = useState(false);
@@ -329,7 +329,7 @@ function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, [authenticated, live, page]);
-  const recordedSource = state?.studio?.source === "RECORDED_DEMO_VIDEO";
+  const recordedSource = state?.studio?.source === "RECORDED_WORKOUT_VIDEO";
   useEffect(() => {
     if (!authenticated || live || !recordedSource || page !== "studio") return;
     const timer = setInterval(() => setFrameTick((t) => t + 1), 200);
@@ -569,7 +569,7 @@ function App() {
       setLoginBusy(false);
     }
   };
-  const tryDemo = async () => {
+  const tryGuided = async () => {
     setLoginBusy(true);
     setError("");
     try {
@@ -585,7 +585,7 @@ function App() {
     if (authenticated) return;
     fetch("/health/ready")
       .then((r) => r.json())
-      .then((h) => setGuestAvailable(h.mode === "SYNTHETIC_DEMO" && !tv))
+      .then((h) => setGuestAvailable(h.mode === "GUIDED" && !tv))
       .catch(() => setGuestAvailable(false));
   }, [authenticated, tv]);
   const logOut = async () => {
@@ -625,10 +625,10 @@ function App() {
             <button
               type="button"
               className="button primary wide"
-              onClick={() => void tryDemo()}
+              onClick={() => void tryGuided()}
               disabled={loginBusy}
             >
-              {loginBusy ? "Opening demo…" : "Try the live demo"}
+              {loginBusy ? "Opening guided day…" : "Try Muni live"}
               <ArrowRight size={16} aria-hidden />
             </button>
           )}
@@ -707,8 +707,8 @@ function App() {
   const incidentSource = incident
     ? (state.evidence.find(
         (e) => e.evidence_id === incident.packet.removal_evidence_id,
-      )?.provenance ?? "SIMULATED_VERIFIED")
-    : "SIMULATED_VERIFIED";
+      )?.provenance ?? "REPLAY_VERIFIED")
+    : "REPLAY_VERIFIED";
   const footage = incident?.packet.source;
   const incidentSourceText =
     incidentSource === "REAL_RECORDED_STOCK" && footage?.license
@@ -730,14 +730,14 @@ function App() {
   const studio = state.studio;
   const target = studio?.target_reps ?? 15;
   // Pinned recorded workout video decoded server-side through MediaPipe (never the live camera).
-  const recordedDemo = !live && studio?.source === "RECORDED_DEMO_VIDEO";
+  const recordedWorkout = !live && studio?.source === "RECORDED_WORKOUT_VIDEO";
   // Only show the camera surface once a frame has actually been processed (or a live/recorded stream runs).
   const hasFrames =
     live ||
-    recordedDemo ||
+    recordedWorkout ||
     (studio?.last_timestamp_ms ?? -1) >= 0 ||
     (studio?.count ?? 0) > 0;
-  const playRecordedDemo = () =>
+  const playRecordedWorkout = () =>
     guarded(async () => {
       cancelReplay();
       if (!state.contracts.length) await runStage(1);
@@ -859,7 +859,7 @@ function App() {
         disabled={busy}
         onClick={() => void guarded(() => act("/consent", { enabled: true }))}
       >
-        {live ? "Enable household collection" : "Restore demo consent"}
+        {live ? "Enable household collection" : "Restore guided consent"}
       </button>
     </div>
   );
@@ -888,10 +888,10 @@ function App() {
         )}
         <div className="household">
           <span className="household-avatar" aria-hidden>
-            {live ? "H" : "D"}
+            {live ? "H" : "G"}
           </span>
           <span className="side-label">
-            {live ? "My household" : "Demo day"}
+            {live ? "My household" : "Guided day"}
           </span>
         </div>
         {pill && (
@@ -993,12 +993,12 @@ function App() {
             )}
             {!live && (
               <span
-                className="demo-chip has-tip"
+                className="day-chip has-tip"
                 tabIndex={0}
-                aria-describedby="demo-tip"
+                aria-describedby="guide-tip"
               >
-                Demo day
-                <span className="tip" id="demo-tip" role="tooltip">
+                Guided day
+                <span className="tip" id="guide-tip" role="tooltip">
                   Replay of a scripted day. Your own household runs live.
                 </span>
               </span>
@@ -1389,7 +1389,9 @@ function App() {
                         onChange={(e) => setDeposit(e.target.value)}
                       >
                         <option value="deposit">Real deposit</option>
-                        <option value="fake">Courier fake-out</option>
+                        <option value="false_claim">
+                          Courier false delivery claim
+                        </option>
                         <optgroup label="Licensed public footage">
                           <option value="real_deposit">Real deposit</option>
                           <option value="real_no_deposit">
@@ -1587,14 +1589,14 @@ function App() {
                   </div>
                 </section>
                 <div className="console-alexa">
-                  <AlexaSimulator state={state} compact />
+                  <AlexaPanel state={state} compact />
                 </div>
               </div>
             )}
 
             {page === "alexa" && (
               <div className="alexa-page">
-                <AlexaSimulator state={state} />
+                <AlexaPanel state={state} />
               </div>
             )}
 
@@ -1947,14 +1949,14 @@ function App() {
                       src={
                         live
                           ? `/api/camera/frame?v=${frameTick}`
-                          : recordedDemo
+                          : recordedWorkout
                             ? `/api/studio/recorded/frame?v=${frameTick}`
                             : `/api/studio/frame?v=${studio.fixture_frame_index ?? 0}-${studio.angle}`
                       }
                       alt={
                         live
                           ? "Authorized Ring frames with MediaPipe skeleton"
-                          : recordedDemo
+                          : recordedWorkout
                             ? "Recorded workout with MediaPipe skeleton overlay"
                             : "Marker pose tracking with skeleton overlay"
                       }
@@ -2001,7 +2003,7 @@ function App() {
                         <button
                           className="button primary"
                           disabled={playing || busy}
-                          onClick={() => void playRecordedDemo()}
+                          onClick={() => void playRecordedWorkout()}
                         >
                           <Video size={15} aria-hidden />
                           Play recorded workout
@@ -2113,7 +2115,7 @@ function App() {
                             studio?.status === "COMPLETED" ||
                             studio?.status === "RUNNING"
                           }
-                          onClick={() => void playRecordedDemo()}
+                          onClick={() => void playRecordedWorkout()}
                         >
                           <Video size={15} aria-hidden />
                           Play recorded workout
@@ -2284,7 +2286,7 @@ function App() {
                           disabled={busy}
                           onClick={() => incidentAction("dispatch-report")}
                         >
-                          Send to demo receiver only
+                          Send to local receiver only
                         </button>
                       )}
                       {["EVIDENCE_PREPARED", "REPORT_APPROVED"].includes(
@@ -2315,7 +2317,7 @@ function App() {
                       <div className="banner receipt" role="status">
                         <ShieldCheck size={15} aria-hidden />
                         <span>
-                          <strong>Demo receiver — not sent to police</strong>
+                          <strong>Local receiver — not sent to police</strong>
                           <code>{incident.receipt.receipt_id}</code>
                         </span>
                       </div>
@@ -2358,7 +2360,7 @@ function App() {
                         <dt>Source</dt>
                         <dd>{incidentSourceText}</dd>
                         <dt>Receiver</dt>
-                        <dd>Demo receiver</dd>
+                        <dd>Local receiver</dd>
                         <dt>Official dispatches</dt>
                         <dd>0 · not sent to police</dd>
                       </dl>
@@ -2511,7 +2513,7 @@ function App() {
                     <p>
                       {live
                         ? "Your live household begins with collection disabled."
-                        : "Demo day data stays in this workspace."}{" "}
+                        : "Guided day data stays in this workspace."}{" "}
                       Pausing stops compilation, camera processing and new
                       watchdog work.
                     </p>
@@ -2533,7 +2535,7 @@ function App() {
                         ? "Pause all collection"
                         : live
                           ? "Enable household collection"
-                          : "Restore demo consent"}
+                          : "Restore guided consent"}
                     </button>
                     <ul className="facts-list">
                       <li>
@@ -2662,7 +2664,7 @@ function App() {
             <h2>Review the exact packet.</h2>
             <p>
               This approves the report for the{" "}
-              <strong>Demo receiver — not sent to police</strong>. No official
+              <strong>Local receiver — not sent to police</strong>. No official
               case number is created.
             </p>
             <code className="hash">{incident.manifest_hash}</code>
@@ -2684,7 +2686,7 @@ function App() {
               onClick={() =>
                 incidentAction("approve-report", {
                   confirmation,
-                  destination: "DEMO_RECEIVER_ONLY",
+                  destination: "LOCAL_RECEIVER_ONLY",
                   manifest_hash: incident.manifest_hash,
                 })
               }

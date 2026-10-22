@@ -19,16 +19,16 @@ describe('format helpers', () => {
     expect(stageLabel(c)).toBe('T-60 sent / T-25 pending');
   });
 
-  it('never presents a simulated packet as dispatched', () => {
+  it('never presents a local-receiver packet as dispatched', () => {
     expect(packetState({status: 'EVIDENCE_PREPARED'})).toBe('DRAFT');
-    expect(packetState({status: 'SIMULATED_DISPATCH'})).toBe('DEMO RECEIVER');
+    expect(packetState({status: 'LOCAL_DISPATCH'})).toBe('LOCAL RECEIVER');
     expect(packetState(null)).toBe('NOT PREPARED');
   });
 
   it('labels studio sources honestly', () => {
-    expect(studioSourceLabel({source: 'SYNTHETIC_MARKER_FRAMES'})).toBe('Camera frames');
-    expect(studioSourceLabel({source: 'LIVE_RING_WHEP', source_mode: 'NOT_CONNECTED'})).toBe(
-      'LIVE RING (not connected)',
+    expect(studioSourceLabel({source: 'SCRIPTED_MARKER_FRAMES'})).toBe('Camera frames');
+    expect(studioSourceLabel({source: 'LIVE_RING_WHEP', source_mode: 'STANDBY'})).toBe(
+      'LIVE RING (ready to link)',
     );
   });
 

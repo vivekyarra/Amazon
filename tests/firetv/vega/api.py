@@ -1,18 +1,18 @@
-# Minimal demo-admin API client for driving backend scenarios during the VVD test.
-# usage: DONE_CREDENTIALS_FILE=/path/with/demo-admin-line python3 api.py <METHOD> <path> [json-body]
-# The password is read from a local, uncommitted file ("demo-admin: <password>") and never printed.
+# Minimal judge-account API client for driving backend scenarios during the VVD test.
+# usage: DONE_CREDENTIALS_FILE=/path/with/judge-line python3 api.py <METHOD> <path> [json-body]
+# The password is read from a local, uncommitted file ("judge: <password>") and never printed.
 import json, os, re, sys, uuid, urllib.error, urllib.request
 
 BASE = os.environ.get("DONE_BASE", "https://100-49-183-59.sslip.io")
-TOK = os.path.expanduser("~/.done_irl_demo_admin_token")  # session cache outside the repo
+TOK = os.path.expanduser("~/.done_irl_judge_token")  # session cache outside the repo
 
 
 def creds():
     for line in open(os.environ["DONE_CREDENTIALS_FILE"], encoding="utf-8"):
-        m = re.match(r"\s*demo-admin\s*:\s*(\S+)", line)
+        m = re.match(r"\s*judge\s*:\s*(\S+)", line)
         if m:
             return m.group(1)
-    sys.exit("no demo-admin line in DONE_CREDENTIALS_FILE")
+    sys.exit("no judge line in DONE_CREDENTIALS_FILE")
 
 
 def req(method, path, body=None, token=None):
@@ -31,7 +31,7 @@ def req(method, path, body=None, token=None):
 
 
 def login():
-    st, b, hd = req("POST", "/api/auth/login", {"username": "demo-admin", "password": creds()})
+    st, b, hd = req("POST", "/api/auth/login", {"username": "judge", "password": creds()})
     m = re.search(r"done_session=([^;]+)", hd.get("set-cookie", "") or "")
     if not m:
         sys.exit("login failed %s" % st)

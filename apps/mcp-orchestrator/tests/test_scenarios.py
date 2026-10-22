@@ -1,4 +1,4 @@
-"""Golden replay, state policy and recovery checks. Synthetic proof stays synthetic."""
+"""Golden replay, state policy and recovery checks. Scripted proof stays labelled as scripted."""
 
 import hashlib
 import pytest
@@ -73,8 +73,8 @@ def test_F02_deposit_starts_one_watchdog_without_completion(post):
     assert len([a for a in s["subagents"] if a["kind"] == "PorchWatchdog"]) == 1
 
 
-def test_F03_fake_deposit_disputed_no_watchdog(post):
-    s = stage(post, 2, "fake")
+def test_F03_false_delivery_claim_disputed_no_watchdog(post):
+    s = stage(post, 2, "false_claim")
     c = e.contract(s, "parcel")
     assert c["status"] == "DISPUTED"
     assert c["deposit_status"] == "DELIVERY_MISMATCH"
@@ -121,7 +121,7 @@ def test_F09_F21_removal_packet_hashes_and_dedupe(client, post):
     assert len(s["incidents"]) == 1
     assert s["incidents"][0]["status"] == "AWAITING_HUMAN_DECISION"
     assert s["incidents"][0]["clip_actual_duration_seconds"] == 15
-    assert s["incidents"][0]["quality"] == "SYNTHETIC_CLIP_AVAILABLE"
+    assert s["incidents"][0]["quality"] == "SCRIPTED_CLIP_AVAILABLE"
     post("/admin/scenarios/4/run", {"branch": "unknown"}, status=409)
     assert len(state(client)["incidents"]) == 1
     for item in s["evidence"]:
@@ -141,7 +141,7 @@ def test_F10_family_authorization_is_human_provenance(post):
     assert next(a for a in s["subagents"] if a["kind"] == "PorchWatchdog")["status"] == "CLOSED"
 
 
-def test_F11_F12_report_prepare_approve_simulated_dispatch(post):
+def test_F11_F12_report_prepare_approve_local_dispatch(post):
     stage(post, 2)
     stage(post, 4, "unknown")
     s = post("/incidents/inc_parcel/prepare-report", {"action": "prepare-report"})["state"]
@@ -152,7 +152,7 @@ def test_F11_F12_report_prepare_approve_simulated_dispatch(post):
         {
             "action": "approve-report",
             "manifest_hash": inc["manifest_hash"],
-            "destination": "DEMO_RECEIVER_ONLY",
+            "destination": "LOCAL_RECEIVER_ONLY",
             "confirmation": "true",
         },
         status=409,
@@ -162,13 +162,13 @@ def test_F11_F12_report_prepare_approve_simulated_dispatch(post):
         {
             "action": "approve-report",
             "manifest_hash": inc["manifest_hash"],
-            "destination": "DEMO_RECEIVER_ONLY",
+            "destination": "LOCAL_RECEIVER_ONLY",
             "confirmation": "APPROVE REPORT",
         },
     )["state"]
     assert s["incidents"][0]["status"] == "REPORT_APPROVED"
     s = post("/incidents/inc_parcel/dispatch-report", {"action": "dispatch-report"})["state"]
-    assert s["incidents"][0]["status"] == "SIMULATED_DISPATCH"
+    assert s["incidents"][0]["status"] == "LOCAL_DISPATCH"
     assert s["incidents"][0]["receipt"]["official_case_id"] is None
 
 
@@ -219,16 +219,16 @@ def test_F18_half_squats_static_duplicates_occlusion(app, post):
     post("/studio/sessions")
     store = app.state.store
     with store.transaction() as db:
-        s = store.read("demo")
+        s = store.read("guided")
         for _ in range(15):
-            e.one_rep(s, db, "demo", half=True)
+            e.one_rep(s, db, "guided", half=True)
         assert s["studio"]["count"] == 0
-        landmarks = vision.extract_marker_pose(vision.synthetic_pose_frame(85))
+        landmarks = vision.extract_marker_pose(vision.scripted_pose_frame(85))
         for i in range(100):
-            e.pose_frame(s, db, "demo", "static", 100000 + i * 100, landmarks)
+            e.pose_frame(s, db, "guided", "static", 100000 + i * 100, landmarks)
         assert s["studio"]["count"] == 0
         landmarks[23][3] = 0.1
-        e.pose_frame(s, db, "demo", "occluded", 120000, landmarks)
+        e.pose_frame(s, db, "guided", "occluded", 120000, landmarks)
         assert s["studio"]["count"] == 0
 
 
@@ -244,12 +244,12 @@ def test_F20_restart_recovers_watchdog_and_jobs(tmp_path):
     store = Store(str(tmp_path / "restart.db"))
     with store.transaction() as db:
         s = e.fresh()
-        s["household_id"] = "demo"
-        e.run_scenario(s, db, "demo", 2, "deposit")
-        store.save(db, "demo", s)
+        s["household_id"] = "guided"
+        e.run_scenario(s, db, "guided", 2, "deposit")
+        store.save(db, "guided", s)
     store.db.close()
     restarted = Store(str(tmp_path / "restart.db"))
-    s = restarted.read("demo")
+    s = restarted.read("guided")
     assert e.contract(s, "parcel")["status"] == "ACTIVE"
     assert any(a["kind"] == "PorchWatchdog" for a in s["subagents"])
     e.tick(s, e.at("15:40"))
@@ -308,7 +308,7 @@ def test_pixel_detector_negative_cases():
 
 def test_contract_verification_cannot_bypass_evidence():
     s = e.fresh()
-    s["household_id"] = "demo"
+    s["household_id"] = "guided"
     c = e.create_contract(s, "test", "Test", "Test", "Self", "POSE")
     with pytest.raises(ApiError):
         e.revise(s, c, "VERIFIED", "LLM says complete")
@@ -320,10 +320,10 @@ def test_failed_transaction_rolls_back(app, post, client):
 
     def failed(s, db):
         s["contracts"].clear()
-        raise RuntimeError("simulated storage failure")
+        raise RuntimeError("injected storage failure")
 
     with pytest.raises(RuntimeError):
-        app.state.mutate("demo", "failed", "failed", failed)
+        app.state.mutate("guided", "failed", "failed", failed)
     assert state(client) == before
 
 
@@ -364,7 +364,7 @@ def test_timezone_offset_required_for_ingestion(post):
 def test_evidence_from_wrong_contract_cannot_complete_a_promise(app, post):
     stage(post, 2)
     store = app.state.store
-    s = store.read("demo")
+    s = store.read("guided")
     c = e.contract(s, "squats")
     with pytest.raises(ApiError):
         e.revise(s, c, "VERIFIED", "An arbitrary image is not squat proof.", s["evidence"][0]["evidence_id"])
@@ -423,14 +423,14 @@ def test_conditional_promise_requires_confirmation(post):
 def test_looping_one_recorded_rep_cannot_unlock_with_new_ids(app, post):
     stage(post, 6)
     with app.state.store.transaction() as db:
-        s = app.state.store.read("demo")
+        s = app.state.store.read("guided")
         ts = 0
         frames = vision.cycle_frames()
         for replay in range(15):
             for index, frame in enumerate(frames):
                 ts += 160
                 e.pose_frame(
-                    s, db, "demo", f"renamed-{replay}-{index}", ts, vision.extract_marker_pose(frame)
+                    s, db, "guided", f"renamed-{replay}-{index}", ts, vision.extract_marker_pose(frame)
                 )
         assert s["studio"]["count"] == 1
         assert s["studio"]["gate"] == "LOCKED"

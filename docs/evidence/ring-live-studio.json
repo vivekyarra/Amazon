@@ -1,6 +1,6 @@
 {
   "checked_at": "2026-10-21T18:44:43Z",
-  "device": "Ring Developer Playground Device (official Ring simulator device)",
+  "device": "Ring Developer Playground Device (official Ring Developer Playground test device)",
   "camera_status": {
     "status": "STREAMING",
     "source": "LIVE_RING_WHEP",

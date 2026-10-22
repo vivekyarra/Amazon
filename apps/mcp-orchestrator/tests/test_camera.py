@@ -36,7 +36,7 @@ def camera_house(store):
     state = e.fresh()
     state.update(household_id="house_owner", clock_mode="WALL", consent=True)
     e.create_contract(state, "squats", "15 squats", "I'll do 15 squats", "Self", "FIRE_TV_LIVE_POSE_CAMERA")
-    e.studio_start(state, source="LIVE_RING_WHEP", source_mode="NOT_CONNECTED")
+    e.studio_start(state, source="LIVE_RING_WHEP", source_mode="STANDBY")
     state["studio"].update(camera_id="test-camera", timestamp_base=0)
     state["camera_request"] = {"status": "OPEN"}
     with store.transaction() as db:
@@ -45,7 +45,7 @@ def camera_house(store):
 
 
 def test_decoded_frames_use_shared_14_vs_15_gate_and_preserve_hashes(tmp_path):
-    # Calibrated synthetic landmarks test the decoder callback reducer, not MediaPipe accuracy.
+    # Calibrated scripted landmarks test the decoder callback reducer, not MediaPipe accuracy.
     store = Store(str(tmp_path / "ledger.db"))
     camera = camera_house(store)
     timestamp = 0
@@ -93,7 +93,7 @@ def test_no_pose_or_duplicate_video_cannot_complete_cycle(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_real_webrtc_codec_loopback_is_explicit_synthetic_transport(monkeypatch, tmp_path):
+async def test_real_webrtc_codec_loopback_is_explicit_scripted_transport(monkeypatch, tmp_path):
     aiortc = pytest.importorskip("aiortc")
     av = pytest.importorskip("av")
     from done_irl import camera as module
@@ -121,7 +121,7 @@ async def test_real_webrtc_codec_loopback_is_explicit_synthetic_transport(monkey
             frame.time_base = Fraction(1, 90000)
             return frame
 
-    class FakeAdapter:
+    class ScriptedAdapter:
         client = None
 
         def __init__(self):
@@ -142,7 +142,7 @@ async def test_real_webrtc_codec_loopback_is_explicit_synthetic_transport(monkey
         async def aclose(self):
             pass
 
-    class FakePose:
+    class ScriptedPose:
         model_hash = "a" * 64
 
         def __init__(self, *args):
@@ -154,8 +154,8 @@ async def test_real_webrtc_codec_loopback_is_explicit_synthetic_transport(monkey
         def close(self):
             pass
 
-    monkeypatch.setattr(module, "RingAdapter", FakeAdapter)
-    monkeypatch.setattr(module, "PoseDetector", FakePose)
+    monkeypatch.setattr(module, "RingAdapter", ScriptedAdapter)
+    monkeypatch.setattr(module, "PoseDetector", ScriptedPose)
     decoded, ended = [], []
     bridge = CameraBridge(
         lambda *args: decoded.append(hashlib.sha256(args[2].tobytes()).hexdigest()),
@@ -163,7 +163,7 @@ async def test_real_webrtc_codec_loopback_is_explicit_synthetic_transport(monkey
     )
     try:
         result = await bridge.start("house_owner", "one")
-        assert result["source_mode"] == "NOT_CONNECTED"
+        assert result["source_mode"] == "STANDBY"
         async with asyncio.timeout(10):
             while len(decoded) < 3:
                 await asyncio.sleep(0.05)
@@ -173,7 +173,7 @@ async def test_real_webrtc_codec_loopback_is_explicit_synthetic_transport(monkey
         assert not {"location", "pc", "adapter"} & bridge.status("house_owner").keys()
         await bridge.stop("house_owner")
         assert cleaned and ended
-        assert bridge.status("house_owner")["source_mode"] == "NOT_CONNECTED"
+        assert bridge.status("house_owner")["source_mode"] == "STANDBY"
     finally:
         await bridge.shutdown()
         await remote.close()

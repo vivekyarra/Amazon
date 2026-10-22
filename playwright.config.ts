@@ -30,7 +30,7 @@ export default defineConfig({
     command: `uv run --frozen uvicorn done_irl.api:app --host 127.0.0.1 --port ${port}`,
     env: {
       DATA_DIR: ".local/e2e",
-      DEMO_ADMIN_PASSWORD: "e2e-private-password",
+      JUDGE_PASSWORD: "e2e-private-password",
       OWNER_PASSWORD: "e2e-owner-password",
       DONE_IRL_WARM_SCENES: "0",
       PYTHONPATH: path.resolve("apps/mcp-orchestrator"),

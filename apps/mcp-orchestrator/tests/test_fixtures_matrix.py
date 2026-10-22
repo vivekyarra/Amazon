@@ -12,7 +12,7 @@ that did not exist elsewhere:
 * P0-007 / P0-045  lifecycle (startup, failure, reconnect, resume, teardown) and degraded paths.
 * F01, F04-F07, F13-F16  golden-table assertions the original scenario tests left implicit.
 
-Everything here is synthetic or mocked transport; nothing is a live Ring/Bee/device proof.
+Everything here is scripted or uses in-process transport; nothing is a live Ring/Bee/device proof.
 """
 
 import base64
@@ -40,7 +40,7 @@ from done_irl.models import ApiError
 from done_irl.runtime import Runtime
 from done_irl.store import Store
 
-PASSWORDS = {"demo-admin": "test-admin-password", "owner": "test-owner-password", "other": "test-other-password"}
+PASSWORDS = {"judge": "test-admin-password", "owner": "test-owner-password", "other": "test-other-password"}
 LIVE_PASSWORDS = {"owner": "long-test-owner-password", "other": "long-test-other-password"}
 
 
@@ -65,7 +65,7 @@ STUDIO = ("/api/studio/sessions", {})
 
 
 def landmarks():
-    return vision.extract_marker_pose(vision.synthetic_pose_frame(170))
+    return vision.extract_marker_pose(vision.scripted_pose_frame(170))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -77,13 +77,13 @@ def landmarks():
 
 EXEMPT = {
     "/api/auth/login": "Credential exchange cannot require a session; validated, rate-limited, no ledger write.",
-    "/api/auth/guest": "One-click judge access in demo deployments only: issues a session for a new isolated demo_* household; rate-limited and capped, no ledger write.",
+    "/api/auth/guest": "One-click judge access in guided deployments only: issues a session for a new isolated guest_* household; rate-limited and capped, no ledger write.",
     "/api/auth/logout": "Requires the session it revokes; repeat is a no-op 401; no household data is written.",
     "/api/webhooks/ring": "Provider callback: raw-body HMAC + account/device binding instead of a session; "
     "idempotent by provider event id; receipts are audited through the durable inbox.",
 }
 
-# path template -> concrete request, setup writes (as the demo administrator), principal and mode.
+# path template -> concrete request, setup writes (as the judge), principal and mode.
 WRITES = {
     "/api/contracts/{cid}/confirm": dict(
         path="/api/contracts/psc_teacher/confirm", body={"action": "cancel"}, setup=[STAGE1]
@@ -124,17 +124,17 @@ WRITES = {
     "/api/admin/failures/{kind}": dict(path="/api/admin/failures/camera-offline", body=None, admin=True),
     "/api/tv/sessions": dict(path="/api/tv/sessions", body=None),
     "/api/privacy/cameras/exclusion": dict(
-        path="/api/privacy/cameras/exclusion", body={"device_id": privacy.SYNTHETIC_CAMERA, "excluded": True}
+        path="/api/privacy/cameras/exclusion", body={"device_id": privacy.SCRIPTED_CAMERA, "excluded": True}
     ),
     "/api/privacy/cameras/masks": dict(
         path="/api/privacy/cameras/masks",
-        body={"device_id": privacy.SYNTHETIC_CAMERA, "polygons": [[[0.7, 0.0], [1.0, 0.0], [1.0, 0.3], [0.7, 0.3]]]},
+        body={"device_id": privacy.SCRIPTED_CAMERA, "polygons": [[[0.7, 0.0], [1.0, 0.0], [1.0, 0.3], [0.7, 0.3]]]},
     ),
     "/api/privacy/retention": dict(path="/api/privacy/retention", body={"days": 3}),
     "/api/privacy/providers/{provider}/{action}": dict(path="/api/privacy/providers/ring/disconnect", body=None),
     "/api/privacy/household/delete": dict(
         path="/api/privacy/household/delete",
-        body={"household_id": "demo", "confirmation": privacy.DELETE_PHRASE},
+        body={"household_id": "guided", "confirmation": privacy.DELETE_PHRASE},
         setup=[STAGE1],
     ),
 }
@@ -174,7 +174,7 @@ def live_app(tmp_path, monkeypatch):
     key.chmod(0o600)
     bindings = tmp_path / "bindings.json"
     bindings.write_text(json.dumps({"account-1": {"household": "house_owner", "devices": ["camera-1"]}}))
-    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("GUIDED_MODE", "false")
     monkeypatch.setenv("LEDGER_KEY_FILE", str(key))
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://testserver")
     monkeypatch.setenv("RING_BINDINGS_FILE", str(bindings))
@@ -188,21 +188,21 @@ def test_P0_004_write_is_authenticated_authorized_idempotent_validated_and_audit
 ):
     spec = WRITES[template]
     live = spec.get("live", False)
-    app = live_app(tmp_path, monkeypatch) if live else create_app(tmp_path / "demo", PASSWORDS)
+    app = live_app(tmp_path, monkeypatch) if live else create_app(tmp_path / "guided", PASSWORDS)
     route = post_routes(app)[template]
     base = "https://testserver" if live else "http://testserver"
     body = spec["body"]
-    household = "house_owner" if live else "demo"
+    household = "house_owner" if live else "guided"
     store = app.state.store
 
-    async def fake_camera(household_id, device):  # no Ring account in tests: the external effect is stubbed
-        return {"id": "matrix-camera", "status": "CONNECTING", "source_mode": "NOT_CONNECTED"}
+    async def scripted_camera(household_id, device):  # no Ring account in tests: the external effect is replaced in-process
+        return {"id": "matrix-camera", "status": "CONNECTING", "source_mode": "STANDBY"}
 
-    async def fake_recorded(household_id, fixture, session_id):
-        return {"id": session_id, "status": "STREAMING", "label": "RECORDED DEMO"}
+    async def scripted_recorded(household_id, fixture, session_id):
+        return {"id": session_id, "status": "STREAMING", "label": "RECORDED WORKOUT"}
 
-    app.state.camera.start = fake_camera
-    app.state.recorded_demo.start = fake_recorded
+    app.state.camera.start = scripted_camera
+    app.state.recorded_workout.start = scripted_recorded
 
     def send(c, payload=body, key="auto", path=spec["path"]):
         headers = {} if key is None else {"Idempotency-Key": uuid.uuid4().hex if key == "auto" else key}
@@ -222,14 +222,14 @@ def test_P0_004_write_is_authenticated_authorized_idempotent_validated_and_audit
                 assert c.post(path, json=payload, headers={"Idempotency-Key": uuid.uuid4().hex}).status_code == 200
         else:
             if spec.get("admin"):
-                # Authorized: an authenticated owner is not the isolated demo administrator.
+                # Authorized: an authenticated owner is not the isolated judge account.
                 assert c.post("/api/auth/login", json={"username": "owner", "password": PASSWORDS["owner"]}).status_code == 200
                 owner_before = ledger(store, "house_owner")
                 denied = send(c)
                 assert denied.status_code == 403, denied.text
                 assert denied.json()["error"]["code"] == "ADMIN_REQUIRED"
                 assert ledger(store, "house_owner") == owner_before
-            assert c.post("/api/auth/login", json={"username": "demo-admin", "password": PASSWORDS["demo-admin"]}).status_code == 200
+            assert c.post("/api/auth/login", json={"username": "judge", "password": PASSWORDS["judge"]}).status_code == 200
             for path, payload in spec.get("setup", []):
                 r = c.post(path, json=payload, headers={"Idempotency-Key": uuid.uuid4().hex})
                 assert r.status_code == 200, (path, r.text)
@@ -293,7 +293,7 @@ def test_P0_004_exempt_routes_keep_their_replacement_contract(app, monkeypatch):
         # login validates strictly and never echoes input
         bad = c.post("/api/auth/login", json={"username": "x", "password": "y", "extra": "do-not-echo"})
         assert bad.status_code == 422 and "do-not-echo" not in bad.text
-        # webhook: unconfigured -> not connected; configured but forged -> 401, no state change
+        # webhook: unconfigured -> standby; configured but forged -> 401, no state change
         assert c.post("/api/webhooks/ring", content=b"{}").status_code == 503
         monkeypatch.setenv("RING_HMAC_KEY", "matrix-secret")
         assert c.post("/api/webhooks/ring", content=b"{}", headers={"X-Signature": "sha256=forged"}).status_code == 401
@@ -310,7 +310,7 @@ def test_P0_004_mcp_tool_writes_are_authenticated_idempotent_and_audited(app):
                            "arguments": {"contract_id": "psc_teacher", "current_time": "x", "user_activity_state": "y"}}}
         accept = {"Accept": "application/json, text/event-stream"}
         assert c.post("/mcp/", json=body, headers=accept).status_code == 401
-        r = c.post("/api/auth/login", json={"username": "demo-admin", "password": PASSWORDS["demo-admin"]})
+        r = c.post("/api/auth/login", json={"username": "judge", "password": PASSWORDS["judge"]})
         assert r.status_code == 200
         auth = {**accept, "Authorization": "Bearer " + c.cookies.get("done_session")}
         c.post(STAGE1[0], json=STAGE1[1], headers={"Idempotency-Key": "stage1"})
@@ -359,7 +359,7 @@ def _live_studio(store, reps=3):
     state = e.fresh()
     state.update(household_id="house_owner", clock_mode="WALL", consent=True)
     e.create_contract(state, "squats", "15 squats", "I'll do 15 squats", "Self", "FIRE_TV_LIVE_POSE_CAMERA")
-    e.studio_start(state, source="LIVE_RING_WHEP", source_mode="NOT_CONNECTED")
+    e.studio_start(state, source="LIVE_RING_WHEP", source_mode="STANDBY")
     state["studio"].update(camera_id="ring-session", timestamp_base=0, count=reps, status="RUNNING")
     state["camera_request"] = {"status": "OPEN"}
     with store.transaction() as db:
@@ -403,14 +403,14 @@ async def test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label(t
     # Bounded WHEP cleanup always runs and local resources are released even if upstream fails.
     assert ("whep", ("https://api.amazonvision.com/sessions/matrix",)) in log
     assert {"pc", "detector.close"} <= {name for name, _ in log}
-    # Source status: no lingering LIVE label and no silent switch to a simulated/replay source.
+    # Source status: no lingering LIVE label and no silent switch to a scripted/replay source.
     status = bridge.status("house_owner")
-    assert status == {"status": "CLOSED", "source_mode": "NOT_CONNECTED"}
+    assert status == {"status": "CLOSED", "source_mode": "STANDBY"}
     state = store.read("house_owner")
     assert state["camera_request"]["status"] == "CLOSED"
     assert state["studio"]["status"] == "PAUSED" and state["studio"]["quality"] == reason
     assert state["studio"]["gate"] == "LOCKED" and state["studio"]["count"] == 3
-    assert state["studio"]["source"] == "LIVE_RING_WHEP"  # never relabelled as replay/simulation
+    assert state["studio"]["source"] == "LIVE_RING_WHEP"  # never relabelled as replay
     gap = state["events"][-1]
     assert gap["event_type"] == "watchdog.monitoring_gap"
     assert gap["payload"]["reason"] == reason and gap["payload"]["camera_session_id"] == "ring-session"
@@ -436,14 +436,14 @@ def test_F19_token_expiry_shows_gap_fallback_label_and_recovers_without_reset(cl
     s = post("/admin/failures/token-expired")["state"]
     gap = s["events"][-1]
     assert gap["event_type"] == "watchdog.monitoring_gap"
-    assert gap["payload"] == {"reason": "token-expired", "source": "EXPLICIT_SIMULATED_FAILURE"}
+    assert gap["payload"] == {"reason": "token-expired", "source": "EXPLICIT_INJECTED_FAILURE"}
     assert s["studio"]["status"] == "PAUSED" and s["studio"]["quality"] == "CAMERA_UNAVAILABLE"
     assert s["studio"]["gate"] == "LOCKED" and s["studio"]["count"] == 3
-    # Fallback label stays explicit: synthetic source, never promoted to live.
-    assert s["studio"]["source"] == "SYNTHETIC_MARKER_FRAMES" and s["studio"]["source_mode"] == e.MODE != "LIVE_VERIFIED"
+    # Fallback label stays explicit: scripted source, never promoted to live.
+    assert s["studio"]["source"] == "SCRIPTED_MARKER_FRAMES" and s["studio"]["source_mode"] == e.MODE != "LIVE_VERIFIED"
     statuses = {i["name"]: i for i in client.get("/api/integrations/status").json()["integrations"]}
     assert statuses["Ring"]["status"] == "BLOCKED" and statuses["Ring"]["last_verified_at"] is None
-    assert statuses["Ring video"]["status"] == "NOT_CONNECTED"
+    assert statuses["Ring video"]["status"] == "STANDBY"
     post("/admin/studio/frame-step", status=503)
     assert client.get("/api/state").json()["state"]["studio"]["count"] == 3
     # Recovery: clearing the fault and resuming continues the same count (no reset, no duplicates).
@@ -476,7 +476,7 @@ def test_F19_expired_owner_session_token_is_refused(app, client):
 
 
 def _admin(c):
-    assert c.post("/api/auth/login", json={"username": "demo-admin", "password": PASSWORDS["demo-admin"]}).status_code == 200
+    assert c.post("/api/auth/login", json={"username": "judge", "password": PASSWORDS["judge"]}).status_code == 200
 
     def call(path, body=None, key=None, status=200):
         r = c.post("/api" + path, json=body or {}, headers={"Idempotency-Key": key or uuid.uuid4().hex})
@@ -539,9 +539,9 @@ def test_F20_restart_during_open_camera_session_records_gap_and_keeps_count(tmp_
         call("/admin/studio/rep")
         app_store = c.app.state.store
         with app_store.transaction() as db:
-            s = app_store.read("demo")
+            s = app_store.read("guided")
             s["camera_request"] = {"status": "OPEN", "id": "pre-crash"}
-            app_store.save(db, "demo", s)
+            app_store.save(db, "guided", s)
     with TestClient(create_app(data, PASSWORDS)) as c:
         _admin(c)
         s = c.get("/api/state").json()["state"]
@@ -605,8 +605,8 @@ def test_F22_other_household_cannot_read_or_act_on_incident_media(app, client, p
     export = client.get("/api/export").json()
     assert export["state"]["incidents"] == [] and export["state"]["evidence"] == []
     assert incident["manifest_hash"] not in json.dumps(export)
-    demo = app.state.store.read("demo")["incidents"][0]
-    assert demo["status"] == "AWAITING_HUMAN_DECISION" and demo["revision"] == incident["revision"]
+    guided = app.state.store.read("guided")["incidents"][0]
+    assert guided["status"] == "AWAITING_HUMAN_DECISION" and guided["revision"] == incident["revision"]
 
 
 # ---------------------------------------------------------------------------------------------
@@ -653,11 +653,11 @@ def test_F23_unauthorized_dispatch_attempts_make_no_outbound_request(app, monkey
         inc = s["incidents"][0]
         assert inc["status"] == "AWAITING_HUMAN_DECISION" and inc["receipt"] is None and inc["approval"] is None
         assert not any(v["event_type"] == "incident.dispatch_acknowledged" for v in s["events"])
-        # Even the fully approved path only reaches the labelled demo receiver, offline.
+        # Even the fully approved path only reaches the labelled local receiver, offline.
         inc_hash = inc["manifest_hash"]
         call("/incidents/inc_parcel/prepare-report", {"action": "prepare-report"})
         call("/incidents/inc_parcel/approve-report", {"action": "approve-report", "manifest_hash": inc_hash,
-                                                      "destination": "DEMO_RECEIVER_ONLY",
+                                                      "destination": "LOCAL_RECEIVER_ONLY",
                                                       "confirmation": "APPROVE REPORT"})
         s = call("/incidents/inc_parcel/dispatch-report", {"action": "dispatch-report"})["state"]
         receipt = s["incidents"][0]["receipt"]
@@ -684,9 +684,9 @@ def test_P0_007_startup_failure_recovery_and_teardown(tmp_path):
         ready = c.get("/health/ready")
         assert ready.status_code == 200 and ready.json()["worker"] == "RUNNING"
 
-        # Failure: a crashing worker turns readiness red instead of pretending to be healthy.
+        # Failure: a crashing worker turns readiness red instead of reporting healthy.
         def broken():
-            raise RuntimeError("simulated worker crash")
+            raise RuntimeError("injected worker crash")
 
         app.state.runtime.step = broken
         for _ in range(50):
@@ -706,7 +706,7 @@ def test_P0_007_startup_failure_recovery_and_teardown(tmp_path):
         assert c.get("/health/ready").status_code == 200
 
         # A live camera session is open when the service is torn down.
-        app.state.camera.sessions["demo"] = _ring_session(log)
+        app.state.camera.sessions["guided"] = _ring_session(log)
     # Teardown: lifespan exit closes WHEP upstream, peer connection and detector, and stops Bee.
     assert app.state.camera.sessions == {}
     assert ("whep", ("https://api.amazonvision.com/sessions/matrix",)) in log
@@ -773,7 +773,7 @@ def test_P0_045_storage_failure_mid_write_rolls_back_and_reports_retryable(app, 
     assert client.get("/api/state").json()["state"] == before
     with store.lock:
         assert not store.db.execute("SELECT 1 FROM commands WHERE key='during-outage'").fetchone()
-        assert not store.db.execute("SELECT 1 FROM artifacts WHERE household='demo'").fetchone()
+        assert not store.db.execute("SELECT 1 FROM artifacts WHERE household='guided'").fetchone()
     # The same key succeeds once storage is back: no half-applied command was cached.
     r = client.post("/api/admin/scenarios/2/run", json={"branch": "deposit"},
                     headers={"Idempotency-Key": "during-outage"})

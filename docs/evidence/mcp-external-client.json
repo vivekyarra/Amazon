@@ -1,7 +1,7 @@
 {
-  "title": "Muni MCP external-client transcript (Alexa+ flow via the official MCP SDK client)",
-  "honesty": "Official MCP Python SDK client over real localhost HTTP against the real server. This is NOT an Alexa device or Alexa+ account connection. Utterances are typed owner text labeled MCP_OWNER_INPUT, not Bee captures. Camera stages are synthetic judge-replay fixtures triggered through authenticated REST, labeled per step.",
-  "generated_at": "2026-10-20T11:29:17.100437+00:00",
+  "title": "Muni MCP external-client transcript (web Alexa+ flow)",
+  "honesty": "Official MCP Python SDK client over real localhost HTTP against the real server. This is NOT an Alexa device or Alexa+ account connection. Utterances are typed owner text labeled MCP_OWNER_INPUT, not Bee captures. Camera stages are scripted judge-replay fixtures triggered through authenticated REST, labeled per step.",
+  "generated_at": "2026-10-22T12:48:22.601094+00:00",
   "client": {
     "sdk": "mcp (python)",
     "version": "1.30.0",
@@ -9,15 +9,15 @@
     "transport": "streamable-http"
   },
   "server": {
-    "url": "http://127.0.0.1:51114/mcp/",
-    "mode": "DEMO_MODE=true, isolated temporary ledger"
+    "url": "http://127.0.0.1:49699/mcp/",
+    "mode": "GUIDED_MODE=true, isolated temporary ledger"
   },
   "redaction": "Authorization headers, cookies, tokens and passwords are replaced with [REDACTED].",
   "summary": [
     {
       "step": "initialize",
       "protocolVersion": "2025-11-25",
-      "server": "DONE/IRL"
+      "server": "Muni"
     },
     {
       "step": "tools/list",
@@ -177,7 +177,7 @@
           "content-type": "application/json",
           "www-authenticate": "Bearer realm=\"done-irl-mcp\""
         },
-        "elapsed_ms": 13.7
+        "elapsed_ms": 7.8
       },
       "jsonrpc_request": {
         "jsonrpc": "2.0",
@@ -186,7 +186,7 @@
       },
       "jsonrpc_response": {
         "schema_version": "1.0",
-        "trace_id": "eb1c3cc8ee5e419c9ab9e03831d75bf0",
+        "trace_id": "1e8e1daf0ad1446686ce7ab8915d544a",
         "error": {
           "code": "AUTH_REQUIRED",
           "message": "Sign in to view this household.",
@@ -207,7 +207,7 @@
         "response_headers": {
           "allow": "POST"
         },
-        "elapsed_ms": 9.0
+        "elapsed_ms": 8.6
       },
       "jsonrpc_request": null,
       "jsonrpc_response": "Method Not Allowed: stateless server; no standalone SSE stream is offered."
@@ -226,7 +226,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 11.8
+        "elapsed_ms": 19.5
       },
       "jsonrpc_request": {
         "method": "initialize",
@@ -260,7 +260,7 @@
             }
           },
           "serverInfo": {
-            "name": "DONE/IRL",
+            "name": "Muni",
             "version": "1.30.0"
           }
         }
@@ -281,7 +281,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 11.8
+        "elapsed_ms": 8.9
       },
       "jsonrpc_request": {
         "method": "notifications/initialized",
@@ -304,7 +304,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 11.3
+        "elapsed_ms": 9.7
       },
       "jsonrpc_request": {
         "method": "tools/list",
@@ -523,7 +523,7 @@
             },
             {
               "name": "get_integration_health",
-              "description": "Read truthful per-provider status (LIVE_VERIFIED / SIMULATED_VERIFIED / NOT_CONNECTED / BLOCKED).",
+              "description": "Read truthful per-provider status (LIVE_VERIFIED / REPLAY_VERIFIED / STANDBY / BLOCKED).",
               "inputSchema": {
                 "properties": {},
                 "title": "get_integration_healthArguments",
@@ -574,7 +574,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 17.4
+        "elapsed_ms": 22.5
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -601,7 +601,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contract_ids\": [\n    \"psc_drinks\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+              "text": "{\n  \"contract_ids\": [\n    \"psc_drinks\"\n  ],\n  \"source_mode\": \"REPLAY_VERIFIED\"\n}"
             }
           ],
           "isError": false
@@ -623,7 +623,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 15.0
+        "elapsed_ms": 22.3
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -650,7 +650,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contract_ids\": [\n    \"psc_sister\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+              "text": "{\n  \"contract_ids\": [\n    \"psc_sister\"\n  ],\n  \"source_mode\": \"REPLAY_VERIFIED\"\n}"
             }
           ],
           "isError": false
@@ -672,7 +672,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 15.6
+        "elapsed_ms": 15.2
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -699,7 +699,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contract_ids\": [\n    \"psc_teacher\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+              "text": "{\n  \"contract_ids\": [\n    \"psc_teacher\"\n  ],\n  \"source_mode\": \"REPLAY_VERIFIED\"\n}"
             }
           ],
           "isError": false
@@ -721,7 +721,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 20.1
+        "elapsed_ms": 10.0
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -748,7 +748,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contract_ids\": [\n    \"psc_squats\"\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+              "text": "{\n  \"contract_ids\": [\n    \"psc_squats\"\n  ],\n  \"source_mode\": \"REPLAY_VERIFIED\"\n}"
             }
           ],
           "isError": false
@@ -770,7 +770,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 10.4
+        "elapsed_ms": 11.3
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -788,7 +788,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contracts\": [\n    {\n      \"contract_id\": \"psc_drinks\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"drinks\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Wife\"\n      },\n      \"original_utterance\": \"I'll bring cold drinks home tonight.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Bring cold drinks home\",\n      \"type\": \"INBOUND_ITEM\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"ARRIVAL_HOME\",\n      \"verification_modality\": \"RING_THRESHOLD_OBJECT_SCAN\",\n      \"required_evidence\": [\n        \"RING_THRESHOLD_OBJECT_SCAN\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_sister\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"sister\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Sister\"\n      },\n      \"original_utterance\": \"I'll call my sister before 6 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Call your sister\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T12:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T11:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T12:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T12:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_teacher\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"teacher\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Nephew’s teacher\"\n      },\n      \"original_utterance\": \"I'll cover the teacher meeting at 4 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Attend nephew’s teacher meeting\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T10:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T09:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T10:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T10:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_squats\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"squats\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Self\"\n      },\n      \"original_utterance\": \"I'll do 15 squats before watching TV.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"15 squats before TV\",\n      \"type\": \"PHYSICAL_ACTION\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"BEFORE_ENTERTAINMENT\",\n      \"verification_modality\": \"FIRE_TV_LIVE_POSE_CAMERA\",\n      \"required_evidence\": [\n        \"FIRE_TV_LIVE_POSE_CAMERA\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    }\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\",\n  \"tv_sessions\": []\n}"
+              "text": "{\n  \"contracts\": [\n    {\n      \"contract_id\": \"psc_drinks\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"drinks\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Wife\"\n      },\n      \"original_utterance\": \"I'll bring cold drinks home tonight.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Bring cold drinks home\",\n      \"type\": \"INBOUND_ITEM\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"ARRIVAL_HOME\",\n      \"verification_modality\": \"RING_THRESHOLD_OBJECT_SCAN\",\n      \"required_evidence\": [\n        \"RING_THRESHOLD_OBJECT_SCAN\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_sister\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"sister\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Sister\"\n      },\n      \"original_utterance\": \"I'll call my sister before 6 PM.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Call your sister\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T12:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T11:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T12:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T12:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_teacher\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"teacher\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Nephew’s teacher\"\n      },\n      \"original_utterance\": \"I'll cover the teacher meeting at 4 PM.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Attend nephew’s teacher meeting\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T10:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T09:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T10:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T10:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_squats\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"squats\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Self\"\n      },\n      \"original_utterance\": \"I'll do 15 squats before watching TV.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"15 squats before TV\",\n      \"type\": \"PHYSICAL_ACTION\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"BEFORE_ENTERTAINMENT\",\n      \"verification_modality\": \"FIRE_TV_LIVE_POSE_CAMERA\",\n      \"required_evidence\": [\n        \"FIRE_TV_LIVE_POSE_CAMERA\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    }\n  ],\n  \"source_mode\": \"REPLAY_VERIFIED\",\n  \"tv_sessions\": []\n}"
             }
           ],
           "isError": false
@@ -810,7 +810,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 22.1
+        "elapsed_ms": 14.7
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -828,7 +828,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contracts\": [\n    {\n      \"contract_id\": \"psc_drinks\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"drinks\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Wife\"\n      },\n      \"original_utterance\": \"I'll bring cold drinks home tonight.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Bring cold drinks home\",\n      \"type\": \"INBOUND_ITEM\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"ARRIVAL_HOME\",\n      \"verification_modality\": \"RING_THRESHOLD_OBJECT_SCAN\",\n      \"required_evidence\": [\n        \"RING_THRESHOLD_OBJECT_SCAN\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_sister\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"sister\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Sister\"\n      },\n      \"original_utterance\": \"I'll call my sister before 6 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Call your sister\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T12:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T11:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T12:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T12:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_teacher\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"teacher\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Nephew’s teacher\"\n      },\n      \"original_utterance\": \"I'll cover the teacher meeting at 4 PM.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Attend nephew’s teacher meeting\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T10:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T09:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T10:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T10:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_squats\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"squats\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Self\"\n      },\n      \"original_utterance\": \"I'll do 15 squats before watching TV.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"15 squats before TV\",\n      \"type\": \"PHYSICAL_ACTION\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"BEFORE_ENTERTAINMENT\",\n      \"verification_modality\": \"FIRE_TV_LIVE_POSE_CAMERA\",\n      \"required_evidence\": [\n        \"FIRE_TV_LIVE_POSE_CAMERA\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_parcel\",\n      \"trace_id\": \"trace_2\",\n      \"key\": \"parcel\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"demo\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Courier\"\n      },\n      \"original_utterance\": \"I'm leaving the parcel at your doorstep.\",\n      \"speaker_context\": \"Consented synthetic household conversation\",\n      \"title\": \"Keep parcel in safe custody\",\n      \"type\": \"PARCEL_CUSTODY\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"AUTHORIZED_INWARD_TRANSFER\",\n      \"verification_modality\": \"RING_SPATIAL_CUSTODY\",\n      \"required_evidence\": [\n        \"RING_SPATIAL_CUSTODY\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [\n        \"ev_9552c94271d24ff3a67119a3ffd8cf73\"\n      ],\n      \"revision\": 1,\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"created_at\": \"2026-10-20T08:40:00+00:00\",\n      \"updated_at\": \"2026-10-20T08:40:00+00:00\",\n      \"scheduled_jobs\": [],\n      \"deposit_status\": \"DEPOSIT_VERIFIED\",\n      \"custody_status\": \"DEPOSIT_VERIFIED_CUSTODY_ACTIVE\"\n    }\n  ],\n  \"source_mode\": \"SIMULATED_VERIFIED\",\n  \"tv_sessions\": []\n}"
+              "text": "{\n  \"contracts\": [\n    {\n      \"contract_id\": \"psc_drinks\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"drinks\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Wife\"\n      },\n      \"original_utterance\": \"I'll bring cold drinks home tonight.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Bring cold drinks home\",\n      \"type\": \"INBOUND_ITEM\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"ARRIVAL_HOME\",\n      \"verification_modality\": \"RING_THRESHOLD_OBJECT_SCAN\",\n      \"required_evidence\": [\n        \"RING_THRESHOLD_OBJECT_SCAN\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_sister\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"sister\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Sister\"\n      },\n      \"original_utterance\": \"I'll call my sister before 6 PM.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Call your sister\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T12:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T11:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T12:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T12:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_teacher\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"teacher\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Nephew’s teacher\"\n      },\n      \"original_utterance\": \"I'll cover the teacher meeting at 4 PM.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Attend nephew’s teacher meeting\",\n      \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": \"2026-10-20T10:30:00+00:00\",\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": null,\n      \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n      \"required_evidence\": [\n        \"BEE_CONVERSATION_AUDIT\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": [\n        {\n          \"kind\": \"T60\",\n          \"at\": \"2026-10-20T09:30:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"T25\",\n          \"at\": \"2026-10-20T10:05:00+00:00\",\n          \"status\": \"PENDING\"\n        },\n        {\n          \"kind\": \"DEADLINE\",\n          \"at\": \"2026-10-20T10:30:00+00:00\",\n          \"status\": \"PENDING\"\n        }\n      ]\n    },\n    {\n      \"contract_id\": \"psc_squats\",\n      \"trace_id\": \"trace_0\",\n      \"key\": \"squats\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Self\"\n      },\n      \"original_utterance\": \"I'll do 15 squats before watching TV.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"15 squats before TV\",\n      \"type\": \"PHYSICAL_ACTION\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"BEFORE_ENTERTAINMENT\",\n      \"verification_modality\": \"FIRE_TV_LIVE_POSE_CAMERA\",\n      \"required_evidence\": [\n        \"FIRE_TV_LIVE_POSE_CAMERA\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T02:30:00+00:00\",\n      \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n      \"scheduled_jobs\": []\n    },\n    {\n      \"contract_id\": \"psc_parcel\",\n      \"trace_id\": \"trace_2\",\n      \"key\": \"parcel\",\n      \"schema_version\": \"1.0\",\n      \"household_id\": \"guided\",\n      \"actor\": {\n        \"id\": \"owner\",\n        \"role\": \"SELF\"\n      },\n      \"counterparty\": {\n        \"label\": \"Courier\"\n      },\n      \"original_utterance\": \"I'm leaving the parcel at your doorstep.\",\n      \"speaker_context\": \"Consented scripted household conversation\",\n      \"title\": \"Keep parcel in safe custody\",\n      \"type\": \"PARCEL_CUSTODY\",\n      \"status\": \"ACTIVE\",\n      \"confidence\": 0.95,\n      \"due_at\": null,\n      \"timezone\": \"Asia/Kolkata\",\n      \"deadline_trigger\": \"AUTHORIZED_INWARD_TRANSFER\",\n      \"verification_modality\": \"RING_SPATIAL_CUSTODY\",\n      \"required_evidence\": [\n        \"RING_SPATIAL_CUSTODY\"\n      ],\n      \"privacy_scope\": \"HOUSEHOLD\",\n      \"evidence_ids\": [\n        \"ev_320faef6a1dd4030a8a0ce187ed5dd37\"\n      ],\n      \"revision\": 1,\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"created_at\": \"2026-10-20T08:40:00+00:00\",\n      \"updated_at\": \"2026-10-20T08:40:00+00:00\",\n      \"scheduled_jobs\": [],\n      \"deposit_status\": \"DEPOSIT_VERIFIED\",\n      \"custody_status\": \"DEPOSIT_VERIFIED_CUSTODY_ACTIVE\"\n    }\n  ],\n  \"source_mode\": \"REPLAY_VERIFIED\",\n  \"tv_sessions\": []\n}"
             }
           ],
           "isError": false
@@ -850,7 +850,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 13.9
+        "elapsed_ms": 10.5
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -858,7 +858,7 @@
           "name": "spawn_watchdog_subagent",
           "arguments": {
             "contract_id": "psc_parcel",
-            "camera_device_id": "synthetic-porch",
+            "camera_device_id": "scripted-porch",
             "target_roi": [
               0.2,
               0.55,
@@ -878,7 +878,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"status\": \"WATCHING\",\n  \"subagent_id\": \"porch_parcel\",\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+              "text": "{\n  \"status\": \"WATCHING\",\n  \"subagent_id\": \"porch_parcel\",\n  \"source_mode\": \"REPLAY_VERIFIED\"\n}"
             }
           ],
           "isError": false
@@ -900,7 +900,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 13.6
+        "elapsed_ms": 10.7
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -920,7 +920,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"subagents\": [\n    {\n      \"subagent_id\": \"porch_parcel\",\n      \"kind\": \"PorchWatchdog\",\n      \"contract_id\": \"psc_parcel\",\n      \"status\": \"WATCHING\",\n      \"last_observation_at\": \"2026-10-20T08:40:00+00:00\",\n      \"restart_cursor\": \"deposit-v1\",\n      \"target_roi\": [\n        0.3125,\n        0.4166666666666667,\n        0.46875,\n        0.5138888888888888\n      ],\n      \"observation_gaps\": [\n        \"Event-driven monitoring; no continuous camera coverage.\"\n      ]\n    }\n  ],\n  \"consent\": true,\n  \"failures\": [],\n  \"source_mode\": \"SIMULATED_VERIFIED\"\n}"
+              "text": "{\n  \"subagents\": [\n    {\n      \"subagent_id\": \"porch_parcel\",\n      \"kind\": \"PorchWatchdog\",\n      \"contract_id\": \"psc_parcel\",\n      \"status\": \"WATCHING\",\n      \"last_observation_at\": \"2026-10-20T08:40:00+00:00\",\n      \"restart_cursor\": \"deposit-v1\",\n      \"target_roi\": [\n        0.3125,\n        0.4166666666666667,\n        0.46875,\n        0.5138888888888888\n      ],\n      \"observation_gaps\": [\n        \"Event-driven monitoring; no continuous camera coverage.\"\n      ]\n    }\n  ],\n  \"consent\": true,\n  \"failures\": [],\n  \"source_mode\": \"REPLAY_VERIFIED\"\n}"
             }
           ],
           "isError": false
@@ -942,7 +942,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 11.5
+        "elapsed_ms": 10.6
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -962,7 +962,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contract\": {\n    \"contract_id\": \"psc_parcel\",\n    \"trace_id\": \"trace_2\",\n    \"key\": \"parcel\",\n    \"schema_version\": \"1.0\",\n    \"household_id\": \"demo\",\n    \"actor\": {\n      \"id\": \"owner\",\n      \"role\": \"SELF\"\n    },\n    \"counterparty\": {\n      \"label\": \"Courier\"\n    },\n    \"original_utterance\": \"I'm leaving the parcel at your doorstep.\",\n    \"speaker_context\": \"Consented synthetic household conversation\",\n    \"title\": \"Keep parcel in safe custody\",\n    \"type\": \"PARCEL_CUSTODY\",\n    \"status\": \"ACTIVE\",\n    \"confidence\": 0.95,\n    \"due_at\": null,\n    \"timezone\": \"Asia/Kolkata\",\n    \"deadline_trigger\": \"AUTHORIZED_INWARD_TRANSFER\",\n    \"verification_modality\": \"RING_SPATIAL_CUSTODY\",\n    \"required_evidence\": [\n      \"RING_SPATIAL_CUSTODY\"\n    ],\n    \"privacy_scope\": \"HOUSEHOLD\",\n    \"evidence_ids\": [\n      \"ev_9552c94271d24ff3a67119a3ffd8cf73\"\n    ],\n    \"revision\": 1,\n    \"source_mode\": \"SIMULATED_VERIFIED\",\n    \"created_at\": \"2026-10-20T08:40:00+00:00\",\n    \"updated_at\": \"2026-10-20T08:40:00+00:00\",\n    \"scheduled_jobs\": [],\n    \"deposit_status\": \"DEPOSIT_VERIFIED\",\n    \"custody_status\": \"DEPOSIT_VERIFIED_CUSTODY_ACTIVE\"\n  },\n  \"evidence\": [\n    {\n      \"evidence_id\": \"ev_9552c94271d24ff3a67119a3ffd8cf73\",\n      \"kind\": \"DEPOSIT_OBSERVATION\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"provenance\": \"SYNTHETIC_SENSOR\",\n      \"captured_at\": \"2026-10-20T08:40:00+00:00\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"event_id\": \"evt_000009\",\n      \"event_type\": \"commitment.created\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000010\",\n      \"event_type\": \"commitment.evidence_collected\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000011\",\n      \"event_type\": \"parcel.deposit_verified\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000012\",\n      \"event_type\": \"commitment.escalation_dispatched\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    }\n  ],\n  \"incident_ids\": [],\n  \"server_clock\": \"2026-10-20T08:40:00+00:00\",\n  \"verified\": false\n}"
+              "text": "{\n  \"contract\": {\n    \"contract_id\": \"psc_parcel\",\n    \"trace_id\": \"trace_2\",\n    \"key\": \"parcel\",\n    \"schema_version\": \"1.0\",\n    \"household_id\": \"guided\",\n    \"actor\": {\n      \"id\": \"owner\",\n      \"role\": \"SELF\"\n    },\n    \"counterparty\": {\n      \"label\": \"Courier\"\n    },\n    \"original_utterance\": \"I'm leaving the parcel at your doorstep.\",\n    \"speaker_context\": \"Consented scripted household conversation\",\n    \"title\": \"Keep parcel in safe custody\",\n    \"type\": \"PARCEL_CUSTODY\",\n    \"status\": \"ACTIVE\",\n    \"confidence\": 0.95,\n    \"due_at\": null,\n    \"timezone\": \"Asia/Kolkata\",\n    \"deadline_trigger\": \"AUTHORIZED_INWARD_TRANSFER\",\n    \"verification_modality\": \"RING_SPATIAL_CUSTODY\",\n    \"required_evidence\": [\n      \"RING_SPATIAL_CUSTODY\"\n    ],\n    \"privacy_scope\": \"HOUSEHOLD\",\n    \"evidence_ids\": [\n      \"ev_320faef6a1dd4030a8a0ce187ed5dd37\"\n    ],\n    \"revision\": 1,\n    \"source_mode\": \"REPLAY_VERIFIED\",\n    \"created_at\": \"2026-10-20T08:40:00+00:00\",\n    \"updated_at\": \"2026-10-20T08:40:00+00:00\",\n    \"scheduled_jobs\": [],\n    \"deposit_status\": \"DEPOSIT_VERIFIED\",\n    \"custody_status\": \"DEPOSIT_VERIFIED_CUSTODY_ACTIVE\"\n  },\n  \"evidence\": [\n    {\n      \"evidence_id\": \"ev_320faef6a1dd4030a8a0ce187ed5dd37\",\n      \"kind\": \"DEPOSIT_OBSERVATION\",\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"provenance\": \"SCRIPTED_SENSOR\",\n      \"captured_at\": \"2026-10-20T08:40:00+00:00\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"event_id\": \"evt_000009\",\n      \"event_type\": \"commitment.created\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"REPLAY_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000010\",\n      \"event_type\": \"commitment.evidence_collected\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"REPLAY_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000011\",\n      \"event_type\": \"parcel.deposit_verified\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"REPLAY_VERIFIED\"\n    },\n    {\n      \"event_id\": \"evt_000012\",\n      \"event_type\": \"commitment.escalation_dispatched\",\n      \"occurred_at\": \"2026-10-20T08:40:00+00:00\",\n      \"source_mode\": \"REPLAY_VERIFIED\"\n    }\n  ],\n  \"incident_ids\": [],\n  \"server_clock\": \"2026-10-20T08:40:00+00:00\",\n  \"verified\": false,\n  \"verification_provenance\": null\n}"
             }
           ],
           "isError": false
@@ -984,7 +984,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 15.3
+        "elapsed_ms": 10.5
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -1028,7 +1028,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 11.8
+        "elapsed_ms": 12.9
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -1048,7 +1048,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"contract\": {\n    \"contract_id\": \"psc_sister\",\n    \"trace_id\": \"trace_0\",\n    \"key\": \"sister\",\n    \"schema_version\": \"1.0\",\n    \"household_id\": \"demo\",\n    \"actor\": {\n      \"id\": \"owner\",\n      \"role\": \"SELF\"\n    },\n    \"counterparty\": {\n      \"label\": \"Sister\"\n    },\n    \"original_utterance\": \"I'll call my sister before 6 PM.\",\n    \"speaker_context\": \"Consented synthetic household conversation\",\n    \"title\": \"Call your sister\",\n    \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n    \"status\": \"ACTIVE\",\n    \"confidence\": 0.95,\n    \"due_at\": \"2026-10-20T12:30:00+00:00\",\n    \"timezone\": \"Asia/Kolkata\",\n    \"deadline_trigger\": null,\n    \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n    \"required_evidence\": [\n      \"BEE_CONVERSATION_AUDIT\"\n    ],\n    \"privacy_scope\": \"HOUSEHOLD\",\n    \"evidence_ids\": [],\n    \"revision\": 1,\n    \"source_mode\": \"SIMULATED_VERIFIED\",\n    \"created_at\": \"2026-10-20T02:30:00+00:00\",\n    \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n    \"scheduled_jobs\": [\n      {\n        \"kind\": \"T60\",\n        \"at\": \"2026-10-20T11:30:00+00:00\",\n        \"status\": \"PENDING\"\n      },\n      {\n        \"kind\": \"T25\",\n        \"at\": \"2026-10-20T12:05:00+00:00\",\n        \"status\": \"PENDING\"\n      },\n      {\n        \"kind\": \"DEADLINE\",\n        \"at\": \"2026-10-20T12:30:00+00:00\",\n        \"status\": \"PENDING\"\n      }\n    ]\n  },\n  \"evidence\": [],\n  \"timeline\": [\n    {\n      \"event_id\": \"evt_000004\",\n      \"event_type\": \"commitment.created\",\n      \"occurred_at\": \"2026-10-20T02:30:00+00:00\",\n      \"source_mode\": \"SIMULATED_VERIFIED\"\n    }\n  ],\n  \"incident_ids\": [],\n  \"server_clock\": \"2026-10-20T10:35:00+00:00\",\n  \"verified\": false\n}"
+              "text": "{\n  \"contract\": {\n    \"contract_id\": \"psc_sister\",\n    \"trace_id\": \"trace_0\",\n    \"key\": \"sister\",\n    \"schema_version\": \"1.0\",\n    \"household_id\": \"guided\",\n    \"actor\": {\n      \"id\": \"owner\",\n      \"role\": \"SELF\"\n    },\n    \"counterparty\": {\n      \"label\": \"Sister\"\n    },\n    \"original_utterance\": \"I'll call my sister before 6 PM.\",\n    \"speaker_context\": \"Consented scripted household conversation\",\n    \"title\": \"Call your sister\",\n    \"type\": \"SCHEDULED_SOCIAL_COMMITMENT\",\n    \"status\": \"ACTIVE\",\n    \"confidence\": 0.95,\n    \"due_at\": \"2026-10-20T12:30:00+00:00\",\n    \"timezone\": \"Asia/Kolkata\",\n    \"deadline_trigger\": null,\n    \"verification_modality\": \"BEE_CONVERSATION_AUDIT\",\n    \"required_evidence\": [\n      \"BEE_CONVERSATION_AUDIT\"\n    ],\n    \"privacy_scope\": \"HOUSEHOLD\",\n    \"evidence_ids\": [],\n    \"revision\": 1,\n    \"source_mode\": \"REPLAY_VERIFIED\",\n    \"created_at\": \"2026-10-20T02:30:00+00:00\",\n    \"updated_at\": \"2026-10-20T02:30:00+00:00\",\n    \"scheduled_jobs\": [\n      {\n        \"kind\": \"T60\",\n        \"at\": \"2026-10-20T11:30:00+00:00\",\n        \"status\": \"PENDING\"\n      },\n      {\n        \"kind\": \"T25\",\n        \"at\": \"2026-10-20T12:05:00+00:00\",\n        \"status\": \"PENDING\"\n      },\n      {\n        \"kind\": \"DEADLINE\",\n        \"at\": \"2026-10-20T12:30:00+00:00\",\n        \"status\": \"PENDING\"\n      }\n    ]\n  },\n  \"evidence\": [],\n  \"timeline\": [\n    {\n      \"event_id\": \"evt_000004\",\n      \"event_type\": \"commitment.created\",\n      \"occurred_at\": \"2026-10-20T02:30:00+00:00\",\n      \"source_mode\": \"REPLAY_VERIFIED\"\n    }\n  ],\n  \"incident_ids\": [],\n  \"server_clock\": \"2026-10-20T10:35:00+00:00\",\n  \"verified\": false,\n  \"verification_provenance\": null\n}"
             }
           ],
           "isError": false
@@ -1070,7 +1070,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 10.8
+        "elapsed_ms": 19.1
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -1112,7 +1112,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 16.8
+        "elapsed_ms": 78.0
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -1132,7 +1132,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"incident\": {\n    \"incident_id\": \"inc_parcel\",\n    \"contract_id\": \"psc_parcel\",\n    \"status\": \"AWAITING_HUMAN_DECISION\",\n    \"detected_at\": \"2026-10-20T11:00:00+00:00\",\n    \"source_mode\": \"SIMULATED_VERIFIED\",\n    \"packet\": {\n      \"deposit_evidence_ids\": [\n        \"ev_9552c94271d24ff3a67119a3ffd8cf73\"\n      ],\n      \"removal_evidence_id\": \"ev_c8657d637f5d4813ad31bf0a8ed32d1f\",\n      \"source_clip_evidence_id\": \"ev_fa62249c423a48649e02938321cd527a\",\n      \"annotated_clip_evidence_id\": \"ev_5812768e63104ad0812f7181592566bd\",\n      \"person_crop_evidence_id\": \"ev_b1d21c2a711a41b1880df18383cb5cbc\",\n      \"trajectory\": [\n        [\n          280,\n          265\n        ],\n        [\n          160,\n          265\n        ],\n        [\n          70,\n          265\n        ]\n      ],\n      \"coordinate_system\": \"SYNTHETIC_PIXELS\",\n      \"capture_gaps\": [\n        \"No live Ring footage. Generated 15-second synthetic clip.\"\n      ]\n    },\n    \"manifest_hash\": \"31f43d51da4039c235d4e16d6a232addeef6f844c7a9341c50aa62de6b2d0490\",\n    \"revision\": 1,\n    \"receipt\": null,\n    \"approval\": null,\n    \"clip_actual_duration_seconds\": 15,\n    \"quality\": \"SYNTHETIC_CLIP_AVAILABLE\",\n    \"destination\": \"DEMO_RECEIVER_ONLY\"\n  },\n  \"evidence\": [\n    {\n      \"evidence_id\": \"ev_c8657d637f5d4813ad31bf0a8ed32d1f\",\n      \"kind\": \"REMOVAL_FRAME\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"3fdeeca09bac80632ed92400b2ea8c591099b720d1217ebd484128d7677df24d\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_b1d21c2a711a41b1880df18383cb5cbc\",\n      \"kind\": \"PERSON_CROP\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"d09a2a8f1022355068e5ee6ff2c18a2b74243d9589d1ffa9d11939e70d16d4ea\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_fa62249c423a48649e02938321cd527a\",\n      \"kind\": \"REMOVAL_CLIP_ORIGINAL\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"dd4377e0195a68a60ea674757ca470c495a4032beb6b084a7a25ee6022afd08b\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_5812768e63104ad0812f7181592566bd\",\n      \"kind\": \"REMOVAL_CLIP_DERIVED\",\n      \"source_mode\": \"SIMULATED_VERIFIED\",\n      \"sha256_original\": \"b5e801ac518914f2df4f6c97760c82abb0a9a13dafebe5045630c71171b74943\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    }\n  ],\n  \"report_states_distinct\": [\n    \"DRAFT\",\n    \"OWNER_APPROVED\",\n    \"SIMULATED_DISPATCH\",\n    \"RECEIPT\"\n  ],\n  \"official_case_id\": null,\n  \"note\": \"Only an externally validated receipt is an official case ID.\"\n}"
+              "text": "{\n  \"incident\": {\n    \"incident_id\": \"inc_parcel\",\n    \"contract_id\": \"psc_parcel\",\n    \"status\": \"AWAITING_HUMAN_DECISION\",\n    \"detected_at\": \"2026-10-20T11:00:00+00:00\",\n    \"source_mode\": \"REPLAY_VERIFIED\",\n    \"packet\": {\n      \"deposit_evidence_ids\": [\n        \"ev_320faef6a1dd4030a8a0ce187ed5dd37\"\n      ],\n      \"removal_evidence_id\": \"ev_b72761603d374217a62d21912c24daec\",\n      \"source_clip_evidence_id\": \"ev_37be3892455b4f84a55d0f3c4e34b614\",\n      \"annotated_clip_evidence_id\": \"ev_838cf2e644c548619b582951f47aef76\",\n      \"person_crop_evidence_id\": \"ev_6f50e880720a41698658c9e6f150711e\",\n      \"trajectory\": [\n        [\n          280,\n          265\n        ],\n        [\n          160,\n          265\n        ],\n        [\n          70,\n          265\n        ]\n      ],\n      \"coordinate_system\": \"SCRIPTED_PIXELS\",\n      \"capture_gaps\": [\n        \"No live Ring footage. Generated 15-second scripted clip.\"\n      ]\n    },\n    \"manifest_hash\": \"b5f341e685876f364891c0f3368d9eef202321fb609a32b078cf892a171a2669\",\n    \"revision\": 1,\n    \"receipt\": null,\n    \"approval\": null,\n    \"clip_actual_duration_seconds\": 15,\n    \"quality\": \"SCRIPTED_CLIP_AVAILABLE\",\n    \"destination\": \"LOCAL_RECEIVER_ONLY\"\n  },\n  \"evidence\": [\n    {\n      \"evidence_id\": \"ev_b72761603d374217a62d21912c24daec\",\n      \"kind\": \"REMOVAL_FRAME\",\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"sha256_original\": \"db93ed8196c8d1588aa1b269e6c20949da0c039f4f86a73583a3d8750260328f\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_6f50e880720a41698658c9e6f150711e\",\n      \"kind\": \"PERSON_CROP\",\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"sha256_original\": \"d09a2a8f1022355068e5ee6ff2c18a2b74243d9589d1ffa9d11939e70d16d4ea\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_37be3892455b4f84a55d0f3c4e34b614\",\n      \"kind\": \"REMOVAL_CLIP_ORIGINAL\",\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"sha256_original\": \"51536294fc0aa6ed763db4810ead63465b801d3f59866a6be67bc5b1f0e77272\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    },\n    {\n      \"evidence_id\": \"ev_838cf2e644c548619b582951f47aef76\",\n      \"kind\": \"REMOVAL_CLIP_DERIVED\",\n      \"source_mode\": \"REPLAY_VERIFIED\",\n      \"sha256_original\": \"c2ab207272748738b66ebb914f49e57a2721d2c6c2f1e22078155e84fb37a720\",\n      \"captured_at\": \"2026-10-20T11:00:00+00:00\"\n    }\n  ],\n  \"report_states_distinct\": [\n    \"DRAFT\",\n    \"OWNER_APPROVED\",\n    \"LOCAL_DISPATCH\",\n    \"RECEIPT\"\n  ],\n  \"official_case_id\": null,\n  \"note\": \"Only an externally validated receipt is an official case ID.\"\n}"
             }
           ],
           "isError": false
@@ -1154,7 +1154,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 27.6
+        "elapsed_ms": 22.1
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -1197,14 +1197,14 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 15.8
+        "elapsed_ms": 26.5
       },
       "jsonrpc_request": {
         "method": "tools/call",
         "params": {
           "name": "bridge_ring_camera_to_firetv",
           "arguments": {
-            "camera_device_id": "synthetic-porch",
+            "camera_device_id": "scripted-porch",
             "firetv_session_id": "none",
             "verification_mode": "POSE_SQUATS"
           }
@@ -1241,7 +1241,7 @@
         "response_headers": {
           "content-type": "application/json"
         },
-        "elapsed_ms": 16.0
+        "elapsed_ms": 16.2
       },
       "jsonrpc_request": {
         "method": "tools/call",
@@ -1259,7 +1259,7 @@
           "content": [
             {
               "type": "text",
-              "text": "{\n  \"integrations\": [\n    {\n      \"name\": \"Bee\",\n      \"status\": \"BLOCKED\",\n      \"last_verified_at\": null,\n      \"reason\": \"No authenticated live event processed for this household.\"\n    },\n    {\n      \"name\": \"Ring\",\n      \"status\": \"BLOCKED\",\n      \"last_verified_at\": null,\n      \"reason\": \"No authenticated live event processed for this household.\"\n    },\n    {\n      \"name\": \"Ring video\",\n      \"status\": \"NOT_CONNECTED\",\n      \"reason\": \"Decoded frames: 0; no silent fallback to demo.\"\n    },\n    {\n      \"name\": \"Alexa+\",\n      \"status\": \"NOT_CONNECTED\",\n      \"reason\": \"No verified Alexa account/device connection. Judge console offers a labeled SIMULATED Alexa+ experience over the real MCP server.\"\n    },\n    {\n      \"name\": \"Fire TV\",\n      \"status\": \"BLOCKED\",\n      \"reason\": \"Native client builds; actual device runtime proof pending.\"\n    },\n    {\n      \"name\": \"MCP\",\n      \"status\": \"SIMULATED_VERIFIED\",\n      \"reason\": \"Official SDK tested; source provenance is recorded per household event.\"\n    },\n    {\n      \"name\": \"Companion\",\n      \"status\": \"SIMULATED_VERIFIED\",\n      \"reason\": \"Authenticated notification inbox; no native push/haptic claim.\"\n    },\n    {\n      \"name\": \"Worker\",\n      \"status\": \"SIMULATED_VERIFIED\",\n      \"reason\": \"RUNNING; VIRTUAL clock.\"\n    }\n  ]\n}"
+              "text": "{\n  \"integrations\": [\n    {\n      \"name\": \"Bee\",\n      \"status\": \"BLOCKED\",\n      \"last_verified_at\": null,\n      \"reason\": \"No authenticated live event processed for this household.\"\n    },\n    {\n      \"name\": \"Ring\",\n      \"status\": \"BLOCKED\",\n      \"last_verified_at\": null,\n      \"reason\": \"No authenticated live event processed for this household.\"\n    },\n    {\n      \"name\": \"Ring video\",\n      \"status\": \"STANDBY\",\n      \"reason\": \"Decoded frames: 0; no silent fallback to scripted replay.\"\n    },\n    {\n      \"name\": \"Alexa+\",\n      \"status\": \"STANDBY\",\n      \"reason\": \"No verified Alexa account/device connection. Judge console offers a labeled web Alexa+ experience over the real MCP server.\"\n    },\n    {\n      \"name\": \"Fire TV\",\n      \"status\": \"BLOCKED\",\n      \"reason\": \"Native client builds; actual device runtime proof pending.\"\n    },\n    {\n      \"name\": \"MCP\",\n      \"status\": \"REPLAY_VERIFIED\",\n      \"reason\": \"Official SDK tested; source provenance is recorded per household event.\"\n    },\n    {\n      \"name\": \"Companion\",\n      \"status\": \"REPLAY_VERIFIED\",\n      \"reason\": \"Authenticated notification inbox; no native push/haptic claim.\"\n    },\n    {\n      \"name\": \"Worker\",\n      \"status\": \"REPLAY_VERIFIED\",\n      \"reason\": \"RUNNING; SCRIPTED clock.\"\n    }\n  ]\n}"
             }
           ],
           "isError": false

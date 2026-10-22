@@ -2,10 +2,10 @@
 """External MCP client proof for Muni.
 
 Starts the real FastAPI/uvicorn server on a free localhost port (isolated temporary DATA_DIR,
-random demo-admin password that is never printed), then drives it over real HTTP with the
+random judge password that is never printed), then drives it over real HTTP with the
 official ``mcp`` Python SDK client (Streamable HTTP transport):
 
-    initialize -> tools/list -> a realistic simulated Alexa+ flow calling every tool
+    initialize -> tools/list -> a realistic web Alexa+ flow calling every tool
 
 Every JSON-RPC request/response on the wire is captured and written, with credentials
 redacted, to docs/evidence/mcp-external-client.json. Judge-replay steps that the MCP surface
@@ -115,7 +115,7 @@ def structured(result):
 async def run(base: str, password: str, transcript: Transcript, summary: list):
     hooks = {"request": [transcript.on_request], "response": [transcript.on_response]}
     async with httpx.AsyncClient(base_url=base, timeout=20, event_hooks=hooks) as http:
-        login = await http.post("/api/auth/login", json={"username": "demo-admin", "password": password})
+        login = await http.post("/api/auth/login", json={"username": "judge", "password": password})
         login.raise_for_status()
         token = http.cookies.get("done_session")
         http.cookies.clear()  # MCP calls authenticate with the bearer header only
@@ -192,7 +192,7 @@ async def run(base: str, password: str, transcript: Transcript, summary: list):
                     "spawn_watchdog_subagent",
                     {
                         "contract_id": by_key["parcel"],
-                        "camera_device_id": "synthetic-porch",
+                        "camera_device_id": "scripted-porch",
                         "target_roi": [0.2, 0.55, 0.45, 0.95],
                         "invariant_type": "PARCEL_PRESENT",
                     },
@@ -242,7 +242,7 @@ async def run(base: str, password: str, transcript: Transcript, summary: list):
                     '"Alexa, start Reality-Lock"',
                     "bridge_ring_camera_to_firetv",
                     {
-                        "camera_device_id": "synthetic-porch",
+                        "camera_device_id": "scripted-porch",
                         "firetv_session_id": "none",
                         "verification_mode": "POSE_SQUATS",
                     },
@@ -321,8 +321,8 @@ def main():
     env = {
         **os.environ,
         "DATA_DIR": data_dir,
-        "DEMO_MODE": "true",
-        "DEMO_ADMIN_PASSWORD": password,
+        "GUIDED_MODE": "true",
+        "JUDGE_PASSWORD": password,
         "PYTHONPATH": str(ROOT / "apps" / "mcp-orchestrator"),
     }
     server = subprocess.Popen(
@@ -353,10 +353,10 @@ def main():
     import mcp
 
     doc = {
-        "title": "Muni MCP external-client transcript (simulated Alexa+ flow)",
+        "title": "Muni MCP external-client transcript (web Alexa+ flow)",
         "honesty": "Official MCP Python SDK client over real localhost HTTP against the real server. "
         "This is NOT an Alexa device or Alexa+ account connection. Utterances are typed owner text "
-        "labeled MCP_OWNER_INPUT, not Bee captures. Camera stages are synthetic judge-replay fixtures "
+        "labeled MCP_OWNER_INPUT, not Bee captures. Camera stages are scripted judge-replay fixtures "
         "triggered through authenticated REST, labeled per step.",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "client": {
@@ -365,7 +365,7 @@ def main():
             "python": platform.python_version(),
             "transport": "streamable-http",
         },
-        "server": {"url": base + "/mcp/", "mode": "DEMO_MODE=true, isolated temporary ledger"},
+        "server": {"url": base + "/mcp/", "mode": "GUIDED_MODE=true, isolated temporary ledger"},
         "redaction": "Authorization headers, cookies, tokens and passwords are replaced with [REDACTED].",
         "summary": summary,
         "final_ledger": final,

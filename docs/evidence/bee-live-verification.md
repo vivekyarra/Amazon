@@ -17,4 +17,4 @@
 | Event size cap | 64 KB per event; larger events are rejected |
 | Dedupe | Utterance ID / todo ID plus a version hash, so re-delivery creates nothing new |
 | Wearer attribution | Unattributed speakers held for owner confirmation (`BEE_SELF_SPEAKERS`) |
-| Offline behaviour | Status shows the disconnect; no fake events; last cursor kept for resume |
+| Offline behaviour | Status shows the disconnect; no invented events; last cursor kept for resume |

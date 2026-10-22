@@ -1,6 +1,6 @@
-"""Pixel-processing synthetic fixtures + conservative landmark verifier.
+"""Pixel-processing scripted fixtures + conservative landmark verifier.
 
-This calibrated color-marker detector validates the synthetic test source, not general
+This calibrated color-marker detector validates the scripted test source, not general
 real-world human recognition. MediaPipe input is supported through the optional worker.
 """
 
@@ -69,7 +69,7 @@ def deposit_verdict(frames):
 def fixture_frames(kind):
     if kind == "deposit":
         return [scene(270, 270), scene(280, 380), scene(280, None)]
-    if kind == "fake":
+    if kind == "false_claim":
         return [scene(270, 270), scene(190, 190), scene(80, 80)]
     if kind == "removal":
         return [scene(280, 450), scene(280, 300), scene(160, 160), scene(70, 70)]
@@ -153,7 +153,7 @@ def pose_update(session, frame_id, timestamp_ms, landmarks):
     return False
 
 
-def synthetic_pose_frame(degrees, jitter=0):
+def scripted_pose_frame(degrees, jitter=0):
     """Render marker pixels; extraction below reconstructs landmarks from image, not count."""
     f = np.zeros((480, 640, 3), dtype=np.uint8)
     r = math.radians(degrees)
@@ -179,11 +179,11 @@ def extract_marker_pose(frame):
 
 def cycle_frames(half=False, offset=0):
     angles = [178, 145, 115, 88, 85, 120, 150, 173, 178] if not half else [178, 145, 120, 125, 150, 173, 178]
-    return [synthetic_pose_frame(a, offset + i % 3) for i, a in enumerate(angles)]
+    return [scripted_pose_frame(a, offset + i % 3) for i, a in enumerate(angles)]
 
 
-def synthetic_removal_video(masks=()):
-    """Generate and preserve a real 15s synthetic video plus a derived annotated clip.
+def scripted_removal_video(masks=()):
+    """Generate and preserve a real 15s scripted video plus a derived annotated clip.
 
     This uses our own geometric content only. It is never a Ring recording. PRIVATE_MASKS
     regions (normalized polygons) are zeroed in the derived clip; the source clip is unmasked.
@@ -270,6 +270,6 @@ def _cached_removal_video(masks=()):
                 timeout=45,
             )
             if result.returncode:
-                raise RuntimeError("Synthetic video encoding failed; evidence was not committed.")
+                raise RuntimeError("Scripted video encoding failed; evidence was not committed.")
             results.append(path.read_bytes())
     return tuple(results)

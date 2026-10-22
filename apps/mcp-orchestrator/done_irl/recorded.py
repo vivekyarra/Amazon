@@ -1,9 +1,9 @@
-"""RECORDED DEMO video source for the REALITY-LOCK studio.
+"""RECORDED WORKOUT video source for the REALITY-LOCK studio.
 
 A committed, hash-pinned video fixture is decoded frame by frame, every decoded frame goes
 through the same MediaPipe ``PoseDetector`` and the same ``frame_received`` reducer as the
 live Ring WHEP path. Nothing here sets a count: reps only come from pose inference on the
-decoded pixels. The source is always labelled ``RECORDED DEMO`` and never ``LIVE RING``.
+decoded pixels. The source is always labelled ``RECORDED WORKOUT`` and never ``LIVE RING``.
 """
 
 import asyncio
@@ -18,8 +18,8 @@ import cv2
 from .models import ApiError
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-SOURCE = "RECORDED_DEMO_VIDEO"
-LABEL = "RECORDED DEMO"
+SOURCE = "RECORDED_WORKOUT_VIDEO"
+LABEL = "RECORDED WORKOUT"
 
 # Official MediaPipe Pose Landmarker (lite, float16, v1). Same URL/hash as scripts/fetch-pose-model.py.
 POSE_MODEL_URL = (
@@ -32,12 +32,12 @@ DEFAULT_POSE_MODEL = REPO_ROOT / "artifacts" / "vision" / "pose-lite.task"
 FIXTURE_DIR = REPO_ROOT / "packages" / "testing-fixtures" / "pose"
 FIXTURES = {
     "squats-15": (
-        "squats-15-synthetic.mp4",
-        "1de9cfd3f7c4c4738c430e205d139bacb68df44700857bd238203d50688a1d95",
+        "squats-15-generated.mp4",
+        "afba6a5d5ef60e0db85fc30c44a5b5b6307cfbe902adcd41cbf4326712ede7a0",
     ),
     "squats-half-15": (
-        "squats-half-15-synthetic.mp4",
-        "f364d681ed9ca2b22d7617fe68c68fc59e745d9cbe4d65ab42910b992a86d8d0",
+        "squats-half-15-generated.mp4",
+        "214429ba7b849a278cae7a29624c0b32ce35201cc93daaa269d11c6416fbe7c8",
     ),
 }
 SKELETON = (
@@ -81,11 +81,11 @@ def fetch_pose_model(destination=DEFAULT_POSE_MODEL):
 
 def fixture_path(name):
     if name not in FIXTURES:
-        raise ApiError(404, "FIXTURE_UNKNOWN", "Choose a published recorded demo fixture.")
+        raise ApiError(404, "FIXTURE_UNKNOWN", "Choose a published recorded workout fixture.")
     filename, expected = FIXTURES[name]
     path = FIXTURE_DIR / filename
     if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
-        raise ApiError(503, "FIXTURE_INVALID", "Recorded demo fixture failed its integrity check.")
+        raise ApiError(503, "FIXTURE_INVALID", "Recorded workout fixture failed its integrity check.")
     return path
 
 
@@ -93,11 +93,11 @@ def decode(path):
     """Yield (index, timestamp_ms, bgr_frame) from the container clock; never a client timestamp."""
     capture = cv2.VideoCapture(str(path))
     if not capture.isOpened():
-        raise ApiError(503, "FIXTURE_UNDECODABLE", "Recorded demo video could not be decoded.")
+        raise ApiError(503, "FIXTURE_UNDECODABLE", "Recorded workout video could not be decoded.")
     fps = capture.get(cv2.CAP_PROP_FPS)
     if not 1 <= fps <= 240:
         capture.release()
-        raise ApiError(503, "FIXTURE_FPS_INVALID", "Recorded demo video has no valid frame rate.")
+        raise ApiError(503, "FIXTURE_FPS_INVALID", "Recorded workout video has no valid frame rate.")
     index = 0
     try:
         while True:
@@ -157,7 +157,7 @@ def annotate(frame, points, studio=None):
 
 
 def open_studio(state, camera_id, fixture, model_sha256):
-    """Bind the REALITY-LOCK studio to a recorded-demo session (same reducer as live frames)."""
+    """Bind the REALITY-LOCK studio to a recorded-workout session (same reducer as live frames)."""
     from . import engine as e
 
     if not state["consent"]:
@@ -165,13 +165,13 @@ def open_studio(state, camera_id, fixture, model_sha256):
     e.pose_contract(state)
     current = state["studio"]
     if current and current["status"] in {"COMPLETED", "OVERRIDDEN"}:
-        raise ApiError(409, "STUDIO_FINISHED", "This REALITY-LOCK session already finished; reset the demo.")
+        raise ApiError(409, "STUDIO_FINISHED", "This REALITY-LOCK session already finished; reset the guided day.")
     if current and current.get("count", 0) and current.get("source") != SOURCE:
         raise ApiError(409, "STUDIO_IN_PROGRESS", "Another source already has verified reps; reset first.")
     if current:
         # Each playback must earn all fifteen reps itself; partial recorded runs never accumulate.
         state["studio"] = None
-    e.studio_start(state, source=SOURCE, source_mode="SIMULATED_VERIFIED")
+    e.studio_start(state, source=SOURCE, source_mode="REPLAY_VERIFIED")
     session = state["studio"]
     session.update(
         camera_id=camera_id,
@@ -200,7 +200,7 @@ def replay(frames, detector, on_frame, camera):
         yield {"timestamp_ms": timestamp, "points": points, "studio": studio, "frame": frame}
 
 
-class RecordedDemoBridge:
+class RecordedWorkoutBridge:
     """Plays a pinned fixture through the real pose engine; mirrors CameraBridge's lifecycle."""
 
     def __init__(self, on_frame, on_end, detector_factory=None):
@@ -219,7 +219,7 @@ class RecordedDemoBridge:
 
     async def start(self, household, fixture, realtime=None, session_id=None):
         if household in self.sessions:
-            raise ApiError(409, "RECORDED_DEMO_ALREADY_OPEN", "Stop the current recorded demo first.")
+            raise ApiError(409, "RECORDED_WORKOUT_ALREADY_OPEN", "Stop the current recorded workout first.")
         path = await asyncio.to_thread(fixture_path, fixture)
         detector = await asyncio.to_thread(self._detector)
         session = {
@@ -227,7 +227,7 @@ class RecordedDemoBridge:
             "fixture": fixture,
             "source": SOURCE,
             "label": LABEL,
-            "source_mode": "SIMULATED_VERIFIED",
+            "source_mode": "REPLAY_VERIFIED",
             "status": "STREAMING",
             "frames_decoded": 0,
             "frames_with_pose": 0,
@@ -293,7 +293,7 @@ class RecordedDemoBridge:
         except ApiError as error:
             reason = error.code
         except Exception:
-            reason = "RECORDED_DEMO_FAILED"
+            reason = "RECORDED_WORKOUT_FAILED"
         reason = session.get("stop_reason", reason)
         session["status"] = "ENDED"
         session["end_reason"] = reason

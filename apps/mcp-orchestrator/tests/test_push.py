@@ -47,7 +47,7 @@ def test_subscription_requires_auth_and_https(app, client, post):
 def test_only_new_alerts_are_pushed_with_generic_incident_copy(app, post, monkeypatch, tmp_path):
     post("/admin/scenarios/1/run", {"branch": "deposit"})
     post("/push/subscribe", SUB)  # cursor: earlier alerts are history, not pushed
-    post("/admin/scenarios/2/run", {"branch": "fake"})  # DELIVERY_MISMATCH
+    post("/admin/scenarios/2/run", {"branch": "false_claim"})  # DELIVERY_MISMATCH
     post("/admin/scenarios/3/run", {"branch": "disengaged"})  # SILENT_PREP + ACTIVE_ESCALATION
     pusher = PushNotifier(tmp_path)
     sent = []
@@ -59,7 +59,7 @@ def test_only_new_alerts_are_pushed_with_generic_incident_copy(app, post, monkey
     assert mismatch["body"] == "Open Muni to review."  # no incident detail on the lock screen
     prep = next(p for p in sent if "Coming up" in p["title"])
     assert prep["silent"] is True and "teacher" in prep["body"].lower()
-    s = app.state.store.read("demo")
+    s = app.state.store.read("guided")
     statuses = {a["kind"]: a.get("delivery_status") for a in s["alerts"]}
     assert statuses["DELIVERY_MISMATCH"] == "ACCEPTED_BY_PUSH_SERVICE"
     assert all(a.get("device_delivery_verified") is False for a in s["alerts"])
@@ -71,11 +71,11 @@ def test_only_new_alerts_are_pushed_with_generic_incident_copy(app, post, monkey
 def test_gone_subscription_is_pruned(app, post, monkeypatch, tmp_path):
     post("/push/subscribe", SUB)
     post("/admin/scenarios/1/run", {"branch": "deposit"})
-    post("/admin/scenarios/2/run", {"branch": "fake"})
+    post("/admin/scenarios/2/run", {"branch": "false_claim"})
     pusher = PushNotifier(tmp_path)
     monkeypatch.setattr(pusher, "send", lambda sub, payload: "SUBSCRIPTION_GONE")
     pusher.deliver(app.state.store)
-    assert app.state.store.read("demo")["push_subscriptions"] == []
+    assert app.state.store.read("guided")["push_subscriptions"] == []
 
 
 def test_service_worker_is_served_from_built_console(client):
@@ -91,14 +91,14 @@ def test_service_worker_is_served_from_built_console(client):
 def test_revoked_consent_stops_push(app, post, monkeypatch, tmp_path):
     post("/push/subscribe", SUB)
     post("/admin/scenarios/1/run", {"branch": "deposit"})
-    post("/admin/scenarios/2/run", {"branch": "fake"})
+    post("/admin/scenarios/2/run", {"branch": "false_claim"})
     post("/consent", {"enabled": False})
     pusher = PushNotifier(tmp_path)
     sent = []
     monkeypatch.setattr(pusher, "send", lambda sub, payload: sent.append(payload) or "ACCEPTED_BY_PUSH_SERVICE")
     pusher.deliver(app.state.store)
     assert sent == []
-    assert e.MODE == "SIMULATED_VERIFIED"
+    assert e.MODE == "REPLAY_VERIFIED"
 
 
 def test_real_vapid_signing_and_encryption_reach_the_push_service(tmp_path, monkeypatch):
@@ -112,11 +112,11 @@ def test_real_vapid_signing_and_encryption_reach_the_push_service(tmp_path, monk
         text = ""
         headers = {}
 
-    def fake_post(url, data=None, headers=None, timeout=None, **_):
+    def scripted_post(url, data=None, headers=None, timeout=None, **_):
         seen.update(url=url, headers=headers, body=data)
         return Response()
 
-    monkeypatch.setattr(pywebpush.requests, "post", fake_post)
+    monkeypatch.setattr(pywebpush.requests, "post", scripted_post)
     pusher = PushNotifier(tmp_path)
     status = pusher.send(SUB, {"title": "Muni", "body": "x"})
     assert status == "ACCEPTED_BY_PUSH_SERVICE"

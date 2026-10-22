@@ -18,7 +18,7 @@ Target the MCP `2025-11-25` Streamable HTTP transport (the transport Alexa+ inte
 | --- | --- | --- |
 | Compile a promise | `compile_commitment(utterance, speaker_context)` → contract id, status, confidence, warnings | Return `completed` or accept a status field from the model |
 | Spawn a watcher | Idempotent by (contract, device, invariant); check device ownership and consent | Start unbounded camera streams |
-| Escalate | Server clock in production; virtual clock only for an admin replay namespace | Trust `current_time` from the model |
+| Escalate | Server clock in production; scripted clock only for an admin replay namespace | Trust `current_time` from the model |
 | Report / dispatch | Return a draft packet; require a separate authenticated owner approval bound to the manifest hash and destination | Dispatch because `human_confirmed=true` was passed |
 | Read state | Read-only tools (`list_active_contracts`, `get_contract_state`, …) that never mutate | Mix reads with side effects |
 

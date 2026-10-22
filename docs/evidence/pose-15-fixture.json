@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "label": "RECORDED DEMO \u2014 SYNTHETIC GENERATED HUMANOID VIDEO \u2014 NOT LIVE RING, NOT A REAL PERSON",
-  "provenance": "SYNTHETIC",
-  "source": "RECORDED_DEMO_VIDEO",
-  "source_mode": "SIMULATED_VERIFIED",
-  "generator": "scripts/generate-synthetic-squats.py (seed 20261020)",
+  "label": "RECORDED WORKOUT \u2014 GENERATED HUMANOID VIDEO \u2014 NOT LIVE RING, NOT A REAL PERSON",
+  "provenance": "SCRIPTED",
+  "source": "RECORDED_WORKOUT_VIDEO",
+  "source_mode": "REPLAY_VERIFIED",
+  "generator": "scripts/generate-squats.py (rng key 20261020)",
   "pipeline": "done_irl.recorded.decode -> camera.PoseDetector (MediaPipe PoseLandmarker VIDEO mode) -> camera_reducers.frame_received -> engine.pose_frame/vision.pose_update",
   "model": {
     "url": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
@@ -14,12 +14,12 @@
   "platform": "Windows-11-10.0.26300-SP0",
   "fixtures": {
     "squats-15": {
-      "path": "packages/testing-fixtures/pose/squats-15-synthetic.mp4",
-      "sha256": "1de9cfd3f7c4c4738c430e205d139bacb68df44700857bd238203d50688a1d95"
+      "path": "packages/testing-fixtures/pose/squats-15-generated.mp4",
+      "sha256": "afba6a5d5ef60e0db85fc30c44a5b5b6307cfbe902adcd41cbf4326712ede7a0"
     },
     "squats-half-15": {
-      "path": "packages/testing-fixtures/pose/squats-half-15-synthetic.mp4",
-      "sha256": "f364d681ed9ca2b22d7617fe68c68fc59e745d9cbe4d65ab42910b992a86d8d0"
+      "path": "packages/testing-fixtures/pose/squats-half-15-generated.mp4",
+      "sha256": "214429ba7b849a278cae7a29624c0b32ce35201cc93daaa269d11c6416fbe7c8"
     }
   },
   "annotated_clip": {
@@ -31,7 +31,7 @@
     "F17_full_15": {
       "frames_processed": 769,
       "frames_with_pose": 769,
-      "processing_fps": 23.7,
+      "processing_fps": 59.4,
       "rep_verified_events": 15,
       "reducer_count": 15,
       "gate": "UNLOCKED",
@@ -39,7 +39,7 @@
       "first_unlocked_frame": 757,
       "unlocked_before_15": false,
       "evidence_provenance": [
-        "RECORDED_DEMO"
+        "RECORDED_WORKOUT"
       ],
       "reps": [
         {
@@ -155,7 +155,7 @@
     "F17_truncated_14": {
       "frames_processed": 723,
       "frames_with_pose": 723,
-      "processing_fps": 31.5,
+      "processing_fps": 63.6,
       "rep_verified_events": 14,
       "reducer_count": 14,
       "gate": "LOCKED",
@@ -270,7 +270,7 @@
     "F18_half_squats_15": {
       "frames_processed": 746,
       "frames_with_pose": 746,
-      "processing_fps": 33.2,
+      "processing_fps": 58.7,
       "rep_verified_events": 0,
       "reducer_count": 0,
       "gate": "LOCKED",
@@ -286,7 +286,7 @@
     "F18_frozen_static_frames": {
       "frames_processed": 75,
       "frames_with_pose": 75,
-      "processing_fps": 35.8,
+      "processing_fps": 59.3,
       "rep_verified_events": 0,
       "reducer_count": 0,
       "gate": "LOCKED",
@@ -302,7 +302,7 @@
     "F18_one_rep_looped_15x": {
       "frames_processed": 753,
       "frames_with_pose": 753,
-      "processing_fps": 28.7,
+      "processing_fps": 68.9,
       "rep_verified_events": 1,
       "reducer_count": 1,
       "gate": "LOCKED",

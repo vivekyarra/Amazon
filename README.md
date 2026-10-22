@@ -14,7 +14,7 @@ Muni hears the promises you make in passing, turns each one into a living contra
 ![AWS](https://img.shields.io/badge/AWS-DynamoDB%20%C2%B7%20S3%20%C2%B7%20EventBridge%20%C2%B7%20SQS-232F3E)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**[Live demo](https://100-49-183-59.sslip.io)** · [Judge in 5 minutes](docs/judge-runbook.md) · [How it works](#how-it-works) · [Amazon tech](#built-on-amazon) · [Quick start](#quick-start)
+**[Try Muni live](https://100-49-183-59.sslip.io)** · [Judge in 5 minutes](docs/judge-runbook.md) · [How it works](#how-it-works) · [Amazon tech](#built-on-amazon) · [Quick start](#quick-start)
 
 <img src="docs/images/mission-control.png" alt="Muni Mission control: the day's promises, what's proven, what needs you, and what was missed" width="900">
 
@@ -50,7 +50,7 @@ Muni is a **commitment keeper for the home**. You never say "set a reminder":
 | Time | What happens | Device |
 |---|---|---|
 | **08:15** | Breakfast chat: *bring cold drinks tonight · call your sister before 6 · cover the teacher meeting at 4 · 15 squats before TV*. Four contracts appear; none are verified. | Bee · Alexa+ |
-| **14:10** | Courier says *"left at your door"*. Muni checks the camera — a real deposit starts a persistent porch watchdog; a fake-out is flagged as a delivery mismatch. | Ring |
+| **14:10** | Courier says *"left at your door"*. Muni checks the camera — a real deposit starts a persistent porch watchdog; a false delivery claim is flagged as a delivery mismatch. | Ring |
 | **15:00 / 15:35** | Silent prep for the teacher meeting, then an actionable alert because you weren't preparing. The meeting closes only when attendance evidence arrives. | AWS EventBridge · phone |
 | **16:30** | Someone carries the parcel toward the street. Muni saves the clip, crop and SHA-256 manifest and asks: *family, or report?* | Ring · Fire TV |
 | **19:45** | You walk up without the drinks. A private *"check before you go in"* — no accusation. | Ring · phone |
@@ -103,7 +103,7 @@ More: [architecture](docs/architecture.md) · [integrations](docs/integrations.m
 
 ## Try it in 5 minutes
 
-**https://100-49-183-59.sslip.io** — press **Try the live demo** (no account needed; every visitor gets a private copy of the day), then **Run the full day**, then follow the [judge runbook](docs/judge-runbook.md). Point any MCP client at `https://100-49-183-59.sslip.io/mcp/`.
+**https://100-49-183-59.sslip.io** — press **Try Muni live** (no account needed; every visitor gets a private copy of the day), then **Run the full day**, then follow the [judge runbook](docs/judge-runbook.md). Point any MCP client at `https://100-49-183-59.sslip.io/mcp/`.
 
 ## Quick start
 
@@ -113,7 +113,7 @@ Requires Python 3.12+ with [uv](https://docs.astral.sh/uv/), Node.js 22.12+ and 
 git clone https://github.com/vivekyarra/Amazon.git && cd Amazon
 ./scripts/setup-local.sh      # Python deps, pinned MediaPipe models, console build
 ./scripts/start-local.sh      # http://127.0.0.1:8080
-./scripts/access.sh           # local demo-admin / owner passwords
+./scripts/access.sh           # local judge / owner passwords
 ```
 
 Connect real devices by filling `.env` (see `.env.example`):
@@ -150,7 +150,7 @@ packages/
   physical-contract-schema/                  Shared contract & event schemas
   agent-skills/evidence-backed-commitments/  Open-source Agent Skill (MIT)
   testing-fixtures/                          Licensed real-scene clips and workout videos, with provenance
-infra/aws/                 CloudFormation (judge-demo.yaml, template.yaml) and operations guide
+infra/aws/                 CloudFormation (judge-stack.yaml, template.yaml) and operations guide
 scripts/                   setup, start, live probes, deploy, emulator and UI checks
 tests/                     Playwright journeys and Fire TV device reports
 docs/                      architecture, integrations, privacy, judge runbook, product feedback, evidence
@@ -162,7 +162,7 @@ The rules and compiler behind Muni are published as an Agent Skill for Amazon's 
 
 ## Privacy & safety
 
-Explicit consent before any collection, per-camera exclusions and privacy masks, adjustable retention with physical deletion, provider disconnect and full household deletion. No face identification. No autonomous police reports — the demo receiver records an approved dispatch and sends nothing. In-app reward gate only; Muni never controls other apps. Details: [privacy & security](docs/privacy-security.md).
+Explicit consent before any collection, per-camera exclusions and privacy masks, adjustable retention with physical deletion, provider disconnect and full household deletion. No face identification. No autonomous police reports — the local receiver records an approved dispatch and sends nothing. In-app reward gate only; Muni never controls other apps. Details: [privacy & security](docs/privacy-security.md).
 
 ## Roadmap
 

@@ -10,16 +10,16 @@ Run `scripts/setup-local.sh`, then `scripts/start-local.sh`. `/health/live` chec
 docker compose -f infra/local/compose.yml up --build -d
 docker compose -f infra/local/compose.yml exec done-irl cat /data/access.json   # private terminal only
 docker compose -f infra/local/compose.yml down
-# Add --volumes only when deliberately deleting ALL local demo data.
+# Add --volumes only when deliberately deleting ALL local guided-day data.
 ```
 
-The image is tested end to end with all six scenarios, fifteen distinct pose cycles, evidence export, service restart, persisted contracts and teardown ([evidence](evidence/container.json)). Build with `docker build -f infra/local/Dockerfile -t done-irl:validation .`; `uv run python scripts/smoke-container.py` validates an isolated container and removes only its own container and volume. The local image starts in demo mode.
+The image is tested end to end with all six scenarios, fifteen distinct pose cycles, evidence export, service restart, persisted contracts and teardown ([evidence](evidence/container.json)). Build with `docker build -f infra/local/Dockerfile -t done-irl:validation .`; `uv run python scripts/smoke-container.py` validates an isolated container and removes only its own container and volume. The local image starts in guided mode (`GUIDED_MODE=true`).
 
 For any remote deployment, put an owner-controlled TLS reverse proxy in front, restrict access, set `ALLOWED_ORIGINS` to the real origin and keep passwords private.
 
 ## AWS
 
-The hosted judge deployment is CloudFormation stack `done-irl-judge` from `infra/aws/judge-demo.yaml`, deployed and smoke-tested over HTTPS ([evidence](evidence/aws-deployment.json), [MCP + EventBridge](evidence/aws-mcp-scheduler.json)). The template, security configuration, backup/restore, retention and teardown are documented in [infra/aws/README.md](../infra/aws/README.md).
+The hosted judge deployment is CloudFormation stack `done-irl-judge` from `infra/aws/judge-stack.yaml`, deployed and smoke-tested over HTTPS ([evidence](evidence/aws-deployment.json), [MCP + EventBridge](evidence/aws-mcp-scheduler.json)). The template, security configuration, backup/restore, retention and teardown are documented in [infra/aws/README.md](../infra/aws/README.md).
 
 ## Fire TV clients
 

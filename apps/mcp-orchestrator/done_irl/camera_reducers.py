@@ -22,10 +22,10 @@ def frame_received(store, household, camera, frame, points, timestamp, frame_has
         if session["status"] in {"COMPLETED", "OVERRIDDEN"}:
             return summary(session)
         # The server-side bridge, never a client field, decides the source label.
-        recorded = camera.get("source") == e.RECORDED_DEMO_SOURCE
-        source_mode = "SIMULATED_VERIFIED" if recorded else "LIVE_VERIFIED"
+        recorded = camera.get("source") == e.RECORDED_WORKOUT_SOURCE
+        source_mode = "REPLAY_VERIFIED" if recorded else "LIVE_VERIFIED"
         session.update(
-            source=e.RECORDED_DEMO_SOURCE if recorded else "LIVE_RING_WHEP",
+            source=e.RECORDED_WORKOUT_SOURCE if recorded else "LIVE_RING_WHEP",
             source_mode=source_mode,
             model_sha256=camera["model_sha256"],
         )
@@ -33,7 +33,7 @@ def frame_received(store, household, camera, frame, points, timestamp, frame_has
         if state.get("clock_mode") == "WALL":
             state["now"] = datetime.now(timezone.utc).isoformat()
         state["_event_source"] = {
-            "source": e.RECORDED_DEMO_SOURCE if recorded else "RING_WHEP",
+            "source": e.RECORDED_WORKOUT_SOURCE if recorded else "RING_WHEP",
             "source_mode": source_mode,
             "consent_scope": "household",
         }

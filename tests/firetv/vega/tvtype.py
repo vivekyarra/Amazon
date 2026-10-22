@@ -1,7 +1,7 @@
 # Types text on the Muni on-screen D-pad keyboard using only official inputd-cli
 # D-pad presses (KEY_UP/DOWN/LEFT/RIGHT/ENTER) on the Vega Virtual Device.
 # Assumes the keyboard was just opened (focus on '1', row 0 col 0).
-# usage: python3 tvtype.py --text STR | --password  (reads the demo-admin line from
+# usage: python3 tvtype.py --text STR | --password  (reads the judge line from
 #        $DONE_CREDENTIALS_FILE; never printed). Use CHUNK=1: one vda call per key (~1.7 s/key).
 #        Batched modes (CHUNK=0/N) dropped or misplaced presses on the VVD in testing.
 # ALWAYS screenshot first to confirm the Password keyboard (not Username) is open: typing a
@@ -37,7 +37,7 @@ def hit(name):
 args = sys.argv[1:]; text = ""
 if "--password" in args:
     for line in open(os.environ["DONE_CREDENTIALS_FILE"], encoding="utf-8"):
-        m = re.match(r"\s*demo-admin\s*:\s*(\S+)", line)
+        m = re.match(r"\s*judge\s*:\s*(\S+)", line)
         if m: text = m.group(1)
 if "--text" in args: text = args[args.index("--text") + 1]
 def anchor():

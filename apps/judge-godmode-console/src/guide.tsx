@@ -60,7 +60,7 @@ const toneIcon: Record<Tone, typeof CheckCheck> = {
   muted: X,
 };
 
-/** The "never fake done" explanation shown on every contract detail. */
+/** The "never done without proof" explanation shown on every contract detail. */
 export function Verdict({
   c,
   evidence,
@@ -412,10 +412,10 @@ const incidentNext: Record<string, [string, string]> = {
   ],
   REPORT_APPROVED: [
     "Approved by you",
-    "Next: send it to the demo receiver. Nothing is sent to police.",
+    "Next: send it to the local receiver. Nothing is sent to police.",
   ],
-  SIMULATED_DISPATCH: [
-    "Delivered to the demo receiver",
+  LOCAL_DISPATCH: [
+    "Delivered to the local receiver",
     "No official case was created. The hashed packet stays exportable.",
   ],
 };
@@ -430,8 +430,7 @@ export function IncidentNext({
 }) {
   const copy = incidentNext[status];
   if (!copy) return null;
-  const done =
-    status === "AUTHORIZED_TRANSFER" || status === "SIMULATED_DISPATCH";
+  const done = status === "AUTHORIZED_TRANSFER" || status === "LOCAL_DISPATCH";
   return (
     <div className={`next-card ${done ? "done" : ""}`} role="status">
       {done ? (

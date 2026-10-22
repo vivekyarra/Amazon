@@ -5,7 +5,7 @@
 # usage: tv.sh key KEY_DOWN [count] | tv.sh shot <name>
 source ~/vega/env
 VDA=${VDA:-$HOME/vega/sdk/vega-sdk/main/0.24.12112/bin/tools/vda}
-EV=${EVIDENCE_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)/docs/evidence/vega}
+EV=${EVIDENCE_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)/artifacts/vega}
 mkdir -p "$EV" /tmp/vshots
 case "$1" in
   key) n=${3:-1}; for i in $(seq 1 "$n"); do "$VDA" shell "inputd-cli button_press $2" >/dev/null; sleep 0.4; done; echo "key $2 x$n";;

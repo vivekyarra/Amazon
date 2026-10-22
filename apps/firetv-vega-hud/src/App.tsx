@@ -28,7 +28,7 @@ export const App = () => {
   const clientRef = useRef<DoneIrlClient | null>(null);
   const [screen, setScreen] = useState<'login' | 'main'>('login');
   const [backend, setBackend] = useState(DEFAULT_BACKEND);
-  const [username, setUsername] = useState('demo-admin');
+  const [username, setUsername] = useState('judge');
   const [password, setPassword] = useState('');
   const [loginMsg, setLoginMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -384,7 +384,7 @@ export const App = () => {
           <Row k="Clip" v={(incident.clip_actual_duration_seconds || 0) + ' s clip (evidence ' + shortHash(pk.source_clip_evidence_id, 14) + ')'} />
           <Row k="Movement" v={(pk.trajectory || []).map((p: number[]) => '(' + p.join(',') + ')').join(' -> ') + ' ' + (pk.coordinate_system || '')} />
           <Row k="Capture gaps" v={(pk.capture_gaps || []).join(' ') || 'none'} />
-          <Row k="Destination" v={incident.destination || 'DEMO_RECEIVER_ONLY'} />
+          <Row k="Destination" v={incident.destination || 'LOCAL_RECEIVER_ONLY'} />
         </View>
         {status === 'AWAITING_HUMAN_DECISION' ? (
           <View style={st.btnRow}>
@@ -415,7 +415,7 @@ export const App = () => {
             <Text style={st.h3}>Human review - DRAFT (not sent)</Text>
             <Row k="Manifest SHA-256" v={shortHash(incident.manifest_hash, 32)} mono />
             <Row k="Attachments" v={'deposit, removal, clip, annotated clip, person crop'} />
-            <Row k="Destination" v="Demo receiver - not sent to police" />
+            <Row k="Destination" v="Local receiver - not sent to police" />
             <View style={st.btnRow}>
               <FocusButton label="Cancel review" preferred onPress={() => run('Cancel review', path + 'cancel-report', {action: 'cancel-report', revision: incident.revision})} />
               <FocusButton
@@ -426,14 +426,14 @@ export const App = () => {
                 onPress={() =>
                   ask(
                     'Approve this exact report?',
-                    'Manifest ' + shortHash(incident.manifest_hash, 24) + ' to DEMO_RECEIVER_ONLY. Approval does not send anything; dispatch is a further step.',
+                    'Manifest ' + shortHash(incident.manifest_hash, 24) + ' to LOCAL_RECEIVER_ONLY. Approval does not send anything; dispatch is a further step.',
                     'APPROVE REPORT',
                     () =>
                       run('Approve report', path + 'approve-report', {
                         action: 'approve-report',
                         revision: incident.revision,
                         manifest_hash: incident.manifest_hash,
-                        destination: 'DEMO_RECEIVER_ONLY',
+                        destination: 'LOCAL_RECEIVER_ONLY',
                         confirmation: 'APPROVE REPORT',
                       }),
                   )
@@ -446,21 +446,21 @@ export const App = () => {
           <View style={st.btnRow}>
             <FocusButton label="Cancel report" preferred onPress={() => run('Cancel report', path + 'cancel-report', {action: 'cancel-report', revision: incident.revision})} />
             <FocusButton
-              label="Send to DEMO receiver..."
-              sub="Demo receiver - not sent to police"
+              label="Send to local receiver..."
+              sub="Local receiver - not sent to police"
               danger
               onPress={() =>
                 ask(
-                  'Send to demo receiver?',
-                  'This sends the approved packet to the DEMO receiver only. No police or external party is contacted.',
-                  'Send to demo receiver',
-                  () => run('Demo dispatch', path + 'dispatch-report', {action: 'dispatch-report', revision: incident.revision}),
+                  'Send to local receiver?',
+                  'This sends the approved packet to the local receiver only. No police or external party is contacted.',
+                  'Send to local receiver',
+                  () => run('Local dispatch', path + 'dispatch-report', {action: 'dispatch-report', revision: incident.revision}),
                 )
               }
             />
           </View>
         ) : null}
-        {status === 'SIMULATED_DISPATCH' || status === 'AUTHORIZED_TRANSFER' ? (
+        {status === 'LOCAL_DISPATCH' || status === 'AUTHORIZED_TRANSFER' ? (
           <View style={st.card}>
             <Text style={st.h3}>Resolved: {packetState(incident)}</Text>
             {incident.receipt ? <Row k="Receipt" v={incident.receipt.label + ' - ' + incident.receipt.receipt_id} /> : null}
@@ -476,7 +476,7 @@ export const App = () => {
   const viewC = () => {
     const evidence: Json[] = (state && state.evidence) || [];
     const ps = packetState(incident);
-    const states = ['DRAFT', 'DEMO RECEIVER', 'DISPATCHED', 'ACKNOWLEDGED'];
+    const states = ['DRAFT', 'LOCAL RECEIVER', 'DISPATCHED', 'ACKNOWLEDGED'];
     return (
       <ScrollView style={st.scroll}>
         <View style={st.card}>

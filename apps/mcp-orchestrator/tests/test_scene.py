@@ -1,7 +1,7 @@
 """Real-scene pipeline on REAL_RECORDED_STOCK clips (public licensed footage, not Ring).
 
 Every verdict below comes from decoding the committed clips, running the pinned MediaPipe
-detector, tracking and zone reasoning. Nothing is mocked. Negative cases use the same real frames
+detector, tracking and zone reasoning. Nothing is replaced in-process. Negative cases use the same real frames
 truncated, darkened or occluded; those derived inputs are labeled as such.
 """
 

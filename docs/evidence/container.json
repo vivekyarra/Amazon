@@ -10,6 +10,6 @@
   },
   "rep_count": 15,
   "restart_durable": true,
-  "source": "SYNTHETIC",
+  "source": "SCRIPTED",
   "official_dispatches": 0
 }

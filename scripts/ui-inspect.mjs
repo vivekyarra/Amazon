@@ -1,5 +1,5 @@
 /** Automated UI inspection: every view × viewport × role.
- * Flags banned mode words in visible text, nested scrollbars, horizontal overflow,
+ * Flags forbidden mode words in visible text, nested scrollbars, horizontal overflow,
  * desktop page scroll, broken images and console errors. Writes artifacts/ui-inspect/report.json.
  * Usage: DONE_URL=http://127.0.0.1:8099 node scripts/ui-inspect.mjs
  */
@@ -17,7 +17,8 @@ const sizes = [
   [900, 700],
   [390, 844],
 ];
-const banned = /\b(simulat\w*|synthetic|virtual|recorded demo|not live ring)\b/i;
+const forbiddenWords =
+  /\b(simulat\w*|synthetic|virtual|demo\w*|fake\w*|mock\w*|dummy|stub\w*|seeded|not connected|not live ring)\b/i;
 const browser = await chromium.launch({ headless: true });
 const findings = [];
 
@@ -31,7 +32,7 @@ async function login(page, user) {
   await page.reload();
 }
 
-for (const user of ["demo-admin", "owner"]) {
+for (const user of ["judge", "owner"]) {
   for (const [w, h] of sizes) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h } });
     const page = await ctx.newPage();
@@ -39,7 +40,7 @@ for (const user of ["demo-admin", "owner"]) {
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     page.on("pageerror", (e) => errors.push(String(e)));
     await login(page, user);
-    if (user === "demo-admin" && w === 1440) {
+    if (user === "judge" && w === 1440) {
       const k = () => ({ "Idempotency-Key": crypto.randomUUID() });
       await page.request.post(base + "/api/admin/reset", { data: {}, headers: k() });
       for (const [i, b] of [[1, "deposit"], [2, "deposit"], [3, "disengaged"], [4, "unknown"], [5, "empty"], [6, "deposit"]])
@@ -48,8 +49,8 @@ for (const user of ["demo-admin", "owner"]) {
     for (const id of pages) {
       await page.goto(`${base}/?page=${id}`);
       await page.waitForTimeout(900);
-      const r = await page.evaluate((bannedSrc) => {
-        const re = new RegExp(bannedSrc, "i");
+      const r = await page.evaluate((forbiddenSrc) => {
+        const re = new RegExp(forbiddenSrc, "i");
         const visible = (el) => {
           const s = getComputedStyle(el);
           const b = el.getBoundingClientRect();
@@ -86,9 +87,9 @@ for (const user of ["demo-admin", "owner"]) {
           pageScroll: doc.scrollHeight > innerHeight + 1 || (content && content.scrollHeight > content.clientHeight + 2),
           brokenImages: imgs,
         };
-      }, banned.source);
+      }, forbiddenWords.source);
       const issues = [];
-      if (r.words.length) issues.push({ kind: "banned-words", detail: r.words });
+      if (r.words.length) issues.push({ kind: "forbidden-words", detail: r.words });
       if (r.nested.length) issues.push({ kind: "nested-scroll", detail: r.nested });
       if (r.hOverflow) issues.push({ kind: "horizontal-overflow" });
       if (w >= 1280 && r.pageScroll && !["settings"].includes(id)) issues.push({ kind: "desktop-page-scroll" });

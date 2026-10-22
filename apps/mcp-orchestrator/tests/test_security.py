@@ -88,15 +88,15 @@ def test_manifest_tampering_refuses_approval(app, post):
     stage(post, 4, "unknown")
     post("/incidents/inc_parcel/prepare-report", {"action": "prepare-report"})
     with app.state.store.transaction() as db:
-        s = app.state.store.read("demo")
+        s = app.state.store.read("guided")
         s["incidents"][0]["packet"]["trajectory"] = [[999, 999]]
-        app.state.store.save(db, "demo", s)
+        app.state.store.save(db, "guided", s)
     post(
         "/incidents/inc_parcel/approve-report",
         {
             "action": "approve-report",
             "manifest_hash": s["incidents"][0]["manifest_hash"],
-            "destination": "DEMO_RECEIVER_ONLY",
+            "destination": "LOCAL_RECEIVER_ONLY",
             "confirmation": "APPROVE REPORT",
         },
         status=409,
@@ -122,7 +122,7 @@ def test_expired_evidence_not_publicly_accessible(app, client, post):
     eid = s["evidence"][0]["evidence_id"]
     with app.state.store.transaction() as db:
         s["evidence"][0]["retention_expires_at"] = "2000-01-01T00:00:00+00:00"
-        app.state.store.save(db, "demo", s)
+        app.state.store.save(db, "guided", s)
     assert client.get("/api/evidence/" + eid).status_code == 410
 
 
@@ -150,7 +150,7 @@ def test_revision_conflict_rejects_stale_owner_action(post):
 def test_production_mode_fails_closed(tmp_path, monkeypatch):
     from done_irl.api import create_app
 
-    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("GUIDED_MODE", "false")
     with pytest.raises(RuntimeError, match="not certified"):
         create_app(tmp_path, {"owner": "test"})
 

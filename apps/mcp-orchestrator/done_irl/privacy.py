@@ -10,7 +10,7 @@ Honest limits (documented in docs/privacy-security.md):
   in-process Bee token copy, live Ring session) and enforces revocation at every entry point; it
   cannot revoke upstream tokens at Amazon/Ring and does not erase the operator's secret store.
 - Masks zero pixels in frames used for detection, live relay output and stored derived evidence
-  (snapshots, crops, annotated clips) before encoding/hashing. The synthetic source clip
+  (snapshots, crops, annotated clips) before encoding/hashing. The scripted source clip
   (REMOVAL_CLIP_ORIGINAL) is preserved unmasked under AES-256-GCM as the chain-of-custody original.
 """
 
@@ -27,7 +27,7 @@ from pydantic import Field, field_validator
 
 from .models import ApiError, StrictModel
 
-SYNTHETIC_CAMERA = "synthetic-porch"
+SCRIPTED_CAMERA = "scripted-porch"
 PROVIDERS = ("bee", "ring")
 DEFAULT_RETENTION_DAYS = 7
 MIN_RETENTION_DAYS, MAX_RETENTION_DAYS = 1, 30
@@ -194,9 +194,9 @@ def apply_retention(s, db, household, days, now=None):
     return {"updated": updated, "purged": purged}
 
 
-def known_cameras(household, demo):
-    if demo:
-        return [SYNTHETIC_CAMERA]
+def known_cameras(household, guided):
+    if guided:
+        return [SCRIPTED_CAMERA]
     path = os.getenv("RING_BINDINGS_FILE")
     if not path:
         return []
@@ -235,7 +235,7 @@ def disconnect(s, db, household, provider):
         s["camera_request"]["status"] = "CLOSED"
     result = {
         "provider": provider,
-        "status": "NOT_CONNECTED",
+        "status": "STANDBY",
         "cancelled_inbox": cancelled,
         "cursors_removed": cursors,
     }
@@ -320,12 +320,12 @@ def delete_household(s, db, household, fresh_state):
     return receipt
 
 
-def public(s, household, demo):
+def public(s, household, guided):
     privacy = view(s)
     return {
         "schema_version": "1.0",
         "household_id": household,
-        "cameras": known_cameras(household, demo),
+        "cameras": known_cameras(household, guided),
         "excluded_cameras": privacy["excluded_cameras"],
         "masks": privacy["masks"],
         "retention_days": privacy["retention_days"],
@@ -338,20 +338,20 @@ def public(s, household, demo):
     }
 
 
-def register(app, *, owner, command, initial, fresh, store, camera, bee, demo):
+def register(app, *, owner, command, initial, fresh, store, camera, bee, guided):
     """Attach owner-only privacy routes. All writes reuse the shared idempotent command path."""
 
     def bee_household():
         return os.getenv("BEE_HOUSEHOLD", "house_owner")
 
     def require_known(household, device):
-        if device not in known_cameras(household, demo):
+        if device not in known_cameras(household, guided):
             raise ApiError(404, "CAMERA_NOT_FOUND", "This camera is not linked to your household.")
 
     @app.get("/api/privacy")
     def privacy_settings(p=Depends(owner)):
         s = initial(p["household"])
-        return {**public(s, p["household"], demo), "trace_id": uuid.uuid4().hex}
+        return {**public(s, p["household"], guided), "trace_id": uuid.uuid4().hex}
 
     @app.post("/api/privacy/cameras/exclusion")
     async def camera_exclusion(body: CameraExclusionInput, request: Request, p=Depends(owner)):
@@ -429,7 +429,7 @@ def register(app, *, owner, command, initial, fresh, store, camera, bee, demo):
             response = command(request, p, lambda s, db: disconnect(s, db, p["household"], provider))
             if provider == "ring":
                 await camera.stop(p["household"], "PROVIDER_DISCONNECTED")
-            if provider == "bee" and not demo and p["household"] == bee_household():
+            if provider == "bee" and not guided and p["household"] == bee_household():
                 # Drop the in-process credential copy and end the stream; startup also honors revocation.
                 bee.stopped = True
                 bee.token = None

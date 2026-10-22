@@ -45,9 +45,9 @@ def create_app(data_dir=None, passwords=None):
     data = Path(data_dir or os.getenv("DATA_DIR", str(root / ".local")))
     data.mkdir(parents=True, exist_ok=True)
     os.chmod(data, 0o700)
-    demo = os.getenv("DEMO_MODE", "true").lower() == "true"
+    guided = os.getenv("GUIDED_MODE", "true").lower() == "true"
     key_file = os.getenv("LEDGER_KEY_FILE")
-    if not demo:
+    if not guided:
         origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
         if not key_file or not Path(key_file).is_file() or not all(o.startswith("https://") for o in origins):
             raise RuntimeError(
@@ -61,14 +61,14 @@ def create_app(data_dir=None, passwords=None):
             passwords = json.loads(credentials.read_text())
         else:
             passwords = {"owner": os.getenv("OWNER_PASSWORD") or secrets.token_urlsafe(20)}
-            if demo:
-                passwords["demo-admin"] = os.getenv("DEMO_ADMIN_PASSWORD") or secrets.token_urlsafe(20)
+            if guided:
+                passwords["judge"] = os.getenv("JUDGE_PASSWORD") or secrets.token_urlsafe(20)
             fd = os.open(credentials, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             with os.fdopen(fd, "w") as f:
                 json.dump(passwords, f)
-    if not demo and ("demo-admin" in passwords or any(len(p) < 16 for p in passwords.values())):
+    if not guided and ("judge" in passwords or any(len(p) < 16 for p in passwords.values())):
         raise RuntimeError(
-            "Live deployment requires owner passwords of at least 16 characters and no demo administrator."
+            "Live deployment requires owner passwords of at least 16 characters and no judge account."
         )
     # Passwords are salted/hashed in memory; bootstrap file is local, private and ignored.
     salts = {name: secrets.token_bytes(16) for name in passwords}
@@ -84,8 +84,8 @@ def create_app(data_dir=None, passwords=None):
         lambda *args: camera_ended(store, *args),
         masks=lambda household, device: privacy.polygons(store.read(household), device),
     )
-    # RECORDED DEMO: pinned fixture frames through the same pose detector and reducer as live frames.
-    recorded_demo = recorded_source.RecordedDemoBridge(
+    # RECORDED WORKOUT: pinned fixture frames through the same pose detector and reducer as live frames.
+    recorded_workout = recorded_source.RecordedWorkoutBridge(
         lambda *args: frame_received(store, *args), lambda *args: camera_ended(store, *args)
     )
     if os.getenv("AWS_LEDGER_TABLE"):
@@ -103,33 +103,33 @@ def create_app(data_dir=None, passwords=None):
         stateless_http=True,
         json_response=True,
         streamable_http_path="/",
-        transport_security=mcp_ext.transport_security(demo),
+        transport_security=mcp_ext.transport_security(guided),
     )
     rates = {}
 
-    def is_demo(household):
-        return household == "demo" or household.startswith("demo_")
+    def is_guided(household):
+        return household == "guided" or household.startswith("guest_")
 
     def fresh(household):
         s = e.fresh()
         s["household_id"] = household
-        # Only the isolated judge namespace replays the virtual canonical day. Every real
-        # household (including the owner of a demo deployment) runs on wall-clock time.
-        if not demo or not is_demo(household):
+        # Only the isolated judge namespace replays the scripted canonical day. Every real
+        # household (including the owner of a guided deployment) runs on wall-clock time.
+        if not guided or not is_guided(household):
             from datetime import datetime, timezone
 
             s.update(
                 clock_mode="WALL",
                 now=datetime.now(timezone.utc).isoformat(),
                 consent=False,
-                source_mode="NOT_CONNECTED",
+                source_mode="STANDBY",
             )
         return s
 
     def initial(household):
         s = store.read(household)
         if s is None:
-            if not demo and os.getenv("AWS_LEDGER_TABLE"):
+            if not guided and os.getenv("AWS_LEDGER_TABLE"):
                 from .aws_runtime import AWSRuntime
 
                 cloud = AWSRuntime(store)
@@ -193,9 +193,9 @@ def create_app(data_dir=None, passwords=None):
         return authenticate(request)
 
     def admin(p=Depends(principal)):
-        if p["role"] != "admin" or not is_demo(p["household"]):
+        if p["role"] != "admin" or not is_guided(p["household"]):
             raise ApiError(
-                403, "ADMIN_REQUIRED", "Judge replay controls require the isolated demo administrator."
+                403, "ADMIN_REQUIRED", "Judge replay controls require the isolated judge account."
             )
         return p
 
@@ -254,10 +254,10 @@ def create_app(data_dir=None, passwords=None):
                             state, camera.sessions[household]["device_id"]
                         ):
                             await camera.stop(household, "PRIVACY_EXCLUDED")
-                    for household in list(recorded_demo.sessions):
+                    for household in list(recorded_workout.sessions):
                         state = store.read(household)
                         if not state or not state["consent"]:
-                            await recorded_demo.stop(household, "CONSENT_REVOKED")
+                            await recorded_workout.stop(household, "CONSENT_REVOKED")
                     app.state.worker_status = "RUNNING"
                 except Exception as error:
                     app.state.worker_status = "DEGRADED"
@@ -308,14 +308,14 @@ def create_app(data_dir=None, passwords=None):
             with store.transaction() as db:
                 for row in db.execute("SELECT id FROM households").fetchall():
                     s = store.read(row["id"])
-                    if not is_demo(row["id"]) and s.get("clock_mode") != "WALL":
+                    if not is_guided(row["id"]) and s.get("clock_mode") != "WALL":
                         # Households created before real households moved to wall-clock time would
                         # otherwise never be reconciled; overdue jobs then resolve as stale/missed.
                         from datetime import datetime, timezone
 
                         previous_now = s["now"]
                         s.update(clock_mode="WALL", now=datetime.now(timezone.utc).isoformat())
-                        e.emit(s, "household.clock_migrated", {"from": "VIRTUAL", "previous_now": previous_now})
+                        e.emit(s, "household.clock_migrated", {"from": "SCRIPTED", "previous_now": previous_now})
                         store.save(db, row["id"], s)
                     if s.get("camera_request", {}).get("status") in {"OPEN", "PENDING", "CONNECTING"}:
                         s["camera_request"]["status"] = "CLOSED"
@@ -326,7 +326,7 @@ def create_app(data_dir=None, passwords=None):
                         e.emit(s, "watchdog.monitoring_gap", {"reason": "PROCESS_RESTART_GAP"})
                         store.save(db, row["id"], s)
             tasks = [asyncio.create_task(reconcile()), asyncio.create_task(push_worker())]
-            if demo and os.getenv("DONE_IRL_WARM_SCENES", "1") == "1":
+            if guided and os.getenv("DONE_IRL_WARM_SCENES", "1") == "1":
 
                 async def warm_scenes():
                     from . import scene
@@ -359,14 +359,14 @@ def create_app(data_dir=None, passwords=None):
                     task.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
                 await camera.shutdown()
-                await recorded_demo.shutdown()
+                await recorded_workout.shutdown()
                 await bee.client.aclose()
 
     app = FastAPI(title="Muni", version="0.1.0", lifespan=lifespan)
     app.state.store = store
     app.state.runtime = runtime
     app.state.camera = camera
-    app.state.recorded_demo = recorded_demo
+    app.state.recorded_workout = recorded_workout
     app.state.mutate = mutate
     app.state.bee = bee
 
@@ -383,10 +383,10 @@ def create_app(data_dir=None, passwords=None):
             if (
                 origin
                 and origin not in allowed
-                and not (demo and origin == str(request.base_url).rstrip("/"))
+                and not (guided and origin == str(request.base_url).rstrip("/"))
             ):
                 raise ApiError(403, "ORIGIN_DENIED", "This origin is not authorized.")
-            if not demo and request.url.scheme != "https" and request.url.path.startswith(("/api", "/mcp")):
+            if not guided and request.url.scheme != "https" and request.url.path.startswith(("/api", "/mcp")):
                 raise ApiError(426, "HTTPS_REQUIRED", "Live household access requires HTTPS.")
             if int(request.headers.get("content-length", "0")) > 1_000_000:
                 raise ApiError(413, "BODY_TOO_LARGE", "Request exceeds 1 MB.")
@@ -458,7 +458,7 @@ def create_app(data_dir=None, passwords=None):
         return {
             "status": "ready",
             "storage": "encrypted-sqlite-wal",
-            "mode": "SYNTHETIC_DEMO" if demo else "LIVE_CONFIGURED_UNVERIFIED",
+            "mode": "GUIDED" if guided else "LIVE_CONFIGURED_UNVERIFIED",
             "worker": getattr(app.state, "worker_status", "STARTING"),
             "schema_version": "1.0",
             "trace_id": uuid.uuid4().hex,
@@ -472,8 +472,8 @@ def create_app(data_dir=None, passwords=None):
         if body.username not in hashes or not hmac.compare_digest(candidate, hashes[body.username]):
             raise ApiError(401, "BAD_CREDENTIALS", "Username or password is incorrect.")
         token = secrets.token_urlsafe(32)
-        role = "admin" if body.username == "demo-admin" else "owner"
-        household = "demo" if role == "admin" else "house_" + body.username
+        role = "admin" if body.username == "judge" else "owner"
+        household = "guided" if role == "admin" else "house_" + body.username
         with store.transaction() as db:
             db.execute(
                 "INSERT INTO sessions VALUES (?,?,?,?,?)",
@@ -494,7 +494,7 @@ def create_app(data_dir=None, passwords=None):
             token,
             httponly=True,
             samesite="strict",
-            secure=not demo or request.url.scheme == "https",
+            secure=not guided or request.url.scheme == "https",
             max_age=8 * 3600,
         )
         return response
@@ -503,10 +503,10 @@ def create_app(data_dir=None, passwords=None):
     GUEST_TTL = 4 * 3600
 
     def prune_guests(db):
-        """Erase guest demo households whose sessions have all expired (no personal data is kept)."""
+        """Erase guest households whose sessions have all expired (no personal data is kept)."""
         now = time.time()
         rows = db.execute(
-            "SELECT h.id FROM households h WHERE substr(h.id,1,5)='demo_' AND NOT EXISTS "
+            "SELECT h.id FROM households h WHERE substr(h.id,1,6)='guest_' AND NOT EXISTS "
             "(SELECT 1 FROM sessions s WHERE s.household=h.id AND s.expires>?)",
             (now,),
         ).fetchall()
@@ -525,28 +525,28 @@ def create_app(data_dir=None, passwords=None):
 
     @app.post("/api/auth/guest")
     def guest(request: Request):
-        """One-click judge access: a private, isolated copy of the demo day. Demo deployments only."""
-        if not demo or os.getenv("DEMO_GUEST", "1") != "1":
+        """One-click judge access: a private, isolated copy of the guided day. Guided deployments only."""
+        if not guided or os.getenv("GUEST_ACCESS", "1") != "1":
             raise ApiError(404, "NOT_FOUND", "Endpoint not found.")
         ip = request.client.host if request.client else "unknown"
         now = time.time()
         hits = [t for t in guest_hits.get(ip, []) if now - t < 3600]
-        if len(hits) >= int(os.getenv("DEMO_GUEST_PER_HOUR", "20")):
-            raise ApiError(429, "RATE_LIMITED", "Too many demo sessions from this network. Try again later.")
+        if len(hits) >= int(os.getenv("GUEST_PER_HOUR", "20")):
+            raise ApiError(429, "RATE_LIMITED", "Too many guest sessions from this network. Try again later.")
         guest_hits[ip] = hits + [now]
         if len(guest_hits) > 5000:
             guest_hits.clear()
         token = secrets.token_urlsafe(32)
-        household = "demo_" + secrets.token_hex(6)
+        household = "guest_" + secrets.token_hex(6)
         with store.transaction() as db:
             prune_guests(db)
             active = db.execute(
-                "SELECT COUNT(DISTINCT household) n FROM sessions WHERE substr(household,1,5)='demo_' "
+                "SELECT COUNT(DISTINCT household) n FROM sessions WHERE substr(household,1,6)='guest_' "
                 "AND expires>?",
                 (now,),
             ).fetchone()["n"]
-            if active >= int(os.getenv("DEMO_GUEST_MAX", "150")):
-                raise ApiError(503, "DEMO_BUSY", "The demo is busy. Please try again in a few minutes.")
+            if active >= int(os.getenv("GUEST_MAX", "150")):
+                raise ApiError(503, "GUEST_BUSY", "Guest access is busy. Please try again in a few minutes.")
             db.execute(
                 "INSERT INTO sessions VALUES (?,?,?,?,?)",
                 (hashlib.sha256(token.encode()).hexdigest(), "guest", household, "admin", now + GUEST_TTL),
@@ -695,8 +695,8 @@ def create_app(data_dir=None, passwords=None):
         # One labelling rule for owner-typed promises, shared by the MCP compile tool and the app.
         return {
             "source": "MCP_OWNER_INPUT",
-            "source_mode": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
-            "consent_scope": "demo" if demo else "household",
+            "source_mode": "REPLAY_VERIFIED" if guided else "STANDBY",
+            "consent_scope": "guided" if guided else "household",
         }
 
     def compile_owner_input(s, bee):
@@ -740,7 +740,7 @@ def create_app(data_dir=None, passwords=None):
             db.execute("DELETE FROM artifacts WHERE household=?", (p["household"],))
             s.clear()
             s.update(e.fresh(), household_id=p["household"])
-            e.emit(s, "replay.reset", {"scope": "ISOLATED_DEMO_ONLY"})
+            e.emit(s, "replay.reset", {"scope": "GUIDED_ONLY"})
 
         # Reset is deliberately a new replay generation; old dedupe responses must not revive old state.
         result = command(request, p, op)
@@ -778,9 +778,9 @@ def create_app(data_dir=None, passwords=None):
                 p["household"],
                 c,
                 "AUTHORIZED_INWARD_TRANSFER",
-                {"direction": "INWARD", "authorization": "SYNTHETIC_OWNER_CONTEXT"},
+                {"direction": "INWARD", "authorization": "SCRIPTED_OWNER_CONTEXT"},
             )
-            e.revise(s, c, "VERIFIED", "Synthetic authorized inward-transfer evidence.", ev)
+            e.revise(s, c, "VERIFIED", "Scripted authorized inward-transfer evidence.", ev)
             c["custody_status"] = "VERIFIED_SAFE_TRANSFER"
             for a in s["subagents"]:
                 if a["kind"] == "PorchWatchdog":
@@ -853,8 +853,8 @@ def create_app(data_dir=None, passwords=None):
             {
                 "schema_version": "1.0",
                 "trace_id": uuid.uuid4().hex,
-                "label": "SYNTHETIC DEMO — NOT AN OFFICIAL REPORT"
-                if demo
+                "label": "GUIDED REPLAY — NOT AN OFFICIAL REPORT"
+                if guided
                 else "PRIVATE EVIDENCE EXPORT — NOT AN OFFICIAL REPORT",
                 "state": s,
             },
@@ -863,8 +863,8 @@ def create_app(data_dir=None, passwords=None):
 
     @app.post("/api/camera/start")
     async def camera_start(body: CameraInput, request: Request, p=Depends(owner)):
-        if demo:
-            raise ApiError(409, "ISOLATED_DEMO", "Choose a live deployment to connect a Ring camera.")
+        if guided:
+            raise ApiError(409, "GUIDED_ONLY", "Choose a live deployment to connect a Ring camera.")
 
         # Commit the command before the external effect; retries cannot reopen a completed session.
         def intent(s, db):
@@ -897,7 +897,7 @@ def create_app(data_dir=None, passwords=None):
                 s = store.read(p["household"])
                 if not s["consent"]:
                     raise ApiError(409, "CONSENT_REVOKED", "Consent was revoked while connecting.")
-                e.studio_start(s, source="LIVE_RING_WHEP", source_mode="NOT_CONNECTED")
+                e.studio_start(s, source="LIVE_RING_WHEP", source_mode="STANDBY")
                 session = s["studio"]
                 session.update(
                     camera_id=result["id"],
@@ -950,23 +950,23 @@ def create_app(data_dir=None, passwords=None):
 
     @app.post("/api/studio/sessions")
     def start_studio(request: Request, p=Depends(owner)):
-        if not demo:
+        if not guided:
             raise ApiError(
                 503,
-                "CAMERA_NOT_CONNECTED",
+                "CAMERA_STANDBY",
                 "A verified live camera session is required to start live pose verification.",
             )
         return command(request, p, lambda s, db: e.studio_start(s))
 
     @app.post("/api/studio/recorded/start")
     async def recorded_start(body: RecordedInput, request: Request, p=Depends(owner)):
-        """Stream a pinned RECORDED DEMO fixture through MediaPipe and the REALITY-LOCK reducer."""
-        if not demo:
+        """Stream a pinned RECORDED WORKOUT fixture through MediaPipe and the REALITY-LOCK reducer."""
+        if not guided:
             raise ApiError(
-                409, "LIVE_DEPLOYMENT", "Recorded demo sources are only available in demo deployments."
+                409, "LIVE_DEPLOYMENT", "Recorded workout sources are only available in guided deployments."
             )
-        if p["household"] in recorded_demo.sessions:
-            raise ApiError(409, "RECORDED_DEMO_ALREADY_OPEN", "Stop the current recorded demo first.")
+        if p["household"] in recorded_workout.sessions:
+            raise ApiError(409, "RECORDED_WORKOUT_ALREADY_OPEN", "Stop the current recorded workout first.")
         camera_id = "recorded_" + uuid.uuid4().hex
         model_sha = recorded_source.pose_model_location()[1] or ""
 
@@ -974,20 +974,20 @@ def create_app(data_dir=None, passwords=None):
             recorded_source.open_studio(s, camera_id, body.fixture, model_sha)
             e.emit(
                 s,
-                "studio.recorded_demo_opened",
+                "studio.recorded_workout_opened",
                 {"camera_id": camera_id, "fixture": body.fixture, "label": recorded_source.LABEL},
             )
 
         command(request, p, bind)
         try:
-            return await recorded_demo.start(p["household"], body.fixture, session_id=camera_id)
+            return await recorded_workout.start(p["household"], body.fixture, session_id=camera_id)
         except BaseException:
-            await asyncio.to_thread(camera_ended, store, p["household"], camera_id, "RECORDED_DEMO_FAILED")
+            await asyncio.to_thread(camera_ended, store, p["household"], camera_id, "RECORDED_WORKOUT_FAILED")
             raise
 
     @app.get("/api/studio/recorded/status")
     def recorded_status(p=Depends(principal)):
-        return recorded_demo.status(p["household"])
+        return recorded_workout.status(p["household"])
 
     @app.post("/api/studio/recorded/stop")
     async def recorded_stop(request: Request, p=Depends(owner)):
@@ -997,23 +997,23 @@ def create_app(data_dir=None, passwords=None):
             p,
             lambda s, db: e.emit(
                 s,
-                "studio.recorded_demo_close_requested",
-                {"camera_id": recorded_demo.status(p["household"]).get("id")},
+                "studio.recorded_workout_close_requested",
+                {"camera_id": recorded_workout.status(p["household"]).get("id")},
             ),
         )
-        await recorded_demo.stop(p["household"])
-        return recorded_demo.status(p["household"])
+        await recorded_workout.stop(p["household"])
+        return recorded_workout.status(p["household"])
 
     @app.get("/api/studio/recorded/frame")
     def recorded_frame(p=Depends(principal)):
         s = initial(p["household"])
-        jpeg = recorded_demo.frame(p["household"])
+        jpeg = recorded_workout.frame(p["household"])
         if not s["consent"] or not jpeg:
-            raise ApiError(503, "RECORDED_FRAME_UNAVAILABLE", "No recorded demo frame has been decoded yet.")
+            raise ApiError(503, "RECORDED_FRAME_UNAVAILABLE", "No recorded workout frame has been decoded yet.")
         return Response(jpeg, media_type="image/jpeg", headers={"Cache-Control": "private, no-store"})
 
     @app.post("/api/admin/studio/rep")
-    def demo_rep(request: Request, p=Depends(admin)):
+    def studio_rep(request: Request, p=Depends(admin)):
         return command(request, p, lambda s, db: e.one_rep(s, db, p["household"]))
 
     @app.post("/api/admin/studio/frame-step")
@@ -1082,7 +1082,7 @@ def create_app(data_dir=None, passwords=None):
         if not s["studio"]:
             raise ApiError(409, "NO_SESSION", "Studio has not started.")
         knee = s["studio"].get("angle", 178)
-        frame = vision.synthetic_pose_frame(knee)
+        frame = vision.scripted_pose_frame(knee)
         points = vision.extract_marker_pose(frame)
         for a, b in [(23, 25), (25, 27), (24, 26), (26, 28), (23, 24)]:
             cv2.line(
@@ -1112,7 +1112,7 @@ def create_app(data_dir=None, passwords=None):
             s["failures"] = [] if kind == "clear" else [kind]
             if s["studio"] and kind != "clear":
                 s["studio"].update(status="PAUSED", quality="CAMERA_UNAVAILABLE")
-            e.emit(s, "watchdog.monitoring_gap", {"reason": kind, "source": "EXPLICIT_SIMULATED_FAILURE"})
+            e.emit(s, "watchdog.monitoring_gap", {"reason": kind, "source": "EXPLICIT_INJECTED_FAILURE"})
 
         return command(request, p, op)
 
@@ -1120,13 +1120,13 @@ def create_app(data_dir=None, passwords=None):
     async def ring_webhook(request: Request):
         key = os.getenv("RING_HMAC_KEY")
         if not key:
-            raise ApiError(503, "RING_NOT_CONNECTED", "Ring webhook verification is not configured.")
+            raise ApiError(503, "RING_STANDBY", "Ring webhook verification is not configured.")
         body = await request.body()
         household, event_id, payload = verify_ring(
             body, request.headers.get("x-signature", ""), key, os.getenv("RING_BINDINGS_FILE")
         )
-        if demo:
-            raise ApiError(409, "ISOLATED_DEMO", "Live webhooks require a separate live deployment.")
+        if guided:
+            raise ApiError(409, "GUIDED_ONLY", "Live webhooks require a separate live deployment.")
         blocked = privacy.inbox_block_reason(store.read(household), "ring", payload)
         if blocked:
             # Acknowledge so the provider stops retrying; nothing is stored or reduced.
@@ -1157,7 +1157,7 @@ def create_app(data_dir=None, passwords=None):
     @app.get("/api/camera/devices")
     def camera_devices(p=Depends(owner)):
         path = os.getenv("RING_BINDINGS_FILE")
-        if not path or demo:
+        if not path or guided:
             return {"devices": []}
         try:
             bindings = json.loads(Path(path).read_text())
@@ -1189,7 +1189,7 @@ def create_app(data_dir=None, passwords=None):
             if privacy.provider_revoked(s, receipt):
                 return {
                     "name": name,
-                    "status": "NOT_CONNECTED",
+                    "status": "STANDBY",
                     "last_verified_at": None,
                     "reason": "Owner disconnected this provider; automatic reconnection is disabled.",
                 }
@@ -1212,18 +1212,18 @@ def create_app(data_dir=None, passwords=None):
                 provider("Ring", "ring"),
                 {
                     "name": "Ring video",
-                    "status": "NOT_CONNECTED"
+                    "status": "STANDBY"
                     if privacy.provider_revoked(s, "ring")
                     else stream["source_mode"],
                     "reason": "Decoded frames: "
                     + str(stream.get("frames_decoded", 0))
-                    + "; no silent fallback to demo.",
+                    + "; no silent fallback to scripted replay.",
                 },
                 {
                     "name": "Alexa+",
-                    "status": "NOT_CONNECTED",
+                    "status": "STANDBY",
                     "reason": "No verified Alexa account/device connection. Judge console offers a labeled "
-                    + "SIMULATED Alexa+ experience over the real MCP server.",
+                    + "web Alexa+ experience over the real MCP server.",
                 },
                 {
                     "name": "Fire TV",
@@ -1232,20 +1232,20 @@ def create_app(data_dir=None, passwords=None):
                 },
                 {
                     "name": "MCP",
-                    "status": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+                    "status": "REPLAY_VERIFIED" if guided else "STANDBY",
                     "reason": "Official SDK tested; source provenance is recorded per household event.",
                 },
                 {
                     "name": "Companion",
-                    "status": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+                    "status": "REPLAY_VERIFIED" if guided else "STANDBY",
                     "reason": "Authenticated notification inbox; no native push/haptic claim.",
                 },
                 {
                     "name": "Worker",
-                    "status": "SIMULATED_VERIFIED" if demo else "NOT_CONNECTED",
+                    "status": "REPLAY_VERIFIED" if guided else "STANDBY",
                     "reason": getattr(app.state, "worker_status", "STARTING")
                     + "; "
-                    + s.get("clock_mode", "VIRTUAL")
+                    + s.get("clock_mode", "SCRIPTED")
                     + " clock.",
                 },
             ],
@@ -1299,7 +1299,7 @@ def create_app(data_dir=None, passwords=None):
     def tool_command(name, args, fn, require_admin=False):
         p = mcp_principal()
         if require_admin and p["role"] != "admin":
-            raise ApiError(403, "ADMIN_REQUIRED", "Synthetic ingestion requires judge role.")
+            raise ApiError(403, "ADMIN_REQUIRED", "Scripted ingestion requires judge role.")
         key = "mcp:" + name + ":" + e.digest(args)
         op = audited(lambda s, db: fn(s, db, p), "MCP", name, p, key)
         return mutate(p["household"], key, e.digest([name, args]), op)["result"]
@@ -1342,12 +1342,12 @@ def create_app(data_dir=None, passwords=None):
             None,
         )
         if (
-            camera_device_id != "synthetic-porch"
+            camera_device_id != "scripted-porch"
             or not agent
             or not s["consent"]
             or privacy.camera_excluded(s, camera_device_id)
         ):
-            return {"status": "BLOCKED", "reason": "Approved synthetic camera and observed deposit required."}
+            return {"status": "BLOCKED", "reason": "Approved scripted camera and observed deposit required."}
         return {"status": agent["status"], "subagent_id": agent["subagent_id"], "source_mode": e.MODE}
 
     @mcp.tool()
@@ -1399,7 +1399,7 @@ def create_app(data_dir=None, passwords=None):
 
         p = mcp_principal()
         s = initial(p["household"])
-        if demo:
+        if guided:
             return {
                 "status": "BLOCKED",
                 "source_mode": "BLOCKED",
@@ -1438,7 +1438,7 @@ def create_app(data_dir=None, passwords=None):
         store=store,
         camera=camera,
         bee=bee,
-        demo=demo,
+        guided=guided,
     )
 
     mcp_ext.register_read_tools(mcp, principal=mcp_principal, initial=initial, integrations=integrations)

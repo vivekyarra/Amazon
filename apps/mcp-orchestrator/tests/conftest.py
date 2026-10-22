@@ -11,14 +11,14 @@ from done_irl.api import create_app
 def app(tmp_path):
     return create_app(
         tmp_path,
-        {"demo-admin": "test-admin-password", "owner": "test-owner-password", "other": "test-other-password"},
+        {"judge": "test-admin-password", "owner": "test-owner-password", "other": "test-other-password"},
     )
 
 
 @pytest.fixture
 def client(app):
     with TestClient(app) as c:
-        r = c.post("/api/auth/login", json={"username": "demo-admin", "password": "test-admin-password"})
+        r = c.post("/api/auth/login", json={"username": "judge", "password": "test-admin-password"})
         assert r.status_code == 200
         yield c
 

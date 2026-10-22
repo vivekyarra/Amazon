@@ -73,7 +73,7 @@ def process(model_path, input_path, output_path, provenance):
     output = {
         "schema_version": "1.0",
         "source": provenance,
-        "source_mode": "NOT_CONNECTED",
+        "source_mode": "STANDBY",
         "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
         "video_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "frames_decoded": count,
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument(
-        "--provenance", choices=["CONSENTED_RECORDED", "PUBLIC_LICENSED_RECORDED", "SYNTHETIC"], required=True
+        "--provenance", choices=["CONSENTED_RECORDED", "PUBLIC_LICENSED_RECORDED", "SCRIPTED"], required=True
     )
     args = parser.parse_args()
     process(args.model, args.input, args.output, args.provenance)

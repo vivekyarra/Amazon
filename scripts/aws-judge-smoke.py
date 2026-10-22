@@ -1,7 +1,7 @@
 """End-to-end smoke test of a deployed judge stack, with AWS-side verification.
 
 Usage:
-  DONE_URL=https://<ip>.sslip.io DEMO_ADMIN_PASSWORD=... AWS_REGION=us-east-1 \
+  DONE_URL=https://<ip>.sslip.io JUDGE_PASSWORD=... AWS_REGION=us-east-1 \
   uv run --extra aws python scripts/aws-judge-smoke.py --stack done-irl-judge [--out docs/evidence/aws-deployment.json]
 
 Runs the six canonical stages through the public HTTPS API, then reads the stack's DynamoDB
@@ -37,7 +37,7 @@ def main():
         return r.json()
 
     report["health_ready"] = c.get("/health/ready").json()
-    post("/auth/login", {"username": "demo-admin", "password": os.environ["DEMO_ADMIN_PASSWORD"]})
+    post("/auth/login", {"username": "judge", "password": os.environ["JUDGE_PASSWORD"]})
     post("/admin/reset")
     for stage, branch in [(1, "deposit"), (2, "deposit"), (3, "disengaged"), (4, "unknown"), (5, "empty"), (6, "deposit")]:
         t0 = time.monotonic()
@@ -55,11 +55,11 @@ def main():
     out = {o["OutputKey"]: o["OutputValue"] for o in cf.describe_stacks(StackName=args.stack)["Stacks"][0]["Outputs"]}
     time.sleep(20)  # allow the cloud outbox worker to flush
     table = boto3.resource("dynamodb", region_name=region).Table(out["LedgerTable"])
-    items = table.query(KeyConditionExpression=boto3.dynamodb.conditions.Key("pk").eq("HOUSE#demo"))["Items"]
+    items = table.query(KeyConditionExpression=boto3.dynamodb.conditions.Key("pk").eq("HOUSE#guided"))["Items"]
     prefixes = {}
     for item in items:
         prefixes[item["sk"].split("#")[0]] = prefixes.get(item["sk"].split("#")[0], 0) + 1
-    report["dynamodb"] = {"table": out["LedgerTable"], "items_for_demo_household": len(items), "by_sort_prefix": prefixes}
+    report["dynamodb"] = {"table": out["LedgerTable"], "items_for_guided_household": len(items), "by_sort_prefix": prefixes}
     s3 = boto3.client("s3", region_name=region)
     objs = s3.list_objects_v2(Bucket=out["EvidenceBucket"], Prefix="").get("KeyCount", 0)
     enc = None

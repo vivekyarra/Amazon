@@ -32,7 +32,7 @@ The ledger-write routes are:
 - **Contracts:** `/api/contracts/{cid}/confirm`
 - **Push:** `/api/push/subscribe`, `/api/push/unsubscribe`
 - **Ingestion and owner input:** `/api/ingest/bee`, `/api/owner/promises`
-- **Demo administration:** `/api/admin/scenarios/{stage}/run`, `/api/admin/reset`,
+- **Guided-day administration:** `/api/admin/scenarios/{stage}/run`, `/api/admin/reset`,
   `/api/admin/clock/advance`, `/api/admin/sister-proof`, `/api/admin/owner-pickup`
 - **Consent and incidents:** `/api/consent`, `/api/incidents/{iid}/{action}`
 - **Camera:** `/api/camera/start` (exercised against a live-mode app), `/api/camera/stop`
@@ -44,7 +44,7 @@ The ledger-write routes are:
   `/api/privacy/retention`, `/api/privacy/providers/{provider}/{action}`,
   `/api/privacy/household/delete`
 
-The external effects of `camera/start` and `recorded/start` (Ring WHEP, MediaPipe streaming) are stubbed
+The external effects of `camera/start` and `recorded/start` (Ring WHEP, MediaPipe streaming) are patched out
 in this test. Those paths are tested separately.
 
 Exempt routes keep a replacement contract (`::test_P0_004_exempt_routes_keep_their_replacement_contract`):
@@ -75,15 +75,15 @@ Two code changes in this audit closed real gaps, and the new tests failed before
 
 | Fault | Safe degradation | Tests |
 |---|---|---|
-| Ring failure / session expiry | WHEP DELETE and local cleanup run even when upstream cleanup fails. Source drops to `NOT_CONNECTED` with no silent replay. Studio pauses locked with a `watchdog.monitoring_gap`. | `test_fixtures_matrix.py::test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label`, `test_camera.py::test_no_pose_or_duplicate_video_cannot_complete_cycle`, `test_adapters.py::test_ring_rejects_untrusted_session_url` |
-| Ring/Bee expired tokens | Rejected and redacted; never shown as live or simulated. An expired owner session gets 401 `SESSION_EXPIRED`. | `test_adapters.py::test_ring_expired_token_does_not_become_live_or_simulated`, `::test_bee_401_redacted`, `test_fixtures_matrix.py::test_F19_ring_access_token_expiry_is_rejected_not_live`, `::test_F19_expired_owner_session_token_is_refused`, `::test_F19_token_expiry_shows_gap_fallback_label_and_recovers_without_reset` |
+| Ring failure / session expiry | WHEP DELETE and local cleanup run even when upstream cleanup fails. Source drops to `STANDBY` with no silent replay. Studio pauses locked with a `watchdog.monitoring_gap`. | `test_fixtures_matrix.py::test_F19_ring_session_budget_expiry_records_gap_and_drops_live_label`, `test_camera.py::test_no_pose_or_duplicate_video_cannot_complete_cycle`, `test_adapters.py::test_ring_rejects_untrusted_session_url` |
+| Ring/Bee expired tokens | Rejected and redacted; never shown as live or replay. An expired owner session gets 401 `SESSION_EXPIRED`. | `test_adapters.py::test_ring_expired_token_does_not_become_live_or_replay`, `::test_bee_401_redacted`, `test_fixtures_matrix.py::test_F19_ring_access_token_expiry_is_rejected_not_live`, `::test_F19_expired_owner_session_token_is_refused`, `::test_F19_token_expiry_shows_gap_fallback_label_and_recovers_without_reset` |
 | Bee stream failure | Error recorded without the token, exponential backoff, nothing fabricated, reconnect resumes from the persisted `Last-Event-ID`. Owner revocation survives restart. | `test_fixtures_matrix.py::test_P0_007_P0_045_bee_stream_failure_backs_off_then_reconnects_with_cursor`, `test_privacy.py::test_provider_disconnect_cancels_work_and_never_auto_reconnects` |
 | Worker crash | A claimed inbox lease is recovered after expiry and reduced exactly once. A crashing reconcile loop turns `/health/ready` to 503 and recovers. | `test_runtime.py::test_inbox_restart_lease_recovery_and_exactly_once_reducer`, `test_fixtures_matrix.py::test_P0_007_startup_failure_recovery_and_teardown`, `::test_F20_*` |
 | Unauthorized webhook | A forged signature, wrong key or unknown device returns 401 or 403. No inbox row and no state change. | `test_security.py::test_forged_webhook_no_state_change`, `test_runtime.py::test_ring_signed_unknown_device_cannot_cross_households`, `test_fixtures_matrix.py::test_P0_045_unauthorized_and_cross_household_webhooks_change_nothing` |
 | Storage failure | A failed save rolls back the whole command, including artifacts and the command row, and the same key succeeds later. A failed S3 upload keeps the outbox for retry. Tampered or expired artifacts are refused. | `test_fixtures_matrix.py::test_P0_045_storage_failure_mid_write_rolls_back_and_reports_retryable`, `test_scenarios.py::test_failed_transaction_rolls_back`, `test_aws_runtime.py::test_s3_failure_keeps_outbox_for_retry`, `::test_failed_cloud_erase_blocks_republish_and_retries`, `test_security.py::test_evidence_tampering_refuses_export_and_preview` |
 | Replay duplication | Duplicate removal, duplicate provider event, duplicate Bee event and duplicate command each apply once. | `test_fixtures_matrix.py::test_F21_duplicate_removal_and_duplicate_provider_event_produce_one_of_each`, `test_scenarios.py::test_F01_four_promises_and_duplicate_reconnect`, `test_runtime.py::test_reused_provider_identity_with_changed_payload_rejected`, `test_security.py::test_idempotency_exact_response_and_conflict` |
 
-These faults are injected through mocked HTTP transports, Moto, stubbed sessions and patched storage.
+These faults are injected through patched HTTP transports, Moto, scripted sessions and patched storage.
 No real Ring, Bee or AWS outage was observed.
 
 ## P0-007: lifecycle

@@ -175,8 +175,7 @@ export function PrivacyControls({ act, busy }: { act: Act; busy: boolean }) {
               return (
                 <div className="privacy-inline" key={name}>
                   <span>
-                    {name} ·{" "}
-                    {revoked ? "NOT_CONNECTED (revoked)" : provider.status}
+                    {name} · {revoked ? "STANDBY (revoked)" : provider.status}
                   </span>
                   <button
                     className="button"

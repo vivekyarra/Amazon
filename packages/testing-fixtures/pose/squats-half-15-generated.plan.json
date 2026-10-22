@@ -1,6 +1,6 @@
 {
   "plan": "half15",
-  "seed": 20261020,
+  "rng_key": 20261020,
   "yaw_deg": 20.0,
   "fps": 15,
   "size": [
@@ -220,5 +220,5 @@
       "end_frame": 745
     }
   ],
-  "provenance": "SYNTHETIC"
+  "provenance": "SCRIPTED"
 }

@@ -15,8 +15,8 @@ from . import privacy
 
 DAY = "2026-10-20"
 ZONE = "Asia/Kolkata"
-MODE = "SIMULATED_VERIFIED"
-RECORDED_DEMO_SOURCE = "RECORDED_DEMO_VIDEO"
+MODE = "REPLAY_VERIFIED"
+RECORDED_WORKOUT_SOURCE = "RECORDED_WORKOUT_VIDEO"
 TERMINAL = {"VERIFIED", "CANCELLED", "REJECTED"}
 
 
@@ -39,7 +39,7 @@ def fresh():
     return dict(
         schema_version="1.0",
         now=at("08:00"),
-        clock_mode="VIRTUAL",
+        clock_mode="SCRIPTED",
         timezone=ZONE,
         consent=True,
         contracts=[],
@@ -64,10 +64,10 @@ def emit(s, event_type, payload, trace=None):
         event_id=f"evt_{len(s['events']) + 1:06d}",
         schema_version="1.0",
         event_type=event_type,
-        household_id=s.get("household_id", "demo"),
+        household_id=s.get("household_id", "guided"),
         actor_id="owner",
         source=s.get("_event_source", {}).get(
-            "source", "SYNTHETIC_REPLAY" if s.get("clock_mode") != "WALL" else "HOUSEHOLD_SERVICE"
+            "source", "SCRIPTED_REPLAY" if s.get("clock_mode") != "WALL" else "HOUSEHOLD_SERVICE"
         ),
         source_mode=s.get("_event_source", {}).get("source_mode", s.get("source_mode", MODE)),
         occurred_at=s["now"],
@@ -76,7 +76,7 @@ def emit(s, event_type, payload, trace=None):
         or (uuid.uuid4().hex if s.get("clock_mode") == "WALL" else f"trace_{s.get('scenario', 0)}"),
         idempotency_key=f"event:{len(s['events']) + 1}",
         consent_scope=s.get("_event_source", {}).get(
-            "consent_scope", "demo" if s.get("clock_mode") != "WALL" else "household"
+            "consent_scope", "guided" if s.get("clock_mode") != "WALL" else "household"
         ),
         payload=payload,
     )
@@ -152,7 +152,7 @@ def add_evidence(
     kind,
     body,
     mime="application/json",
-    provenance="SYNTHETIC_SENSOR",
+    provenance="SCRIPTED_SENSOR",
     duration_ms=0,
     parent_evidence_id=None,
     sensor=None,
@@ -172,7 +172,7 @@ def add_evidence(
         trace_id=c.get("trace_id", s.get("_trace_id", f"trace_{s.get('scenario', 0)}")),
         kind=kind,
         source_platform=sensor.get(
-            "platform", "OWNER_CONFIRMATION" if provenance == "USER_CONFIRMED" else "SYNTHETIC_FIXTURE"
+            "platform", "OWNER_CONFIRMATION" if provenance == "USER_CONFIRMED" else "SCRIPTED_FIXTURE"
         ),
         source_mode=sensor.get("source_mode", s.get("source_mode", MODE)),
         provenance=provenance,
@@ -185,7 +185,7 @@ def add_evidence(
         parent_evidence_id=parent_evidence_id,
         consent_grant_id="household-explicit-consent"
         if s.get("clock_mode") == "WALL"
-        else "demo-explicit-consent",
+        else "guided-explicit-consent",
         retention_expires_at=(
             datetime.now(timezone.utc) + timedelta(days=privacy.retention_days(s))
         ).isoformat(),
@@ -195,7 +195,7 @@ def add_evidence(
         confidence=confidence,
         model_name_version=sensor.get(
             "model",
-            "owner-statement-v1" if provenance == "USER_CONFIRMED" else "synthetic-calibrated-markers-v1",
+            "owner-statement-v1" if provenance == "USER_CONFIRMED" else "scripted-calibrated-markers-v1",
         ),
     )
     if privacy_mask is not None:
@@ -211,7 +211,7 @@ def add_evidence(
     return evidence_id
 
 
-def frame_evidence(s, db, household, c, kind, frame, crop=None, camera=privacy.SYNTHETIC_CAMERA):
+def frame_evidence(s, db, household, c, kind, frame, crop=None, camera=privacy.SCRIPTED_CAMERA):
     """Store a camera-derived snapshot/crop with PRIVATE_MASKS zeroed before encoding and hashing."""
     privacy.require_camera_allowed(s, camera)
     masked, meta = privacy.mask_frame(s, camera, frame)
@@ -238,7 +238,7 @@ def create_contract(s, key, title, quote, counterparty, modality, due=None, trig
         original_utterance=quote,
         speaker_context="Consented household conversation"
         if s.get("clock_mode") == "WALL"
-        else "Consented synthetic household conversation",
+        else "Consented scripted household conversation",
         title=title,
         type={"drinks": "INBOUND_ITEM", "squats": "PHYSICAL_ACTION", "parcel": "PARCEL_CUSTODY"}.get(
             key, "SCHEDULED_SOCIAL_COMMITMENT"
@@ -334,7 +334,7 @@ def compile_bee(s, bee: BeeInput):
         or not re.search(r"^i(?:'ll| will| promise| promised)\b", text)
         or bool(re.search(r"\b(if|maybe|might)\b", text))
     )
-    # The four canonical demo promises keep their named verifiers and sub-agents.
+    # The four canonical guided-day promises keep their named verifiers and sub-agents.
     specs = [
         (
             "drinks",
@@ -366,7 +366,7 @@ def compile_bee(s, bee: BeeInput):
         ),
     ]
     created = []
-    # Canonical scene patterns (fixed 16:00/18:00 defaults) belong to the virtual judge day only;
+    # Canonical scene patterns (fixed 16:00/18:00 defaults) belong to the scripted judge day only;
     # real wall-clock households always use the general parser so relative times are honoured.
     canonical = s.get("clock_mode") != "WALL" and not re.search(r"\b(called|already|finished)\b", text)
     for key, pattern, title, person, modality, hm, trigger in specs if canonical else []:
@@ -690,7 +690,7 @@ def alert(s, c, kind, message, action=None):
 def tick(s, now):
     current = datetime.fromisoformat(now)
     if current < datetime.fromisoformat(s["now"]):
-        raise ApiError(409, "CLOCK_REWIND", "Reset the isolated demo before moving time backwards.")
+        raise ApiError(409, "CLOCK_REWIND", "Reset the guided household before moving time backwards.")
     s["now"] = now
     if not s["consent"]:
         return
@@ -763,9 +763,9 @@ def verify_social(s, db, household, key):
         household,
         c,
         "AUTHORIZED_PARTICIPATION",
-        dict(target=key, participation=True, source="SYNTHETIC_AUTHORIZED_TRANSCRIPT", occurred_at=s["now"]),
+        dict(target=key, participation=True, source="SCRIPTED_AUTHORIZED_TRANSCRIPT", occurred_at=s["now"]),
     )
-    revise(s, c, "VERIFIED", "Matching authorized participation evidence; simulated source.", ev)
+    revise(s, c, "VERIFIED", "Matching authorized participation evidence; scripted source.", ev)
 
 
 def pose_contract(s):
@@ -783,7 +783,7 @@ def pose_contract(s):
     return c
 
 
-def studio_start(s, source="SYNTHETIC_MARKER_FRAMES", source_mode=MODE):
+def studio_start(s, source="SCRIPTED_MARKER_FRAMES", source_mode=MODE):
     c = pose_contract(s)
     if not s["consent"]:
         raise ApiError(409, "CONSENT_REVOKED", "Camera processing is paused.")
@@ -832,7 +832,7 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
         if session["count"] == target and session["gate"] != "UNLOCKED":
             c = next(c for c in s["contracts"] if c["contract_id"] == session["contract_id"])
             live = session["source"] == "LIVE_RING_WHEP"
-            recorded = session["source"] == RECORDED_DEMO_SOURCE
+            recorded = session["source"] == RECORDED_WORKOUT_SOURCE
             body = dict(
                 count=target,
                 source=session["source"],
@@ -841,7 +841,7 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 model_sha256=session.get("model_sha256"),
             )
             if recorded:
-                body.update(label="RECORDED DEMO", fixture=session.get("fixture"))
+                body.update(label="RECORDED WORKOUT", fixture=session.get("fixture"))
             ev = add_evidence(
                 s,
                 db,
@@ -849,7 +849,7 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 c,
                 "POSE_15_CYCLES" if target == 15 else "POSE_CYCLES",
                 body,
-                provenance="LIVE_SENSOR" if live else "RECORDED_DEMO" if recorded else "SYNTHETIC_SENSOR",
+                provenance="LIVE_SENSOR" if live else "RECORDED_WORKOUT" if recorded else "SCRIPTED_SENSOR",
                 sensor={
                     "platform": "RING_WHEP",
                     "source_mode": "LIVE_VERIFIED",
@@ -857,8 +857,8 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 }
                 if live
                 else {
-                    "platform": RECORDED_DEMO_SOURCE,
-                    "source_mode": "SIMULATED_VERIFIED",
+                    "platform": RECORDED_WORKOUT_SOURCE,
+                    "source_mode": "REPLAY_VERIFIED",
                     "model": "MediaPipe-PoseLandmarker:" + session.get("model_sha256", ""),
                 }
                 if recorded
@@ -870,9 +870,9 @@ def pose_frame(s, db, household, frame_id, timestamp_ms, landmarks):
                 "VERIFIED",
                 f"{target} complete MediaPipe cycles from decoded Ring WHEP frames."
                 if live
-                else f"{target} complete MediaPipe cycles from a RECORDED DEMO video fixture, not a live Ring camera."
+                else f"{target} complete MediaPipe cycles from a RECORDED WORKOUT video fixture, not a live Ring camera."
                 if recorded
-                else f"{target} complete cycles from synthetic marker pixel extraction, not live human verification.",
+                else f"{target} complete cycles from scripted marker pixel extraction, not live human verification.",
                 ev,
             )
             session.update(gate="UNLOCKED", status="COMPLETED")
@@ -891,7 +891,7 @@ def one_rep(s, db, household, half=False):
 
 def run_scenario(s, db, household, stage, branch):
     if not s["consent"]:
-        raise ApiError(409, "CONSENT_REVOKED", "Restore explicit demo consent before replay.")
+        raise ApiError(409, "CONSENT_REVOKED", "Restore explicit guided consent before replay.")
     if stage in {2, 4, 5, 6} and s["failures"]:
         raise ApiError(
             503,
@@ -899,8 +899,8 @@ def run_scenario(s, db, household, stage, branch):
             "An injected source/storage failure is active; clear it before observation.",
         )
     if stage in {2, 4, 5}:
-        # The synthetic porch camera honors owner exclusion exactly like a linked device.
-        privacy.require_camera_allowed(s, privacy.SYNTHETIC_CAMERA)
+        # The scripted porch camera honors owner exclusion exactly like a linked device.
+        privacy.require_camera_allowed(s, privacy.SCRIPTED_CAMERA)
     s["scenario"] = stage
     if stage == 1:
         if not s["contracts"]:
@@ -947,8 +947,8 @@ def run_scenario(s, db, household, stage, branch):
         if branch.startswith("real_"):
             return scene.real_deposit_stage(s, db, household, c, branch)
         frames = [
-            privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, f)[0]
-            for f in vision.fixture_frames("fake" if branch == "fake" else "deposit")
+            privacy.mask_frame(s, privacy.SCRIPTED_CAMERA, f)[0]
+            for f in vision.fixture_frames("false_claim" if branch == "false_claim" else "deposit")
         ]
         verdict = vision.deposit_verdict(frames)
         ev = frame_evidence(s, db, household, c, "DEPOSIT_OBSERVATION", frames[-1])
@@ -1001,7 +1001,7 @@ def run_scenario(s, db, household, stage, branch):
         if branch.startswith("real_"):
             return scene.real_watchdog_stage(s, db, household, c, branch)
         frames = [
-            privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, f)[0] for f in vision.fixture_frames("removal")
+            privacy.mask_frame(s, privacy.SCRIPTED_CAMERA, f)[0] for f in vision.fixture_frames("removal")
         ]
         if vision.removal_verdict(frames) != "REMOVAL_UNDER_REVIEW":
             return
@@ -1009,9 +1009,9 @@ def run_scenario(s, db, household, stage, branch):
             return
         ev = frame_evidence(s, db, household, c, "REMOVAL_FRAME", frames[-1])
         crop_ev = frame_evidence(s, db, household, c, "PERSON_CROP", frames[-1], crop=(80, 270, 45, 110))
-        regions = privacy.polygons(s, privacy.SYNTHETIC_CAMERA)
-        clip_mask = privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, frames[-1])[1]
-        video = vision.synthetic_removal_video(regions)
+        regions = privacy.polygons(s, privacy.SCRIPTED_CAMERA)
+        clip_mask = privacy.mask_frame(s, privacy.SCRIPTED_CAMERA, frames[-1])[1]
+        video = vision.scripted_removal_video(regions)
         source_clip = None
         annotated_clip = None
         if video:
@@ -1045,9 +1045,9 @@ def run_scenario(s, db, household, stage, branch):
             "annotated_clip_evidence_id": annotated_clip,
             "person_crop_evidence_id": crop_ev,
             "trajectory": [[280, 265], [160, 265], [70, 265]],
-            "coordinate_system": "SYNTHETIC_PIXELS",
+            "coordinate_system": "SCRIPTED_PIXELS",
             "capture_gaps": [
-                "No live Ring footage. Generated 15-second synthetic clip."
+                "No live Ring footage. Generated 15-second scripted clip."
                 if video
                 else "No live Ring footage; encoder unavailable, snapshots only."
             ],
@@ -1064,8 +1064,8 @@ def run_scenario(s, db, household, stage, branch):
             receipt=None,
             approval=None,
             clip_actual_duration_seconds=15 if video else 0,
-            quality="SYNTHETIC_CLIP_AVAILABLE" if video else "EVIDENCE_INCOMPLETE",
-            destination="DEMO_RECEIVER_ONLY",
+            quality="SCRIPTED_CLIP_AVAILABLE" if video else "EVIDENCE_INCOMPLETE",
+            destination="LOCAL_RECEIVER_ONLY",
         )
         s["incidents"].append(incident)
         c["custody_status"] = "REMOVAL_UNDER_REVIEW"
@@ -1084,7 +1084,7 @@ def run_scenario(s, db, household, stage, branch):
             drinks=branch == "visible",
             occluded=branch == "ambiguous",
         )
-        frame = privacy.mask_frame(s, privacy.SYNTHETIC_CAMERA, frame)[0]
+        frame = privacy.mask_frame(s, privacy.SCRIPTED_CAMERA, frame)[0]
         obs = vision.detect(frame)
         result = (
             "VISIBLE_MATCH" if "drinks" in obs else ("AMBIGUOUS" if "person" not in obs else "NOT_VISIBLE")
@@ -1115,7 +1115,7 @@ def run_scenario(s, db, household, stage, branch):
     elif stage == 6:
         studio_start(s)
         emit(
-            s, "studio.replay_ready", dict(message="Process synthetic frames in studio. No counter shortcut.")
+            s, "studio.replay_ready", dict(message="Process scripted frames in studio. No counter shortcut.")
         )
 
 
@@ -1154,41 +1154,41 @@ def incident_action(s, db, household, incident_id, action, data):
         if (
             inc["status"] != "EVIDENCE_PREPARED"
             or data.get("manifest_hash") != inc["manifest_hash"]
-            or data.get("destination") != "DEMO_RECEIVER_ONLY"
+            or data.get("destination") != "LOCAL_RECEIVER_ONLY"
             or data.get("confirmation") != "APPROVE REPORT"
         ):
             raise ApiError(
                 409,
                 "EXACT_APPROVAL_REQUIRED",
-                "Review the exact manifest, demo destination and confirmation phrase.",
+                "Review the exact manifest, local receiver destination and confirmation phrase.",
             )
         verify_artifacts(s, db, household)
         inc.update(
             status="REPORT_APPROVED",
             approval=dict(
                 manifest_hash=inc["manifest_hash"],
-                destination="DEMO_RECEIVER_ONLY",
+                destination="LOCAL_RECEIVER_ONLY",
                 approved_at=s["now"],
                 owner="authenticated-owner",
             ),
         )
-        emit(s, "incident.owner_approved", dict(incident_id=incident_id, destination="DEMO_RECEIVER_ONLY"))
+        emit(s, "incident.owner_approved", dict(incident_id=incident_id, destination="LOCAL_RECEIVER_ONLY"))
     elif action == "dispatch-report":
         if inc["status"] != "REPORT_APPROVED" or not inc["approval"]:
             raise ApiError(403, "OWNER_APPROVAL_REQUIRED", "A model boolean is not owner approval.")
         verify_artifacts(s, db, household)
         inc.update(
-            status="SIMULATED_DISPATCH",
+            status="LOCAL_DISPATCH",
             receipt=dict(
-                label="SIMULATED DISPATCH — NOT SENT TO POLICE",
-                receipt_id="DEMO-" + incident_id,
+                label="LOCAL DISPATCH — NOT SENT TO POLICE",
+                receipt_id="LOCAL-" + incident_id,
                 official_case_id=None,
             ),
         )
         emit(
             s,
             "incident.dispatch_acknowledged",
-            dict(incident_id=incident_id, simulated=True, external_sends=0),
+            dict(incident_id=incident_id, local_only=True, external_sends=0),
         )
     elif action == "cancel-report":
         if inc["status"] not in {"EVIDENCE_PREPARED", "REPORT_APPROVED"}:

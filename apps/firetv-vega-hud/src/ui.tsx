@@ -84,7 +84,7 @@ export function FocusButton(p: BtnProps) {
   );
 }
 
-// On-screen D-pad keyboard. Works on any Vega device/simulator without relying on a
+// On-screen D-pad keyboard. Works on any Vega device without relying on a
 // system IME. A strict 5 x 10 grid of equal keys so Up/Down always keeps the column.
 export const KEY_ROWS = [
   '1234567890'.split(''),

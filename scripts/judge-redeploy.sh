@@ -25,14 +25,17 @@ if [ ! -f /srv/done-irl/config/detector.tflite ]; then
   chown 10001:10001 /srv/done-irl/config/detector.tflite; chmod 0600 /srv/done-irl/config/detector.tflite
 fi
 grep -q '^DONE_IRL_DETECTOR_MODEL=' /srv/done-irl/runtime.env || { echo DONE_IRL_DETECTOR_MODEL=/config/detector.tflite; echo DONE_IRL_DETECTOR_DOWNLOAD=0; } >> /srv/done-irl/runtime.env
-# Optional Amazon Bedrock (Nova) key: copied from the stack's runtime secret, never passed through SSM.
+# JUDGE_PASSWORD and the optional Amazon Bedrock (Nova) key: copied from the stack's runtime secret, never passed through SSM.
 /opt/done-irl-aws/bin/python - <<'PY'
 import json
 from pathlib import Path
 import boto3
 s = json.loads(boto3.client('secretsmanager', region_name='$region').get_secret_value(SecretId='$secret')['SecretString'])
 p = Path('/srv/done-irl/runtime.env')
-rows = [r for r in p.read_text().splitlines() if r and not r.startswith(('BEDROCK_', 'MUNI_NOVA='))]
+rows = [r for r in p.read_text().splitlines() if r and not r.startswith(('BEDROCK_', 'MUNI_NOVA=', 'JUDGE_PASSWORD='))]
+judge = s.get('JUDGE_PASSWORD')
+if isinstance(judge, str) and len(judge) >= 16 and not any(c in judge for c in '\r\n\x00'):
+    rows.append('JUDGE_PASSWORD=' + judge)
 if s.get('BEDROCK_ACCESS_KEY_ID') and s.get('BEDROCK_SECRET_ACCESS_KEY'):
     rows += ['BEDROCK_ACCESS_KEY_ID=' + s['BEDROCK_ACCESS_KEY_ID'], 'BEDROCK_SECRET_ACCESS_KEY=' + s['BEDROCK_SECRET_ACCESS_KEY'], 'MUNI_NOVA=1']
 p.write_text('\n'.join(rows) + '\n')

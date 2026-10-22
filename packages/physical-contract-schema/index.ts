@@ -1,5 +1,5 @@
 export type SourceMode =
-  "LIVE_VERIFIED" | "SIMULATED_VERIFIED" | "NOT_CONNECTED" | "BLOCKED";
+  "LIVE_VERIFIED" | "REPLAY_VERIFIED" | "STANDBY" | "BLOCKED";
 export type ContractStatus =
   | "DISCOVERED"
   | "NEEDS_CONFIRMATION"
@@ -101,7 +101,7 @@ export interface Studio {
   target_reps?: number;
 }
 export interface State {
-  clock_mode?: "WALL" | "VIRTUAL";
+  clock_mode?: "WALL" | "SCRIPTED";
   source_mode?: SourceMode;
   now: string;
   timezone: string;

@@ -25,7 +25,7 @@ ORIGINAL_TOOLS = {
 }
 
 
-def login(c, user="demo-admin", password="test-admin-password"):
+def login(c, user="judge", password="test-admin-password"):
     r = c.post("/api/auth/login", json={"username": user, "password": password})
     assert r.status_code == 200
     return {"Authorization": "Bearer " + c.cookies.get("done_session")}
@@ -149,7 +149,7 @@ def test_read_tools_reflect_shared_ledger_without_mutation(mcp):
     assert packet["official_case_id"] is None and packet["evidence"]
     assert all("sha256_original" in v for v in packet["evidence"])
     health = {i["name"]: i for i in mcp.call("get_integration_health")["integrations"]}
-    assert health["Alexa+"]["status"] == "NOT_CONNECTED"
+    assert health["Alexa+"]["status"] == "STANDBY"
     verify = mcp.call("request_user_verification", {"contract_id": by_key["drinks"]["contract_id"]})
     assert verify["state_changed"] is False and verify["status"] != "VERIFIED"
     after = mcp.get("/api/state", headers=mcp.bearer).json()["state"]

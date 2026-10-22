@@ -1,6 +1,6 @@
 # Device and platform realities (checked October 2026)
 
-Always confirm against current official docs; these are the constraints that most often break demos.
+Always confirm against current official docs; these are the constraints that most often break judged builds.
 
 ## Ring Partner API (`https://api.amazonvision.com`)
 
@@ -12,7 +12,7 @@ Always confirm against current official docs; these are the constraints that mos
   must therefore be a durable, event-driven record (webhooks + history + short sessions), and the UI
   should show `last observed` and coverage gaps.
 - Developer Playground tokens last about **30 minutes**. Anything judged or used days later needs a
-  conspicuously labelled recorded/simulated source — never a live-looking replay.
+  conspicuously labelled recorded/scripted source — never a live-looking replay.
 - Webhooks: verify `X-Signature: sha256=<HMAC_SHA256(raw_body)>`, dedupe by request id, and treat
   motion as a trigger to look, not as proof.
 
@@ -39,5 +39,5 @@ Always confirm against current official docs; these are the constraints that mos
 ## Alexa+
 
 - Integrations are MCP servers (Streamable HTTP, `2025-11-25`+) or Agent Skills. A web-based
-  simulated Alexa experience must be labelled as simulated and must not claim device delivery
+  Alexa experience must be labelled as a web experience and must not claim device delivery
   (no "whispered to your earbuds" unless a real delivery API confirmed it).

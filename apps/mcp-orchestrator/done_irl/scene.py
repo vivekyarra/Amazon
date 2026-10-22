@@ -12,7 +12,7 @@ Pipeline (spec 11.2 / 11.3), deliberately conservative:
    two-stage high/low score matching). Static detections that never move are treated as scene
    fixtures, never as actors. No identity, face or biometric inference is performed.
 4. Reason over normalized calibrated zones (STREET_PERIMETER, PORCH_DEPOSIT_ROI,
-   DOOR_THRESHOLD_PLANE, PRIVATE_MASKS) and produce the same verdict contract as the synthetic
+   DOOR_THRESHOLD_PLANE, PRIVATE_MASKS) and produce the same verdict contract as the scripted
    path: DEPOSIT_CONFIRMED / MISMATCH / REMOVAL_UNDER_REVIEW / TRANSFER_OBSERVED / NO_REMOVAL /
    UNKNOWN for the porch, VISIBLE_MATCH / NOT_VISIBLE / AMBIGUOUS / CAMERA_UNAVAILABLE for the
    threshold. Low confidence never becomes theft, delivery fraud or "forgot".
@@ -1122,7 +1122,7 @@ def real_watchdog_stage(s, db, household, c, branch):
         approval=None,
         clip_actual_duration_seconds=round(duration_ms / 1000, 2),
         quality="REAL_RECORDED_CLIP_AVAILABLE" if duration_ms >= 15000 else "EVIDENCE_INCOMPLETE",
-        destination="DEMO_RECEIVER_ONLY",
+        destination="LOCAL_RECEIVER_ONLY",
     )
     s["incidents"].append(incident)
     c["custody_status"] = "REMOVAL_UNDER_REVIEW"

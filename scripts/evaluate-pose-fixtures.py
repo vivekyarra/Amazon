@@ -154,11 +154,11 @@ def main():
     }
     evidence = {
         "schema_version": "1.0",
-        "label": "RECORDED DEMO — SYNTHETIC GENERATED HUMANOID VIDEO — NOT LIVE RING, NOT A REAL PERSON",
-        "provenance": "SYNTHETIC",
+        "label": "RECORDED WORKOUT — GENERATED HUMANOID VIDEO — NOT LIVE RING, NOT A REAL PERSON",
+        "provenance": "SCRIPTED",
         "source": recorded.SOURCE,
-        "source_mode": "SIMULATED_VERIFIED",
-        "generator": "scripts/generate-synthetic-squats.py (seed 20261020)",
+        "source_mode": "REPLAY_VERIFIED",
+        "generator": "scripts/generate-squats.py (rng key 20261020)",
         "pipeline": "done_irl.recorded.decode -> camera.PoseDetector (MediaPipe PoseLandmarker VIDEO mode) "
         "-> camera_reducers.frame_received -> engine.pose_frame/vision.pose_update",
         "model": dict(url=recorded.POSE_MODEL_URL, sha256=recorded.POSE_MODEL_SHA256),

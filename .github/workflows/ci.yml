@@ -109,7 +109,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libgl1
       - run: uv sync --frozen
       - run: npm ci --no-audit --no-fund && npm run build
-      - name: Start demo backend
+      - name: Start guided backend
         run: |
           nohup uv run --frozen uvicorn --app-dir apps/mcp-orchestrator done_irl.api:app --host 127.0.0.1 --port 8080 > backend.log 2>&1 &
           for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/health/ready && break; sleep 2; done

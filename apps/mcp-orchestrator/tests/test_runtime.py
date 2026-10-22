@@ -22,7 +22,7 @@ def live_house(store, now=NOW):
     state.update(
         household_id="house_owner",
         clock_mode="WALL",
-        source_mode="NOT_CONNECTED",
+        source_mode="STANDBY",
         now=now.isoformat(),
         consent=True,
     )
@@ -43,11 +43,11 @@ def utterance():
 def test_encrypted_state_and_commands_survive_restart(app, post, tmp_path):
     post("/admin/scenarios/1/run")
     store = app.state.store
-    raw = store.db.execute("SELECT state FROM households WHERE id='demo'").fetchone()["state"]
+    raw = store.db.execute("SELECT state FROM households WHERE id='guided'").fetchone()["state"]
     response = store.db.execute("SELECT response FROM commands LIMIT 1").fetchone()["response"]
     assert "teacher" not in raw and "utterance" not in response
     reopened = Store(str(tmp_path / "ledger.db"))
-    assert len(reopened.read("demo")["contracts"]) == 4
+    assert len(reopened.read("guided")["contracts"]) == 4
     reopened.db.close()
 
 
@@ -75,21 +75,21 @@ def test_artifact_is_encrypted_and_retention_physically_deletes(app, post):
     post("/admin/scenarios/1/run")
     post("/admin/scenarios/2/run")
     store = app.state.store
-    state = store.read("demo")
+    state = store.read("guided")
     item = state["evidence"][0]
     raw = store.db.execute("SELECT data FROM artifacts WHERE id=?", (item["evidence_id"],)).fetchone()["data"]
     with store.lock:
-        decoded = store.uow.get_artifact(item["evidence_id"], "demo")
+        decoded = store.uow.get_artifact(item["evidence_id"], "guided")
     assert raw != decoded["data"]
     assert hashlib.sha256(decoded["data"]).hexdigest() == item["sha256_original"]
     expiry = datetime.fromisoformat(item["retention_expires_at"]).timestamp() + 1
     with store.transaction() as db:
         assert store.purge_expired(db, expiry) >= 1
-        assert not db.get_artifact(item["evidence_id"], "demo")
+        assert not db.get_artifact(item["evidence_id"], "guided")
         assert db.execute("SELECT id FROM retention_tombstones WHERE id=?", (item["evidence_id"],)).fetchone()
-    assert store.read("demo")["evidence"] == state["evidence"]  # Immutable hash chain retained.
+    assert store.read("guided")["evidence"] == state["evidence"]  # Immutable hash chain retained.
     with pytest.raises(ApiError) as exc:
-        e.verify_artifacts(state, store.uow, "demo")
+        e.verify_artifacts(state, store.uow, "guided")
     assert exc.value.code == "EVIDENCE_EXPIRED"
 
 
@@ -123,22 +123,22 @@ def test_inbox_restart_lease_recovery_and_exactly_once_reducer(tmp_path):
     assert reopened.db.execute("SELECT cursor FROM provider_cursors").fetchone()["cursor"] == "bee-1"
 
 
-def test_wall_clock_deadlines_reconcile_without_demo_controls(tmp_path):
+def test_wall_clock_deadlines_reconcile_without_guided_controls(tmp_path):
     store = Store(str(tmp_path / "ledger.db"))
     state = live_house(store)
     e.compile_bee(state, BeeInput.model_validate(utterance()))
     with store.transaction() as db:
         store.save(db, "house_owner", state)
-        demo = e.fresh()
-        demo["household_id"] = "demo"
-        store.save(db, "demo", demo)
+        guided = e.fresh()
+        guided["household_id"] = "guided"
+        store.save(db, "guided", guided)
     # 16:00 IST = 10:30 UTC. First tier at 09:30 UTC.
     runtime = Runtime(store, lambda: NOW.replace(hour=9, minute=31).timestamp())
     runtime.step()
     assert len(store.read("house_owner")["alerts"]) == 1
     runtime.step()
     assert len(store.read("house_owner")["alerts"]) == 1
-    assert store.read("demo")["now"] == e.at("08:00")
+    assert store.read("guided")["now"] == e.at("08:00")
     runtime.clock = lambda: NOW.replace(hour=10, minute=31).timestamp()
     runtime.step()
     state = store.read("house_owner")
@@ -237,7 +237,7 @@ def test_configured_live_webhook_persists_receipt_without_claiming_video(tmp_pat
     key = tmp_path / "key"
     key.write_bytes(bytes(range(32)))
     key.chmod(0o600)
-    monkeypatch.setenv("DEMO_MODE", "false")
+    monkeypatch.setenv("GUIDED_MODE", "false")
     monkeypatch.setenv("LEDGER_KEY_FILE", str(key))
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://testserver")
     monkeypatch.setenv("RING_HMAC_KEY", "private-test-key")
@@ -293,8 +293,8 @@ def test_tv_session_registration_is_owner_scoped_bounded_and_not_device_proof(cl
     assert other.get("tv_sessions", []) == []
 
 
-def test_legacy_virtual_owner_household_migrates_to_wall_clock_and_reconciles(tmp_path):
-    """Regression: an owner household created on the virtual clock was never ticked by the wall-clock worker."""
+def test_legacy_scripted_clock_owner_household_migrates_to_wall_clock_and_reconciles(tmp_path):
+    """Regression: an owner household created on the scripted clock was never ticked by the wall-clock worker."""
     from datetime import datetime, timedelta, timezone
     from fastapi.testclient import TestClient
 
@@ -302,17 +302,22 @@ def test_legacy_virtual_owner_household_migrates_to_wall_clock_and_reconciles(tm
     from done_irl.api import create_app
     from done_irl.models import BeeInput
 
-    passwords = {"demo-admin": "migration-admin-pass", "owner": "migration-owner-pass"}
+    passwords = {"judge": "migration-admin-pass", "owner": "migration-owner-pass"}
     app = create_app(tmp_path, passwords)
     store = app.state.store
     legacy = e.fresh()
     legacy["household_id"] = "house_owner"
     past = datetime.now(timezone.utc) - timedelta(hours=3)
     e.compile_bee(legacy, BeeInput(event_id="m", utterance="I will call Mom in 2 hours.", occurred_at=past.isoformat()))
+    guest = e.fresh()
+    guest["household_id"] = "guest_0a1b2c"
     with store.transaction() as db:
         store.save(db, "house_owner", legacy)
+        store.save(db, "guest_0a1b2c", guest)
     restarted = create_app(tmp_path, passwords)
     with TestClient(restarted):
+        # Guided households ("guided" and "guest_*") keep their scripted clock across restarts.
+        assert restarted.state.store.read("guest_0a1b2c")["clock_mode"] != "WALL"
         s = restarted.state.store.read("house_owner")
         assert s["clock_mode"] == "WALL"
         assert any(ev["event_type"] == "household.clock_migrated" for ev in s["events"])
