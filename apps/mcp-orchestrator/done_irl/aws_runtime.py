@@ -230,9 +230,9 @@ class AWSRuntime:
                 query = {"KeyConditionExpression": Key("pk").eq("HOUSE#" + household), "ConsistentRead": True}
                 while True:
                     page = self.table.query(**query)
-                    with self.table.batch_writer() as batch:
-                        for item in page.get("Items", []):
-                            batch.delete_item(Key={"pk": item["pk"], "sk": item["sk"]})
+                    # Single-item deletes: the service role is scoped to DeleteItem, not BatchWriteItem.
+                    for item in page.get("Items", []):
+                        self.table.delete_item(Key={"pk": item["pk"], "sk": item["sk"]})
                     if "LastEvaluatedKey" not in page:
                         break
                     query["ExclusiveStartKey"] = page["LastEvaluatedKey"]
