@@ -385,6 +385,16 @@ def test_generated_video_duration_and_original_derived_provenance(tmp_path, post
     assert source["sha256_original"] != derived["sha256_original"]
     video = client.get("/api/evidence/" + source_id)
     assert video.headers["content-type"] == "video/webm"
+    assert video.headers["accept-ranges"] == "bytes"
+    size = len(video.content)
+    part = client.get("/api/evidence/" + source_id, headers={"Range": "bytes=10-19"})
+    assert part.status_code == 206
+    assert part.content == video.content[10:20]
+    assert part.headers["content-range"] == f"bytes 10-19/{size}"
+    tail = client.get("/api/evidence/" + source_id, headers={"Range": "bytes=-5"})
+    assert tail.status_code == 206 and tail.content == video.content[-5:]
+    beyond = client.get("/api/evidence/" + source_id, headers={"Range": f"bytes={size}-"})
+    assert beyond.status_code == 416
     path = tmp_path / "source.webm"
     path.write_bytes(video.content)
     capture = cv2.VideoCapture(str(path))

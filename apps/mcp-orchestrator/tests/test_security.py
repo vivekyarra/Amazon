@@ -164,3 +164,10 @@ def test_validation_errors_have_trace_and_do_not_echo_inputs(client):
     assert r.json()["error"]["code"] == "VALIDATION_FAILED"
     assert r.json()["trace_id"]
     assert "private-password" not in r.text and "do-not-echo" not in r.text
+
+
+def test_interactive_api_docs_are_not_served(client):
+    # The CSP blocks the CDN scripts Swagger/ReDoc need, so they would render blank.
+    assert "swagger-ui" not in client.get("/docs").text
+    assert "redoc" not in client.get("/redoc").text.lower()
+    assert client.get("/openapi.json").json()["info"]["title"] == "Muni"

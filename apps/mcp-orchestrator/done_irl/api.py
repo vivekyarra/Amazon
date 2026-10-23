@@ -362,7 +362,8 @@ def create_app(data_dir=None, passwords=None):
                 await recorded_workout.shutdown()
                 await bee.client.aclose()
 
-    app = FastAPI(title="Muni", version="0.1.0", lifespan=lifespan)
+    # Swagger/ReDoc load scripts from a CDN that the CSP blocks; the schema stays at /openapi.json.
+    app = FastAPI(title="Muni", version="0.1.0", lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.store = store
     app.state.runtime = runtime
     app.state.camera = camera
@@ -825,7 +826,7 @@ def create_app(data_dir=None, passwords=None):
         return command(request, p, op)
 
     @app.get("/api/evidence/{eid}")
-    def evidence(eid: str, p=Depends(principal)):
+    def evidence(eid: str, request: Request, p=Depends(principal)):
         s = initial(p["household"])
         metadata = next((v for v in s["evidence"] if v["evidence_id"] == eid), None)
         if not metadata:
@@ -842,7 +843,27 @@ def create_app(data_dir=None, passwords=None):
             or hashlib.sha256(row["data"]).hexdigest() != metadata["sha256_original"]
         ):
             raise ApiError(409, "EVIDENCE_TAMPERED", "The artifact failed its integrity check.")
-        return Response(row["data"], media_type=row["mime"], headers={"Cache-Control": "private, no-store"})
+        data = row["data"]
+        headers = {"Cache-Control": "private, no-store", "Accept-Ranges": "bytes"}
+        # Byte ranges let browsers (Safari in particular) play and seek evidence clips.
+        wanted = request.headers.get("range", "")
+        if wanted.startswith("bytes=") and "," not in wanted and data:
+            first, _, last = wanted[6:].strip().partition("-")
+            try:
+                if first:
+                    start, end = int(first), int(last) if last else len(data) - 1
+                else:
+                    start, end = max(0, len(data) - int(last)), len(data) - 1
+            except ValueError:
+                start, end = -1, -1
+            if 0 <= start < len(data) and start <= end:
+                end = min(end, len(data) - 1)
+                headers["Content-Range"] = f"bytes {start}-{end}/{len(data)}"
+                return Response(data[start : end + 1], status_code=206, media_type=row["mime"], headers=headers)
+            return Response(
+                b"", status_code=416, headers={**headers, "Content-Range": f"bytes */{len(data)}"}
+            )
+        return Response(data, media_type=row["mime"], headers=headers)
 
     @app.get("/api/export")
     def export(p=Depends(principal)):
