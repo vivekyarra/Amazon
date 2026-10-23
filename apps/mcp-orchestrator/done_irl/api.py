@@ -1004,6 +1004,21 @@ def create_app(data_dir=None, passwords=None):
             return await recorded_workout.start(p["household"], body.fixture, session_id=camera_id)
         except BaseException:
             await asyncio.to_thread(camera_ended, store, p["household"], camera_id, "RECORDED_WORKOUT_FAILED")
+            # A failed startup must not strand an empty, paused recorded session.
+            # Otherwise the guided day's explicitly scripted fallback cannot begin:
+            # studio_start() sees an existing session, and frame-step cannot run.
+            # Keep the monitoring-gap event, but only release an unverified session.
+            with store.transaction() as db:
+                state = store.read(p["household"])
+                studio = state.get("studio") if state else None
+                if (
+                    studio
+                    and studio.get("camera_id") == camera_id
+                    and studio.get("status") == "PAUSED"
+                    and studio.get("count", 0) == 0
+                ):
+                    state["studio"] = None
+                    store.save(db, p["household"], state)
             raise
 
     @app.get("/api/studio/recorded/status")
