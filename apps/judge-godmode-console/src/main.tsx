@@ -2613,8 +2613,8 @@ function App() {
               </button>
             </div>
             <p className="muted-text small pad">
-              Companion inbox · native push and earbud whispers are not
-              connected.
+              Companion inbox · alerts land here. Phone notifications are opt-in
+              under Connections &amp; privacy.
             </p>
             <div className="scroll">
               {[...state.alerts].reverse().map((a) => (

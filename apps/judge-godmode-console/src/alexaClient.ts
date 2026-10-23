@@ -268,7 +268,7 @@ export async function answer(
           ? `Your squats promise is ${statusWords[squats.status] ?? squats.status.toLowerCase()}.`
           : "There is no squats promise in the ledger yet.";
         if (bridge.status === "BLOCKED")
-          return `I can't open a live Ring-to-Fire TV camera relay here: the live camera isn't connected. ${promise} You can still run the workout in the Reality-Lock studio.`;
+          return `The live Ring-to-Fire TV camera relay runs only on the owner's live deployment, not in this guided day. ${promise} You can still run the workout in the Reality-Lock studio.`;
         return `Reality-Lock bridge status: ${bridge.status.toLowerCase()}. ${promise}`;
       }
       case "sister": {

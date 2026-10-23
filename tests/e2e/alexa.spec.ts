@@ -96,7 +96,7 @@ test("Alexa+ answers from real MCP tool calls over the shared ledger", async ({
   );
   await ask(page, "Alexa, start Reality-Lock", "bridge_ring_camera_to_firetv");
   await expect(panel.getByTestId("alexa-reply").last()).toContainText(
-    "can't open a live Ring-to-Fire TV camera relay",
+    "live Ring-to-Fire TV camera relay runs only on the owner's live deployment",
   );
 
   // Ledger untouched by the read-only questions: no contract became VERIFIED by voice.
