@@ -175,7 +175,8 @@ export function PrivacyControls({ act, busy }: { act: Act; busy: boolean }) {
               return (
                 <div className="privacy-inline" key={name}>
                   <span>
-                    {name} · {revoked ? "STANDBY (revoked)" : provider.status}
+                    {name[0].toUpperCase() + name.slice(1)} ·{" "}
+                    {revoked ? "Access revoked" : "Authorized"}
                   </span>
                   <button
                     className="button"

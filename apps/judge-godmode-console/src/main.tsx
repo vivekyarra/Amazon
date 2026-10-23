@@ -542,7 +542,13 @@ function App() {
       }
       if (!stop.current) {
         navigate("studio");
-        await workout();
+        // End the day on the recorded workout (real MediaPipe pose on video);
+        // fall back to marker frames only if the recording cannot start.
+        try {
+          await act("/studio/recorded/start", { fixture: "squats-15" });
+        } catch {
+          await workout();
+        }
       }
     } catch {
       /* displayed */
