@@ -130,7 +130,7 @@ Deploy your own HTTPS stack on AWS: [infra/aws/README.md](infra/aws/README.md).
 
 | | |
 |---|---|
-| **Tests** | 264 backend tests (domain, security, MCP compliance, real-video vision, pose, privacy, AWS via Moto) · 6 Playwright journeys · Android TV emulator D-pad journey · container replay — all in CI on every push |
+| **Tests** | 280 backend tests (domain, security, MCP compliance, real-video vision, pose, privacy, AWS via Moto) · 7 Playwright journeys · Android TV emulator D-pad journey · container replay — all in CI on every push |
 | **Scenario coverage** | All 24 canonical and adversarial fixtures machine-checked — [fixture matrix](docs/evidence/fixture-matrix.md) |
 | **Live Ring** | 176 distinct 720p WHEP frames decoded; live relay into Reality-Lock — [probe](docs/evidence/ring-live-probe.json) · [studio](docs/evidence/ring-live-studio.json) |
 | **Live AWS** | T-60 / T-25 / deadline fired by EventBridge within one second of schedule — [evidence](docs/evidence/aws-live-escalation.json) |

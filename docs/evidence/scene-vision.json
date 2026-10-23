@@ -1,7 +1,7 @@
 {
   "generated_at": "2026-10-20T12:18:25+00:00",
   "provenance": "REAL_RECORDED_STOCK",
-  "statement": "Actual pipeline output on public licensed recordings. Not Ring footage, not the user's home, not live capture. Verifies the real-frame pipeline behavior only; live-Ring requirements remain open.",
+  "statement": "Actual pipeline output on public licensed recordings. Not Ring footage, not the user's home, not live capture. Verifies the real-frame pipeline behavior only; live Ring is covered by ring-live-probe.json and ring-live-studio.json.",
   "pipeline_version": "scene-tracker-v1",
   "model": {
     "name": "mediapipe-efficientdet-lite0-float32-v1",

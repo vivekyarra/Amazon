@@ -91,7 +91,7 @@ report = dict(
     provenance=scene.SOURCE,
     statement=(
         "Actual pipeline output on public licensed recordings. Not Ring footage, not the user's home, "
-        "not live capture. Verifies the real-frame pipeline behavior only; live-Ring requirements remain open."
+        "not live capture. Verifies the real-frame pipeline behavior only; live Ring is covered by ring-live-probe.json and ring-live-studio.json."
     ),
     pipeline_version=scene.PIPELINE_VERSION,
     model=dict(name=scene.MODEL_NAME, url=scene.MODEL_URL, sha256=scene.MODEL_SHA256),
